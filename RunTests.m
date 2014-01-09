@@ -1,0 +1,11 @@
+addpath(genpath('.'));
+MemoryCopyTest();
+ScaleTest();
+MatrixMultTest();
+AddVectorTest();
+ActRELUTest();
+ConvTest();
+MaxPoolingTest();
+UpdateTest();
+GC();
+GPUVerification();

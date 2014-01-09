@@ -1,0 +1,31 @@
+# Windows default autosave extension
+*.asv
+
+# OSX / *nix default autosave extension
+*.m~
+
+# Compiled MEX binaries (all platforms)
+*.mex*
+
+*.swp
+
+# Simulink Code Generation	
+slprj/
+
+.DS_Store
+
+trained/imagenet.mat
+data/imagenet_regression/*
+data/imagenet/test.mat
+data/imagenet/train.mat
+data/imagenet/imagenet-weight.mat
+data/imagenet/imagenet-test-batch.mat
+cuda/C_.cpp
+data/mnist/test1*.mat
+data/mnist/val1*.mat
+data/mnist/train1*.mat
+data/imagenet/test1*.mat
+data/imagenet/train1*.mat
+data/imagenet/val1*.mat
+data/imagenet/meta.mat
+cuda/*.mat

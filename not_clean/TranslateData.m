@@ -1,0 +1,1 @@
+load('data/mnist_translated/train.mat');

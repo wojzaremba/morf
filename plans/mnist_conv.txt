@@ -1,0 +1,60 @@
+[    
+    {
+        "type" : "ImageInput",
+        "file_pattern": "data/mnist/",
+        "batch_size": 100,
+        "rows": 28,
+        "cols": 28
+    },
+
+    {
+        "type": "Conv",
+        "local_2d_patch" : {
+           "patch_rows": 10,
+           "patch_cols": 10,
+           "stride_rows": 2,
+           "stride_cols": 2,
+           "padding_rows": 0,
+           "padding_cols": 0
+        },
+        "depth": 50,
+        "function": "RELU"
+    },
+
+    {
+        "type": "MaxPooling",
+        "local_2d_patch" : {
+           "patch_rows": 4,
+           "patch_cols": 4,
+           "stride_rows": 2,
+           "stride_cols": 2
+        },
+    },
+
+    {
+        "type": "FC",
+        "depth": 100,
+        "function": "RELU"
+    },
+
+    {
+        "type": "Dropout",
+        "p": 0.5
+    },
+
+    {
+        "type": "FC",
+        "depth": 10,
+        "function": "LINEAR"
+    },
+    {
+        "type": "Softmax",
+        "depth": 10,
+    },
+
+    {
+      "type": "Spec",
+      "lr": 0.1,
+      "momentum": 0.9
+    }
+]
