@@ -42,26 +42,40 @@ classdef MonochromaticInput < Approximation
             ret.perm = perm;
             ret.Wmono = Wmono;
             ret.Wapprox = Wapprox;
-            ret.cuda_template = strcat(root_path, 'cuda/src/filter_acts_mono_template.cuh');
-            ret.cuda_true = strcat(root_path, 'cuda/src/filter_acts_mono.cuh');     
+            ret.cuda_template = obj.CudaTemplate();
+            ret.cuda_true = obj.CudaTrue();
         end
         
         function ret = RunCuda(obj, args)
             global plan;
-            X = plan.layer{1}.cpu.vars.X;
-            W = plan.layer{2}.cpu.vars.W;
+            X = single(plan.layer{1}.cpu.vars.out);
+            W = single(plan.layer{2}.cpu.vars.W);
+            colors = args.colors;
             numImages = size(X, 1);
             imgWidth = size(X, 2);
             numImgColors = size(colors, 1);
             XX = reshape(X, [numImages*imgWidth*imgWidth, 3]);
             res = XX * colors';
-            Xmono = reshape(res, [numImages, imgWidth, imgWidth, numImgColors]);
+            Xmono = single(reshape(res, [numImages, imgWidth, imgWidth, numImgColors]));
 
-            Wmono = args.Wmono;
-            Wapprox = args.Wapprox;
+            Wmono = single(args.Wmono);
+            Wapprox = single(args.Wapprox);
             numFilters = size(W, 1);
 
             perm = args.perm;
+            
+            padding = 0;
+            stride = 4;
+            
+            % Define GPU ids
+            gids.X = 1;
+            gids.Xmono = 2;
+            gids.W = 3;
+            gids.Wmono = 4;
+            gids.Wapprox = 5;
+            gids.out = 6;
+            gids.out_mono = 7;
+            gids.perm = 8;
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % (1) First check correctness of cuda code: results with 
@@ -72,7 +86,7 @@ classdef MonochromaticInput < Approximation
             out_mono_ = single(zeros(numImages, 55, 55, numFilters));
 
             % copy to GPU for regular conv
-            C_(CopyToGPU, gids.Wapprox,  Wapprox);
+            C_(CopyToGPU, gids.Wapprox,  h);
             C_(CopyToGPU, gids.X,  X);
             C_(CopyToGPU, gids.out,  out_);
 
@@ -80,14 +94,13 @@ classdef MonochromaticInput < Approximation
             out = reshape(C_(CopyFromGPU, gids.out), size(out_));
             C_(CleanGPU);
 
-
             %copy to GPU for mono conv
             Capprox_(CopyToGPU, gids.Wmono,  Wmono);
             Capprox_(CopyToGPU, gids.Xmono,  Xmono);
             Capprox_(CopyToGPU, gids.out_mono,  out_mono_);
             Capprox_(CopyToGPU, gids.perm,  perm);
 
-            Capprox_(ConvActMono, gids.Xmono, gids.Wmono, gids.out_mono, size(Xmono, 2), size(Xmono, 4), size(Wmono, 2), stride, padding, gids.perm);
+            Capprox_(monochromatic_input, gids.Xmono, gids.Wmono, gids.out_mono, size(Xmono, 2), size(Xmono, 4), size(Wmono, 2), stride, padding, gids.perm);
             out_mono = reshape(Capprox_(CopyFromGPU, gids.out_mono), size(out_mono_));
             Capprox_(CleanGPU);
 

@@ -47,6 +47,16 @@ classdef Approximation < handle
             cuda_vars = [];            
         end
         
+        function ret = CudaTemplate(obj)
+            global root_path
+            ret = sprintf('%s/expr_compress/cuda/src/%s_template.cuh', root_path, obj.name);
+        end
+
+        function ret = CudaTrue(obj)
+            global root_path
+            ret = sprintf('%s/expr_compress/cuda/src/%s_gen.cuh', root_path, obj.name);
+        end        
+        
         function VerifyCombination(obj, approx_vars, cuda_vars)
             assert(0);
         end

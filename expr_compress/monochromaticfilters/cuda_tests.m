@@ -2,7 +2,7 @@
 % correctness and speedup.
 
 clear all;
-morf_path = '/Users/Denton/Documents/morf-emily/';
+morf_path = '/Volumes/denton/Documents/morf/';
 addpath(genpath(morf_path));
 
 %flags

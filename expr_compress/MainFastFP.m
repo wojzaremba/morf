@@ -2,9 +2,16 @@
 % XXX : Functions to inspect content of this map of maps. 
 % XXX : remove unnessesary funcs from Cmono.cu
 
-clear all
-init('/Volumes/denton/Documents/morf/');
-load_imagenet_model();
+global root_path;
+global plan;
+clearvars -except root_path plan;
+if (exist('root_path') ~= 1 || isempty(root_path))
+    init('/Volumes/denton/Documents/morf/');
+end
+if (exist('plan') ~= 1 || isempty(plan))
+    load_imagenet_model();
+end
+
 S = Scheduler(struct('acceptance', 0.99));
 
 S.Add(MonochromaticInput(struct('numImgColors', {3, 4, 6}), ...

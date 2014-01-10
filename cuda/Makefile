@@ -21,20 +21,8 @@ all: clean mex
 nvcc:
 	$(NVCC) C_.cpp --cuda src/C_.cu
 
-nvccapprox:
-	$(NVCC) Capprox_.cpp --cuda src/Capprox_.cu
-
-nvccmono:
-	$(NVCC) Cmono_.cpp --cuda src/Cmono_.cu
-
 mex: nvcc
 	$(MEX) C_.cpp
-
-mexapprox: nvccapprox
-	$(MEX) Capprox_.cpp
-
-mexmono: nvccmono
-	$(MEX) Cmono_.cpp
 
 clean:
 	rm -rf *.mex*

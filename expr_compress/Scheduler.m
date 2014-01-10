@@ -70,11 +70,11 @@ classdef Scheduler < handle
                         obj.Compile(approx.name, approx_ret, cuda_vars);
                         
                         % Run the cuda code
-                        cuda_results = approx.RunCuda(); % XXX : Ideally unified
+                        cuda_results = approx.RunCuda(approx_ret); % XXX : Ideally unified
                         
                         % Log the results specific to these approx_vars and
                         % cuda_vars
-                        log.AddCudaResults(approx_vars, cuda_vars, cuda_results);
+                        log.AddCudaExecutionResults(approx_vars, cuda_vars, cuda_results);
                     end                    
                 end
             end
@@ -84,8 +84,8 @@ classdef Scheduler < handle
         function Compile(obj, func_name, args, cuda_vars)
             global root_path;
             % replace #mock with, func_name 
-            fid_read = fopen(strcat(root_path, 'cuda/src/Capprox_template_.cu'), 'r');
-            fid_write = fopen(strcat(root_path, 'cuda/src/Capprox_.cu'), 'wt');
+            fid_read = fopen(strcat(root_path, 'expr_compress/cuda/src/Capprox_template.cu'), 'r');
+            fid_write = fopen(strcat(root_path, 'expr_compress/cuda/src/Capprox_gen.cu'), 'wt');
             line = fgets(fid_read);
             while ischar(line)
                 line = strrep(line, '#mock' , func_name); 
@@ -118,26 +118,21 @@ classdef Scheduler < handle
             fclose(fid_read);
             fclose(fid_write);
             % compile
-            cd(strcat(root_path, 'cuda'));
+            cd(strcat(root_path, '/expr_compress/cuda'));
             status = system('make mexapprox');
             cd(root_path);
             
             if status
                 fprintf('Error compiling with target mexapprox\n');
-                fid_read = fopen(args.cuda_true, 'r');
-                line = fgets(fid_read);
-                while ischar(line)
-                    disp(line);
-                    line = fgets(fid_read);
-                end
-                fclose(fid_read);
+%                 fid_read = fopen(args.cuda_true, 'r');
+%                 line = fgets(fid_read);
+%                 while ischar(line)
+%                     disp(line);
+%                     line = fgets(fid_read);
+%                 end
+%                 fclose(fid_read);
                 assert(0);
             end
-        end
-        
-        function RunCuda(obj)
-            assert(0);
-            
         end
         
         function test_error = TestApprox(obj, Wapprox)
