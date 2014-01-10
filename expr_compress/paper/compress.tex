@@ -47,7 +47,6 @@
 \icmlauthor{Joan Bruna}{bruna@cs.nyu.edu}
 \icmlauthor{Rob Fergus}{fergus@cs.nyu.edu}
 
-
 \icmlkeywords{machine learning, deep learning, speeding up forward pass, redundancies in neural networks}
 
 \begin{abstract}
@@ -56,12 +55,29 @@
 
 \section{Introduction}
 
-Forward Pass is critical for mass-deployment
+Training large neural networks takes weeks, or even months. This can hinder 
+research, and there have been extensive effort devoted to speed up training procedure.
+However, resource-wise from perspective of companies executing neural networks on internet-scale
+data (e.g. annotating images), this is not the main cost. Major cost is in the
+final stage, where network is evaluated on the target data, which is present in quantities of billions.
+We focus here on speeding up evaluation of \emph{trained} neural network, which directly
+maps to the cost of executing NN on internet-scale data. Our techniques speed up execution by 
+factor of $2-4$ while keeping prediction accuracy within $1\%$ from the original model. 
 
-Current architectures: most of the complexity comes from 
-convolutional layers (95 percent vs 5 percent). Whereas on training
+
+% XXX: Maybe we will speak also about real time application.
 
 
+We focus in this work on convolutional neural networks used for computer vision tasks. Most of
+computation time during evaluation is spend on convolutional layers ($90\% - 95\%$, while it takes only
+small fraction of time ($5\%-10\%$) to evaluate rest of layers (pooling, local contrast normalization,
+fully connected). It is worth to note, that most of learnable parameters are kept in fully connected layers ($90\% - 95\%$)
+, and convolutional layers store very small fraction of parameters ($5\% - 10\%$).
+
+
+We achieve evaluation speed up by constructing approximations to the convolutional kernels. Convolutional kernel
+is a $4$-dimensional tensor, with two spacial dimensions which are convolutional. It turns out, that kernel of trained
+network has a lot of redundancies in parameters, which we exploit to speed up forward pass.
 
 
 \section{Related Work}
