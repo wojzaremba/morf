@@ -1,5 +1,5 @@
 
-load('/Users/joan/Documents/matlab/morf_tmp/morf/compression/imagenet_weights.mat');
+load imagenet_weights.mat;
 
 
 %1 . first layer

@@ -1,15 +1,12 @@
 
 
-%clear all;
+clear all;
+addpath(genpath('.'));
 %load('/Users/joan/Documents/matlab/morf_tmp/morf/compression/all_imagenet_weights.mat');
 %load('/Users/joan/Documents/matlab/morf_tmp/morf/compression/imagenet_weights_v2.mat');
 
 %the sizes are (output H V input)
-% /misc/vlgscratch2/LecunGroup/bruna/all_imagenet_weights.mat
-load imagenet_weights;
-layer = {};
-layer{1} = permute(layer1, [1, 3, 4, 2]);
-layer{2} = permute(layer2, [1, 3, 4, 2]);
+load /misc/vlgscratch2/LecunGroup/bruna/all_imagenet_weights.mat;
 
 L=2;
 oclust=[32 32];
@@ -36,7 +33,7 @@ for l=1:min(L,size(layer,2))
             Ii=find(idx_input==j);
             chunk = layer{l}(Io,:,:,Ii);
             %size(chunk)
-            [~,~,~,~,~,aerr{rast}]=rankoneconv(chunk,P(l));rast=rast+1;
+            [~,~,~,~,aerr{rast}]=rankoneconvtemp(chunk,P(l));rast=rast+1;
         end
     end
 

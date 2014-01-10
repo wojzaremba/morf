@@ -1,6 +1,7 @@
 
 clear all;
 
+addpath(genpath('.'))
 load('imagenet_weights.mat');
 
 
@@ -15,20 +16,14 @@ for f=1:size(layer1,1)
     approx0(f,:,:,:)=reshape(chunk,1,size(layer1,2),size(layer1,3),size(layer1,4));
 end
 
-L=4;%number of 'colors'
-if 0
-    lambda=0.001;
-    CMat = SparseCoefRecovery(C',0,'Lasso',lambda);
-    CKSym = BuildAdjacency(CMat,0);
-    [Grps] = SpectralClustering(CKSym,L);
-    order= Grps(:,2);
-else
-    MAXiter = 1000; % Maximum iteration for KMeans Algorithm
-    REPlic = 10; % Replication for KMeans Algorithm
-    [order,colors] = kmeans(C,L,'start','sample','maxiter',MAXiter,'replicates',REPlic,'EmptyAction','singleton');
-end
+L=16;%number of 'colors'
+
+MAXiter = 1000; % Maximum iteration for KMeans Algorithm
+REPlic = 10; % Replication for KMeans Algorithm
+[order,colors] = litekmeans(C',L);
 [ordsort,popo]=sort(order);
 
+colors = colors';
 for f=1:size(layer1,1)
     chunk = (colors(order(f),:)')*dec(f,1)*(S(f,:));
     approx1(f,:,:,:)=reshape(chunk,1,size(layer1,2),size(layer1,3),size(layer1,4));

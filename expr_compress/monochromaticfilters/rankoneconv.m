@@ -1,4 +1,4 @@
-function [C, H, V, F, Xout] = rankoneconv(X, K)
+function [C, H, V, F, Xout] = rankoneconv(X, K) % XXX : name changed to temporarily fix naming problem
 %this function approximates the 4-D convolutional tensor X by k rank-1 tensors.
 %joan bruna 2013 Courant Institute
 

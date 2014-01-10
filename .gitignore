@@ -29,3 +29,4 @@ data/imagenet/train1*.mat
 data/imagenet/val1*.mat
 data/imagenet/meta.mat
 cuda/*.mat
+expr_compress/logs/*

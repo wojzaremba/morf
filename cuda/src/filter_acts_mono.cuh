@@ -471,8 +471,8 @@ __global__ void filterActsMonoEvenManyCol_YxX_color(float* images, float* filter
 
 
     if (numImgColors <= 4) {
-        dim3 blocks = dim3(DIVUP(numImages, 32 * 4), (numModules * numFilters) / (6 * 6));
-        dim3 threads(32, 6); // B_Y always 4
+        dim3 blocks = dim3(DIVUP(numImages, 32 * 4), (numModules * numFilters) / (4 * 8));
+        dim3 threads(32, 4); // B_Y always 4
         //bool checkImgBounds = numImages % (32*imgsPerThread) != 0;
         if (scaleTargets == 0) {
             targets.resize(numFilters * numModules, numImages);
@@ -481,14 +481,14 @@ __global__ void filterActsMonoEvenManyCol_YxX_color(float* images, float* filter
             assert_(targets.getNumCols() == numImages);
         }
 
-       // printf("(G_X, G_Y) = (%d, %d) \n", DIVUP(numImages, 32 * 4), (numModules * numFilters) / (6 * 6));
-        filterActsMonoEven_YxX_color < 6, 32, 4, 6, 1, 0, 0 > <<<blocks, threads>>>(images.getDevData(), filters.getDevData(), targets.getDevData(),
+       // printf("(G_X, G_Y) = (%d, %d) \n", DIVUP(numImages, 32 * 4), (numModules * numFilters) / (4 * 8));
+        filterActsMonoEven_YxX_color < 4, 32, 4, 8, 1, 0, 0 > <<<blocks, threads>>>(images.getDevData(), filters.getDevData(), targets.getDevData(),
             numImages, numFilters, numImgColors, imgSizeY, imgSizeX, filterSize, paddingStart, moduleStride, numModulesY, numModulesX, imgStride, scaleTargets, scaleOutput, conv);
     
     } else {
         int numKernelModulesX = DIVUP(numModulesX, 2); // kernelModulesX == kernelModulesY
-        dim3 blocks = dim3(DIVUP(numImages, 32 * 4), (numKernelModulesX*numKernelModulesX * numFilters) / 6);
-        dim3 threads(32, 6); // B_Y always 4
+        dim3 blocks = dim3(DIVUP(numImages, 32 * 4), (numKernelModulesX*numKernelModulesX * numFilters) / 4);
+        dim3 threads(32, 4); // B_Y always 4
         //bool checkImgBounds = numImages % (32*imgsPerThread) != 0;
         if (scaleTargets == 0) {
             targets.resize(numFilters * numModules, numImages);
@@ -496,8 +496,8 @@ __global__ void filterActsMonoEvenManyCol_YxX_color(float* images, float* filter
             assert_(targets.getNumRows() == numFilters * numModules);
             assert_(targets.getNumCols() == numImages);
         }
-        //printf("(G_X, G_Y) = (%d, %d) \n", DIVUP(numImages, 32 * 4), (numKernelModulesX*numKernelModulesX * numFilters) / 6);
-        filterActsMonoEvenManyCol_YxX_color < 6, 32, 4, 0, 0 > <<<blocks, threads>>>(images.getDevData(), filters.getDevData(), targets.getDevData(),
+        //printf("(G_X, G_Y) = (%d, %d) \n", DIVUP(numImages, 32 * 4), (numKernelModulesX*numKernelModulesX * numFilters) / 4);
+        filterActsMonoEvenManyCol_YxX_color < 4, 32, 4, 0, 0 > <<<blocks, threads>>>(images.getDevData(), filters.getDevData(), targets.getDevData(),
             numImages, numFilters, numImgColors, imgSizeY, imgSizeX, filterSize, paddingStart, moduleStride, numModulesY, numModulesX, numKernelModulesX, imgStride, scaleTargets, scaleOutput, conv);
     
     }            
