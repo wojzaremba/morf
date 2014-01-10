@@ -2,8 +2,9 @@
 % XXX : Functions to inspect content of this map of maps. 
 % XXX : remove unnessesary funcs from Cmono.cu
 
-%clear all
-% load_imagenet_model();
+clear all
+init('/Volumes/denton/Documents/morf/');
+load_imagenet_model();
 S = Scheduler(struct('acceptance', 0.99));
 
 S.Add(MonochromaticInput(struct('numImgColors', {3, 4, 6}), ...
@@ -15,7 +16,7 @@ S.Add(MonochromaticInput(struct('numImgColors', {3, 4, 6}), ...
                                 'scale', {0, 0, 0}, ...
                                 'checkImgBounds', {0, 0, 0})));
 S.Run();
-S.log.Printf();
+S.Printf();
 
 
 

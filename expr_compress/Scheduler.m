@@ -19,6 +19,13 @@ classdef Scheduler < handle
             obj.approx_logs{end + 1} = ApproxLog(approx.name);
         end
         
+        function Printf(obj)
+           for i = 1:length(obj.approx_logs)
+               fprintf('Printing approx_log for %s\n', obj.approxs{i}.name);
+               obj.approx_logs{i}.Printf(); 
+           end
+        end
+        
         function Run(obj)
             for i = 1 : length(obj.approxs)
                 approx = obj.approxs{i};
@@ -26,19 +33,28 @@ classdef Scheduler < handle
                 fprintf('Executing approx : %s\n', approx.name);
                 approx.ResetApproxVarsIter();                
                 success = true;
+                % Iterate over approximation parameters
                 while (success)
                     [success, approx_vars] = approx.GetApproxVars(); % struct('numImgColors', 4])
                     Wapprox = [];  
                     
                     approx.ResetCudaVarsIter(); 
                     success2 = true;
+                    % Iterate over cuda variables
                     while(success2)
                         [success2, cuda_vars] = approx.GetCudaVars(approx_vars);
                         if (log.IsProcessed(approx_vars, cuda_vars))
                             continue;
                         end 
-                        % We haven't computed approximation yet, so we do
-                        % it here.
+                        
+                        % Skip if not a valid combination of approximation
+                        % and cuda variables
+                        if (~approx.VerifyCombination(approx_vars, cuda_vars))
+                            continue;
+                        end
+                        
+                        % If we haven't computed the approximation yet, do
+                        % it here
                         if (isempty(Wapprox))
                             [Wapprox, approx_ret] = approx.Approx(approx_vars);
                             test_error = obj.TestApprox(Wapprox);
@@ -49,8 +65,15 @@ classdef Scheduler < handle
                         if (test_error > obj.acceptance)                            
                             continue;
                         end
-                        obj.Compile(approx.name, approx_ret, cuda_vars);                        
-                        cuda_results = approx.RunCuda(); % Ideally unified
+                        % Compile, filling in template variables with
+                        % cuda_vars
+                        obj.Compile(approx.name, approx_ret, cuda_vars);
+                        
+                        % Run the cuda code
+                        cuda_results = approx.RunCuda(); % XXX : Ideally unified
+                        
+                        % Log the results specific to these approx_vars and
+                        % cuda_vars
                         log.AddCudaResults(approx_vars, cuda_vars, cuda_results);
                     end                    
                 end
@@ -59,9 +82,10 @@ classdef Scheduler < handle
         
         % func_name is a a string, args and cuda_vars are structs
         function Compile(obj, func_name, args, cuda_vars)
+            global root_path;
             % replace #mock with, func_name 
-            fid_read = fopen('cuda/src/Capprox_template_.cu', 'r');
-            fid_write = fopen('cuda/src/Capprox_.cu', 'wt');
+            fid_read = fopen(strcat(root_path, 'cuda/src/Capprox_template_.cu'), 'r');
+            fid_write = fopen(strcat(root_path, 'cuda/src/Capprox_.cu'), 'wt');
             line = fgets(fid_read);
             while ischar(line)
                 line = strrep(line, '#mock' , func_name); 
@@ -94,9 +118,9 @@ classdef Scheduler < handle
             fclose(fid_read);
             fclose(fid_write);
             % compile
-            cd('cuda');
+            cd(strcat(root_path, 'cuda'));
             status = system('make mexapprox');
-            cd('..');
+            cd(root_path);
             
             if status
                 fprintf('Error compiling with target mexapprox\n');

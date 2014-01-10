@@ -27,6 +27,7 @@ classdef Approximation < handle
             else
                success = 0;
                params = [];
+               obj.iter_approx_vars = 1;
             end
             obj.iter_cuda_vars = 1;
         end
