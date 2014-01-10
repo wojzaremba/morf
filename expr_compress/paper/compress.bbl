@@ -1,0 +1,41 @@
+\begin{thebibliography}{5}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Denil et~al.(2013)Denil, Shakibi, Dinh, Ranzato, and
+  de~Freitas]{denil2013predicting}
+Denil, Misha, Shakibi, Babak, Dinh, Laurent, Ranzato, Marc'Aurelio, and
+  de~Freitas, Nando.
+\newblock Predicting parameters in deep learning.
+\newblock \emph{arXiv preprint arXiv:1306.0543}, 2013.
+
+\bibitem[Le et~al.(2010)Le, Ngiam, Chen, Chia, Koh, and
+  Ng]{LeNgiChenChiaKohNg10}
+Le, Q.~V., Ngiam, J., Chen, Z., Chia, D., Koh, P.~W., and Ng, A.~Y.
+\newblock Tiled convolutional neural networks.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2010.
+
+\bibitem[Le et~al.(2011)Le, Ranzato, Monga, Devin, Chen, Corrado, Dean, and
+  Ng]{le2011building}
+Le, Quoc~V, Ranzato, Marc'Aurelio, Monga, Rajat, Devin, Matthieu, Chen, Kai,
+  Corrado, Greg~S, Dean, Jeff, and Ng, Andrew~Y.
+\newblock Building high-level features using large scale unsupervised learning.
+\newblock \emph{arXiv preprint arXiv:1112.6209}, 2011.
+
+\bibitem[Lowe(1999)]{lowe1999object}
+Lowe, David~G.
+\newblock Object recognition from local scale-invariant features.
+\newblock In \emph{Computer vision, 1999. The proceedings of the seventh IEEE
+  international conference on}, volume~2, pp.\  1150--1157. Ieee, 1999.
+
+\bibitem[Zeiler et~al.(2011)Zeiler, Taylor, and Fergus]{zeiler2011adaptive}
+Zeiler, Matthew~D, Taylor, Graham~W, and Fergus, Rob.
+\newblock Adaptive deconvolutional networks for mid and high level feature
+  learning.
+\newblock In \emph{Computer Vision (ICCV), 2011 IEEE International Conference
+  on}, pp.\  2018--2025. IEEE, 2011.
+
+\end{thebibliography}

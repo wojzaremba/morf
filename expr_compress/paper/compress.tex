@@ -55,12 +55,12 @@
 
 \section{Introduction}
 
-Training large neural networks takes weeks, or even months. This can hinder 
+Training large neural networks (NN) takes weeks, or even months. This can hinder 
 research, and there have been extensive effort devoted to speed up training procedure.
 However, resource-wise from perspective of companies executing neural networks on internet-scale
 data (e.g. annotating images), this is not the main cost. Major cost is in the
 final stage, where network is evaluated on the target data, which is present in quantities of billions.
-We focus here on speeding up evaluation of \emph{trained} neural network, which directly
+We focus here on speeding up evaluation of \emph{trained} NN, which directly
 maps to the cost of executing NN on internet-scale data. Our techniques speed up execution by 
 factor of $2-4$ while keeping prediction accuracy within $1\%$ from the original model. 
 
@@ -69,20 +69,22 @@ factor of $2-4$ while keeping prediction accuracy within $1\%$ from the original
 
 
 We focus in this work on convolutional neural networks used for computer vision tasks. Most of
-computation time during evaluation is spend on convolutional layers ($90\% - 95\%$, while it takes only
-small fraction of time ($5\%-10\%$) to evaluate rest of layers (pooling, local contrast normalization,
-fully connected). It is worth to note, that most of learnable parameters are kept in fully connected layers ($90\% - 95\%$)
-, and convolutional layers store very small fraction of parameters ($5\% - 10\%$).
+computation time during evaluation is spend on convolutional layers i.e. $\sim90\% - 95\%$, while it takes only
+the small fraction of time $\sim 5\%-10\%$ to evaluate rest of layers (pooling, local contrast normalization,
+fully connected). It is worth to note, that most of learnable parameters are kept in fully connected layers $\sim 90\% - 95\%$
+, and convolutional layers constitutes of very small fraction of parameters $\sim 5\% - 10\%$.
 
 
-We achieve evaluation speed up by constructing approximations to the convolutional kernels. Convolutional kernel
-is a $4$-dimensional tensor, with two spacial dimensions which are convolutional. It turns out, that kernel of trained
-network has a lot of redundancies in parameters, which we exploit to speed up forward pass.
+We achieve forward pass speed up by constructing approximations to the convolutional layer kernel. Convolutional kernel
+is a $4$-dimensional tensor, with two spacial dimensions, and two feature maps-to-feature maps dimensions. Kernel of trained
+network has a lot of redundancies in parameters, which we exploit to speed up forward pass, while mildly training off
+prediction accuracy (approximated kernels give prediction within $\sim 1\%$ of the original prediction).
 
 
 \section{Related Work}
 
-Marc'Aurelio on weight redundancy.
+
+Denil et. al \cite{denil2013predicting} noticed that 
 
 Classical optimizations for convolutions. 
 
@@ -94,7 +96,7 @@ recognition.
 Understanding of ConvNets. 
 
 
-\section{Tensor Low Rank Approximation (Joan writing, Wojciech Interfaces)}
+\section{Tensor Low Rank Approximation}
 
 This section describes a low-rank approximation of a generic 
 convolutional layer. 
@@ -103,10 +105,11 @@ Let $W$ be a $4$-dimensional tensor of dimensions $(C,X,Y,F)$,
 and let $I(c,x,y)$ denote an input signal, 
 where $c=1\dots C$ and $(x,y) \in \{1,\dots,N\}\times \{1,\dots,M\}$.
 A generic convolutional layer is defined as
-\begin{equation}
+\begin{align*}
 \label{convlayereq}
-I \ast W (f,x,y) = \sum_{c=1}^C \sum_{x'=-X/2}^{X/2} \sum_{y'=-Y/2}^{Y/2} I(c,x-x',y-y') W(c,x',y',f)~.
-\end{equation}
+&I \ast W (f,x,y) = \\
+&\sum_{c=1}^C \sum_{x'=-X/2}^{X/2} \sum_{y'=-Y/2}^{Y/2} I(c,x-x',y-y') W(c,x',y',f)
+\end{align*}
 
 \subsection{Linear Compression of Convolutional Filter bank}
 
@@ -310,6 +313,10 @@ Low-rank to avoid over-fitting.
 
 
 \section{Discussion}
+
+\nocite{*}
+\bibliography{bibliography}
+\bibliographystyle{icml2014}
 
 
 \end{document}

@@ -1,48 +1,46 @@
 This is BibTeX, Version 0.99d (TeX Live 2013/MacPorts 2013_5)
 Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: compress.aux
-I found no \citation commands---while reading file compress.aux
-I found no \bibdata command---while reading file compress.aux
-I found no \bibstyle command---while reading file compress.aux
-You've used 0 entries,
-            0 wiz_defined-function locations,
-            83 strings with 490 characters,
-and the built_in function-call counts, 0 in all, are:
-= -- 0
-> -- 0
-< -- 0
-+ -- 0
-- -- 0
-* -- 0
-:= -- 0
-add.period$ -- 0
-call.type$ -- 0
-change.case$ -- 0
-chr.to.int$ -- 0
-cite$ -- 0
-duplicate$ -- 0
-empty$ -- 0
-format.name$ -- 0
-if$ -- 0
-int.to.chr$ -- 0
-int.to.str$ -- 0
-missing$ -- 0
-newline$ -- 0
-num.names$ -- 0
-pop$ -- 0
-preamble$ -- 0
-purify$ -- 0
+The style file: icml2014.bst
+Database file #1: bibliography.bib
+You've used 5 entries,
+            2773 wiz_defined-function locations,
+            622 strings with 5890 characters,
+and the built_in function-call counts, 3046 in all, are:
+= -- 261
+> -- 220
+< -- 4
++ -- 74
+- -- 69
+* -- 247
+:= -- 462
+add.period$ -- 17
+call.type$ -- 5
+change.case$ -- 38
+chr.to.int$ -- 5
+cite$ -- 10
+duplicate$ -- 133
+empty$ -- 217
+format.name$ -- 74
+if$ -- 645
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 5
+newline$ -- 33
+num.names$ -- 20
+pop$ -- 86
+preamble$ -- 1
+purify$ -- 33
 quote$ -- 0
-skip$ -- 0
+skip$ -- 113
 stack$ -- 0
-substring$ -- 0
-swap$ -- 0
-text.length$ -- 0
+substring$ -- 90
+swap$ -- 31
+text.length$ -- 3
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 0
+type$ -- 55
 warning$ -- 0
-while$ -- 0
+while$ -- 21
 width$ -- 0
-write$ -- 0
-(There were 3 error messages)
+write$ -- 72
