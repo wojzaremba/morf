@@ -1,0 +1,2 @@
+classdef MockApprox < Approxmation
+end
