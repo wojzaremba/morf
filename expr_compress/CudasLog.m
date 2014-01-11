@@ -21,11 +21,17 @@ classdef CudasLog < handle
             obj.cuda_results(cuda_str) = cuda_results;
         end
         
+        function ret = IsProcessed(obj, cuda_vars)
+            % Are cuda_vars in map?
+            cuda_str = struct2str(cuda_vars);
+            ret = obj.cuda_results.isKey(cuda_str);
+        end
+        
         function Printf(obj)
             key_set = keys(obj.cuda_results);
             for i = 1 : length(key_set)
                 key = key_set{i};
-                fprintf('\t%s ', key);
+                fprintf('\tCuda vars: %s \n', key);
                 cuda_result = obj.cuda_results(key);
                 fprintf('\t\tcuda_eq = %d\n\t\tcuda_test_error = %f\n\t\tcuda_speedup = %f \n', cuda_result.cuda_eq, cuda_result.cuda_test_error, cuda_result.cuda_speedup);
             end

@@ -42,8 +42,6 @@ classdef MonochromaticInput < Approximation
             ret.perm = perm;
             ret.Wmono = Wmono;
             ret.Wapprox = Wapprox;
-            ret.cuda_template = obj.CudaTemplate();
-            ret.cuda_true = obj.CudaTrue();
         end
         
         function ret = RunCuda(obj, args)
@@ -95,14 +93,14 @@ classdef MonochromaticInput < Approximation
             C_(CleanGPU);
 
             %copy to GPU for mono conv
-            Capprox_(CopyToGPU, gids.Wmono,  Wmono);
-            Capprox_(CopyToGPU, gids.Xmono,  Xmono);
-            Capprox_(CopyToGPU, gids.out_mono,  out_mono_);
-            Capprox_(CopyToGPU, gids.perm,  perm);
+            Capprox_gen(CopyToGPU, gids.Wmono,  Wmono);
+            Capprox_gen(CopyToGPU, gids.Xmono,  Xmono);
+            Capprox_gen(CopyToGPU, gids.out_mono,  out_mono_);
+            Capprox_gen(CopyToGPU, gids.perm,  perm);
 
-            Capprox_(monochromatic_input, gids.Xmono, gids.Wmono, gids.out_mono, size(Xmono, 2), size(Xmono, 4), size(Wmono, 2), stride, padding, gids.perm);
-            out_mono = reshape(Capprox_(CopyFromGPU, gids.out_mono), size(out_mono_));
-            Capprox_(CleanGPU);
+            Capprox_gen(monochromatic_input, gids.Xmono, gids.Wmono, gids.out_mono, size(Xmono, 2), size(Xmono, 4), size(Wmono, 2), stride, padding, gids.perm);
+            out_mono = reshape(Capprox_gen(CopyFromGPU, gids.out_mono), size(out_mono_));
+            Capprox_gen(CleanGPU);
 
             % are results equal?
             eq = sum(sum(sum(sum(out_mono ~= out))));
@@ -141,20 +139,20 @@ classdef MonochromaticInput < Approximation
             C_(CleanGPU);
 
             % copy to GPU for mono conv
-            Capprox_(CopyToGPU, gids.Xmono,  Xmono);
-            Capprox_(CopyToGPU, gids.Wmono,  Wmono);
-            Capprox_(CopyToGPU, gids.out_mono,  out_mono_);
-            Capprox_(CopyToGPU, gids.perm,  perm);
+            Capprox_gen(CopyToGPU, gids.Xmono,  Xmono);
+            Capprox_gen(CopyToGPU, gids.Wmono,  Wmono);
+            Capprox_gen(CopyToGPU, gids.out_mono,  out_mono_);
+            Capprox_gen(CopyToGPU, gids.perm,  perm);
 
             lapse2 = [];
             for t=1:num_runs
-                Capprox_(StartTimer);
-                Capprox_(monochromatic_input, gids.Xmono, gids.Wmono, gids.out_mono, size(Xmono, 2), size(Xmono, 4), size(Wmono, 2), stride, padding, gids.perm);
-                lapse = Capprox_(StopTimer); 
-                out_mono = reshape(Capprox_(CopyFromGPU, gids.out_mono), size(out_));
+                Capprox_gen(StartTimer);
+                Capprox_gen(monochromatic_input, gids.Xmono, gids.Wmono, gids.out_mono, size(Xmono, 2), size(Xmono, 4), size(Wmono, 2), stride, padding, gids.perm);
+                lapse = Capprox_gen(StopTimer); 
+                out_mono = reshape(Capprox_gen(CopyFromGPU, gids.out_mono), size(out_));
                 lapse2 = [lapse2, lapse];
             end
-            Capprox_(CleanGPU);
+            Capprox_gen(CleanGPU);
 
             speedup = lapse1 ./ lapse2;
             ret.cuda_speedup = speedup;     

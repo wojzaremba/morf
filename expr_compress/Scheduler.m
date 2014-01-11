@@ -32,31 +32,30 @@ classdef Scheduler < handle
                 log = obj.approx_logs{i};
                 fprintf('Executing approx : %s\n', approx.name);
                 approx.ResetApproxVarsIter();                
-                success = true;
+
                 % Iterate over approximation parameters
+                [success, approx_vars] = approx.GetApproxVars(); % struct('numImgColors', 4])
                 while (success)
-                    [success, approx_vars] = approx.GetApproxVars(); % struct('numImgColors', 4])
                     Wapprox = [];  
                     
                     approx.ResetCudaVarsIter(); 
-                    success2 = true;
                     % Iterate over cuda variables
+                    [success2, cuda_vars] = approx.GetCudaVars(approx_vars);
                     while(success2)
-                        [success2, cuda_vars] = approx.GetCudaVars(approx_vars);
                         if (log.IsProcessed(approx_vars, cuda_vars))
                             continue;
                         end 
                         
                         % Skip if not a valid combination of approximation
                         % and cuda variables
-                        if (~approx.VerifyCombination(approx_vars, cuda_vars))
-                            continue;
-                        end
+%                         if (~approx.VerifyCombination(approx_vars, cuda_vars))
+%                             continue;
+%                         end
                         
                         % If we haven't computed the approximation yet, do
                         % it here
                         if (isempty(Wapprox))
-                            [Wapprox, approx_ret] = approx.Approx(approx_vars);
+                            [Wapprox, approx_ret] = approx.ApproxGeneric(approx_vars);
                             test_error = obj.TestApprox(Wapprox);
                             log.SaveApproxInfo(approx_vars, struct('test_error', test_error));                
                         end
@@ -75,7 +74,10 @@ classdef Scheduler < handle
                         % Log the results specific to these approx_vars and
                         % cuda_vars
                         log.AddCudaExecutionResults(approx_vars, cuda_vars, cuda_results);
-                    end                    
+                        
+                        [success2, cuda_vars] = approx.GetCudaVars(approx_vars);
+                    end   
+                    [success, approx_vars] = approx.GetApproxVars(); % struct('numImgColors', 4])
                 end
             end
         end
@@ -114,16 +116,17 @@ classdef Scheduler < handle
                 fprintf(fid_write, line);
                 line = fgets(fid_read);
             end
+            fprintf('Compiling %s with approx_params: %s, cuda_params: %s\n', func_name, struct2str(args.approx_params), struct2str(cuda_vars));
 
             fclose(fid_read);
             fclose(fid_write);
             % compile
             cd(strcat(root_path, '/expr_compress/cuda'));
-            status = system('make mexapprox');
+            [status, cmdout] = system('make mexapprox');
             cd(root_path);
             
             if status
-                fprintf('Error compiling with target mexapprox\n');
+                fprintf('Error compiling with target mexapprox : \n%s\n', cmdout);
 %                 fid_read = fopen(args.cuda_true, 'r');
 %                 line = fgets(fid_read);
 %                 while ischar(line)

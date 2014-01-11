@@ -3,7 +3,8 @@
 % XXX : remove unnessesary funcs from Cmono.cu
 
 global root_path;
-global plan;
+global plan debug;
+debug = 0;
 clearvars -except root_path plan;
 if (exist('root_path') ~= 1 || isempty(root_path))
     init('/Volumes/denton/Documents/morf/');

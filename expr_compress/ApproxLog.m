@@ -21,8 +21,7 @@ classdef ApproxLog < handle
             end
             % approx_vars are in map, so how about cuda_vars?
             cudas_log = obj.cudas_logs(approx_str);
-            cuda_str = struct2str(cuda_vars);
-            ret = cudas_log.isKey(cuda_str);
+            ret = cudas_log.IsProcessed(cuda_vars);
         end
         
         function SaveApproxInfo(obj, approx_vars, info)
@@ -54,13 +53,14 @@ classdef ApproxLog < handle
         end
                 
         function Printf(obj)
-            fprintf('Approx vars = %s\n', obj.name);
+            fprintf('Approximation = %s\n', obj.name);
             cudas_logs = obj.cudas_logs;
             key_set = keys(cudas_logs);
             for i = 1 : length(key_set)
                 key = key_set{i};
-                fprintf('\t%s ', key);
-                cudas_logs(key).Printf();
+                fprintf('Approx vars: \t%s \n', key);
+                cudas_log = cudas_logs(key);
+                cudas_log.Printf();
             end
         end
     end

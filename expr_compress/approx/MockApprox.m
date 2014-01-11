@@ -18,12 +18,12 @@ classdef MockApprox < Approximation
             else
                 ret = false;                
             end
+            printf(2, 'Calling VerifyCombination with %s, %s, ret = %d\n', struct2str(approx_vars), struct2str(cuda_vars), ret);            
         end        
         
         function [Wapprox, ret] = Approx(obj, params)            
-            Wapprox = params.A ^ 2 * ones(5, 1);                       
-            ret.cuda_template = obj.CudaTemplate();
-            ret.cuda_true = obj.CudaTrue();            
+            Wapprox = params.A ^ 2 * ones(5, 1);
+            ret = struct();
         end
         
         function ret = RunCuda(obj, args)
