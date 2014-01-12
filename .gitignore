@@ -35,3 +35,4 @@ trained/._imagenet.mat
 trained/*imagenet*
 *_gen.*
 .smb*
+._*

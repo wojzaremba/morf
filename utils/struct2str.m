@@ -1,3 +1,4 @@
 function ret = struct2str(struc)
-    ret = strrep(evalc(['disp(struc)']), char(10), '_');
+    ret = regexprep(evalc(['disp(struc)']), '[\n]*', '__');
+    ret = regexprep(ret, '  +', ' ');
 end

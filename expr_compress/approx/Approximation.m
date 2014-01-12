@@ -5,14 +5,20 @@ classdef Approximation < handle
         iter_cuda_vars
         approx_vars
         cuda_vars        
+        suffix
     end
     
     methods
-        function obj = Approximation(approx_vars, cuda_vars)
+        function obj = Approximation(suffix, approx_vars, cuda_vars)
             obj.approx_vars = approx_vars;
             obj.cuda_vars = cuda_vars;            
             obj.iter_approx_vars = 1;
             obj.iter_cuda_vars = 1;
+            obj.suffix = suffix;
+        end
+        
+        function str = FullName(obj)
+            str = sprintf('%s%s', obj.name, obj.suffix);
         end
         
         function [Wapprox, args] = Approx(obj, params)
@@ -29,8 +35,43 @@ classdef Approximation < handle
                success = 0;
                params = [];
                printf(2, 'Out of range ApproxVars, success = %d\n', success);
-            end
-            
+            end            
+        end
+        
+        function test_error = RunOrigConv(obj, Wapprox)
+            global plan
+            plan.layer{2}.cpu.vars.W = Wapprox;
+            plan.input.step = 1;
+            plan.input.GetImage(0);
+            ForwardPass(plan.input);    
+            test_error = plan.classifier.GetScore();
+        end        
+        
+        function [test_error, time] = RunModifConv(obj, args)        
+            global plan
+            layer_orig = plan.layer{2};      
+            json_orig = layer_orig.json;
+            json = args.json;
+            json.cols = json_orig.cols;
+            json.rows = json_orig.rows;
+            json.depth = json_orig.depth;
+            json.on_gpu = 1;
+            layers = {};
+            layers = plan.layer;
+            plan.layer = {};
+            plan.layer{1} = layers{1};
+            plan.layer{2} = eval(sprintf('%s(json)', args.layer));                        
+            for i = 3 : length(layers)
+                plan.layer{i} = layers{i};
+            end            
+            plan.layer{1}.next = {plan.layer{2}};            
+            plan.layer{2}.next = {plan.layer{3}};
+            ForwardPass(plan.input);
+            test_error = plan.classifier.GetScore();            
+            time = plan.time.fp(2);
+            plan.layer = layers;
+            plan.layer{1}.next = {plan.layer{2}};            
+            plan.layer{2}.next = {plan.layer{3}};            
         end
         
         function [success, cuda_vars] = GetCudaVars(obj, approx_vars)

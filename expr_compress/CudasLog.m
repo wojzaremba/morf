@@ -33,7 +33,7 @@ classdef CudasLog < handle
                 key = key_set{i};
                 fprintf('\tCuda vars: %s \n', key);
                 cuda_result = obj.cuda_results(key);
-                fprintf('\t\tcuda_eq = %d\n\t\tcuda_test_error = %f\n\t\tcuda_speedup = %f \n', cuda_result.cuda_eq, cuda_result.cuda_test_error, cuda_result.cuda_speedup);
+                fprintf('\t\ttime = %d\n', cuda_result.time);
             end
         end
         

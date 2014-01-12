@@ -4,8 +4,8 @@ classdef MockApprox < Approximation
     end
     
     methods
-        function obj = MockApprox(approx_vars, cuda_vars)
-            obj@Approximation(approx_vars, cuda_vars);
+        function obj = MockApprox(suffix, approx_vars, cuda_vars)
+            obj@Approximation(suffix, approx_vars, cuda_vars);
             obj.name = 'mock_approx';
             obj.nr_execution = 0;
         end
@@ -21,15 +21,12 @@ classdef MockApprox < Approximation
             printf(2, 'Calling VerifyCombination with %s, %s, ret = %d\n', struct2str(approx_vars), struct2str(cuda_vars), ret);            
         end        
         
-        function [Wapprox, ret] = Approx(obj, params)            
-            Wapprox = params.A ^ 2 * ones(5, 1);
-            ret = struct();
-        end
-        
-        function ret = RunCuda(obj, args)
-            ret.cuda_eq = 1;
-            ret.cuda_test_error = 0;
-            ret.cuda_speedup = 2;     
-        end
+        function [Wapprox, ret] = Approx(obj, params)   
+            global plan
+            Wapprox = 2 * plan.layer{2}.cpu.vars.W;
+            ret = struct();            
+            ret.layer = 'MockFC';
+            ret.json = struct();
+        end        
     end
 end

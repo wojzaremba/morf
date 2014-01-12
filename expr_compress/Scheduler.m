@@ -4,6 +4,7 @@ classdef Scheduler < handle
         approx_logs
         acceptance
         path
+        no_compilation
     end    
     
     methods
@@ -12,19 +13,30 @@ classdef Scheduler < handle
             obj.approx_logs = {};
             obj.acceptance = opt.acceptance;
             obj.acceptance = 21; % XXX (it should be relative).
+            obj.no_compilation = Val(opt, 'no_compilation', 0);
         end
         
         function Add(obj, approx)
             obj.approxs{end + 1} = approx;
-            obj.approx_logs{end + 1} = ApproxLog(approx.name);
+            obj.approx_logs{end + 1} = ApproxLog(approx.FullName(), ...
+                struct('acceptance', obj.acceptance, 'no_compilation', obj.no_compilation));
         end
         
         function Printf(obj)
            for i = 1:length(obj.approx_logs)
-               fprintf('Printing approx_log for %s\n', obj.approxs{i}.name);
+               printf(0, 'Printing approx_log for %s\n', obj.approxs{i}.name);
                obj.approx_logs{i}.Printf(); 
            end
         end
+
+        function VerifyCompiled(obj)
+           for i = 1:length(obj.approx_logs)
+               printf(2, 'VerifyCompiled approx_log for %s\n', obj.approxs{i}.name);
+               obj.approx_logs{i}.VerifyCompiled(); 
+           end
+        end        
+        
+        
         
         function Run(obj)
             for i = 1 : length(obj.approxs)
@@ -43,20 +55,15 @@ classdef Scheduler < handle
                     [success2, cuda_vars] = approx.GetCudaVars(approx_vars);
                     while(success2)
                         if (log.IsProcessed(approx_vars, cuda_vars))
+                            [success2, cuda_vars] = approx.GetCudaVars(approx_vars);
                             continue;
                         end 
-                        
-                        % Skip if not a valid combination of approximation
-                        % and cuda variables
-%                         if (~approx.VerifyCombination(approx_vars, cuda_vars))
-%                             continue;
-%                         end
                         
                         % If we haven't computed the approximation yet, do
                         % it here
                         if (isempty(Wapprox))
                             [Wapprox, approx_ret] = approx.ApproxGeneric(approx_vars);
-                            test_error = obj.TestApprox(Wapprox);
+                            test_error = approx.RunOrigConv(Wapprox);
                             log.SaveApproxInfo(approx_vars, struct('test_error', test_error));                
                         end
                         test_error = log.GetApproxInfo(approx_vars).test_error;
@@ -69,8 +76,10 @@ classdef Scheduler < handle
                         obj.Compile(approx.name, approx_ret, cuda_vars);
                         
                         % Run the cuda code
-                        cuda_results = approx.RunCuda(approx_ret); % XXX : Ideally unified
-                        
+                        printf(2, 'Running modified conv with approx_params = %s, cuda_params = %s\n', struct2str(approx_vars), struct2str(cuda_vars));
+                        [test_error_cuda, time] = approx.RunModifConv(approx_ret);
+                        assert(test_error_cuda == test_error);
+                        cuda_results = struct('time', time);
                         % Log the results specific to these approx_vars and
                         % cuda_vars
                         log.AddCudaExecutionResults(approx_vars, cuda_vars, cuda_results);
@@ -84,6 +93,10 @@ classdef Scheduler < handle
         
         % func_name is a a string, args and cuda_vars are structs
         function Compile(obj, func_name, args, cuda_vars)
+            if (obj.no_compilation)
+                printf(0, 'We are not compiling anything !!!');
+                return;
+            end
             global root_path;
             % replace #mock with, func_name 
             fid_read = fopen(strcat(root_path, 'expr_compress/cuda/src/Capprox_template.cu'), 'r');
@@ -137,13 +150,5 @@ classdef Scheduler < handle
                 assert(0);
             end
         end
-        
-        function test_error = TestApprox(obj, Wapprox)
-            test_error = 0;
-            % XXX
-        end
-        
-        
-        
     end    
 end    

@@ -1,9 +1,9 @@
 
-clear all;
+%clear all;
 
+clearvars -except root_path plan;
 addpath(genpath('.'))
 load('imagenet_weights.mat');
-
 
 %simple re-parametrization of first layer with monochromatic filters
 
@@ -33,8 +33,8 @@ codeC=order;
 C=colors;
 S=reshape(S,size(layer1,1),size(layer1,3),size(layer1,4));
 
-collage_imnet(layer1);
-collage_imnet(approx1);
+% collage_imnet(layer1);
+% collage_imnet(approx1);
 
 
 save('layer1color.mat','codeC','C','S');

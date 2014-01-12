@@ -274,8 +274,8 @@ classdef Layer < handle
             if (includeDer)
                 plan.stats.total_learnable_vars = plan.stats.total_learnable_vars + prod(dims);
                 plan.stats.total_vars = plan.stats.total_vars + 2 * prod(dims);
-                eval(sprintf('obj.cpu.accum.%s = zeros(size(obj.cpu.vars.%s));', name, name)); 
-                eval(sprintf('obj.cpu.dvars.%s = zeros(size(obj.cpu.vars.%s));', name, name)); 
+                eval(sprintf('obj.cpu.accum.%s = zeros(dims);', name, name)); 
+                eval(sprintf('obj.cpu.dvars.%s = zeros(dims);', name, name)); 
             end            
         end
         

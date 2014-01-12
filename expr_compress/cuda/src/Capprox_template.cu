@@ -1,6 +1,5 @@
 #include "mex.h"
 #include "#mock_gen.cuh"
-#include "common_conv.cuh"
 
 const int fsize = 26;
 static void (*func[fsize]) (int, mxArray **, int, const mxArray **) = 

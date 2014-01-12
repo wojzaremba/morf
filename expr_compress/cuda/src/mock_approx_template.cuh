@@ -3,6 +3,7 @@
 #include <vector>
 #include "mex.h"
 
+#include "common_conv.cuh"
 #include "nvmatrix.cuh"
 #include "nvmatrix_kernels.cuh"
 #include "nvmatrix_operators.cuh"
