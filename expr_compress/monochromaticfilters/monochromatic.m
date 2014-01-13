@@ -1,44 +1,54 @@
 
-%clear all;
+clear all;
 
 clearvars -except root_path plan;
 addpath(genpath('.'))
 load('imagenet_weights.mat');
 
 %simple re-parametrization of first layer with monochromatic filters
-
-for f=1:size(layer1,1)
-    [u,s,v]=svd(squeeze(layer1(f,:,:)),0);
+W = layer1;
+for f=1:size(W,1)
+    [u,s,v]=svd(squeeze(W(f,:,:)),0);
     C(f,:)=u(:,1);
     S(f,:)=v(:,1);
     dec(f,:)=diag(s);
     chunk = u(:,1)*s(1,1)*v(:,1)';
-    approx0(f,:,:,:)=reshape(chunk,1,size(layer1,2),size(layer1,3),size(layer1,4));
+    approx0(f,:,:,:)=reshape(chunk,1,size(W,2),size(W,3),size(W,4));
 end
 
-L=16;%number of 'colors'
+L=4;%number of 'colors'
 
 MAXiter = 1000; % Maximum iteration for KMeans Algorithm
 REPlic = 10; % Replication for KMeans Algorithm
-[order,colors] = litekmeans(C',L);
-[ordsort,popo]=sort(order);
+[assignment,colors] = litekmeans(C',L);
+[ordsort,perm]=sort(assignment);
 
 colors = colors';
-for f=1:size(layer1,1)
-    chunk = (colors(order(f),:)')*dec(f,1)*(S(f,:));
-    approx1(f,:,:,:)=reshape(chunk,1,size(layer1,2),size(layer1,3),size(layer1,4));
+Wapprox = zeros(size(W));
+for f=1:size(W,1)
+    chunk = (colors(assignment(f),:)')*dec(f,1)*(S(f,:));
+    Wapprox(f,:,:,:)=reshape(chunk,1,size(W,2),size(W,3),size(W,4));
 end
 
-codeC=order;
-C=colors;
-S=reshape(S,size(layer1,1),size(layer1,3),size(layer1,4));
 
-% collage_imnet(layer1);
-% collage_imnet(approx1);
+Wmono = reshape(bsxfun(@times, S, dec(:, 1)),size(W,1),size(W,3),size(W,4));
+%Wmono = Wmono(perm, :, :);
+collage_imnet(W); 
+collage_imnet(Wapprox);
+                       
+Wconstruct = zeros(96, 11, 11, 3);
+for i = 1 : size(W, 1)
+    for c = 1 : 3
+        Wconstruct(i, :, :, c) =  Wmono(i, :, :) * colors(assignment(i), c);
+    end
+end
+
+Wapprox = permute(Wapprox, [1, 3, 4, 2]);
+
+ norm(squeeze(Wmono(1, :, :)) * colors(assignment(1), 1) + ...
+  squeeze(Wmono(1, :, :)) * colors(assignment(1), 2) + ...
+  squeeze(Wmono(1, :, :)) * colors(assignment(1), 3) - ...
+(squeeze(Wapprox(1, :, :, 1)) + squeeze(Wapprox(1, :, :, 2)) + squeeze(Wapprox(1, :, :, 3))));
 
 
-save('layer1color.mat','codeC','C','S');
-
-
-
-
+collage_imnet(permute(Wconstruct, [1, 4, 2, 3]));

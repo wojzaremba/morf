@@ -45,33 +45,45 @@ classdef Approximation < handle
             plan.input.GetImage(0);
             ForwardPass(plan.input);    
             test_error = plan.classifier.GetScore();
-        end        
+        end                      
         
         function [test_error, time] = RunModifConv(obj, args)        
             global plan
-            layer_orig = plan.layer{2};      
+            layer_orig = plan.layer{args.layer_nr};
             json_orig = layer_orig.json;
-            json = args.json;
-            json.cols = json_orig.cols;
-            json.rows = json_orig.rows;
-            json.depth = json_orig.depth;
+            json = catstruct(args.json, json_orig);
             json.on_gpu = 1;
             layers = {};
             layers = plan.layer;
             plan.layer = {};
-            plan.layer{1} = layers{1};
-            plan.layer{2} = eval(sprintf('%s(json)', args.layer));                        
-            for i = 3 : length(layers)
-                plan.layer{i} = layers{i};
+            json.type = args.layer;
+            for i = 1 : length(layers)
+                if (i ~= args.layer_nr)
+                    plan.layer{i} = layers{i};
+                else
+                    plan.layer{args.layer_nr} = eval(sprintf('%s(json)', args.layer));                                            
+                end
             end            
-            plan.layer{1}.next = {plan.layer{2}};            
-            plan.layer{2}.next = {plan.layer{3}};
-            ForwardPass(plan.input);
+            plan.layer{args.layer_nr - 1}.next = {plan.layer{args.layer_nr}};            
+            plan.layer{args.layer_nr}.next = {plan.layer{args.layer_nr + 1}};
+            obj.SetLayerVars(args);            
+            ForwardPassApprox(plan.input);
             test_error = plan.classifier.GetScore();            
             time = plan.time.fp(2);
             plan.layer = layers;
-            plan.layer{1}.next = {plan.layer{2}};            
-            plan.layer{2}.next = {plan.layer{3}};            
+            plan.layer{args.layer_nr - 1}.next = {plan.layer{args.layer_nr}};            
+            plan.layer{args.layer_nr}.next = {plan.layer{args.layer_nr + 1}};
+        end
+        
+        function SetLayerVars(obj, args)
+            global plan
+            layer_vars = args.vars;
+            fields = fieldnames(layer_vars);
+            for f = 1: length(fields)
+                field = fields{f};
+                W = getfield(layer_vars, field);
+                plan.layer{args.layer_nr}.Upload(field, W);
+            end            
         end
         
         function [success, cuda_vars] = GetCudaVars(obj, approx_vars)

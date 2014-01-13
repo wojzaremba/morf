@@ -1,22 +1,18 @@
-clc;
-global root_path debug plan executed_conv_mock
+clear all
+global root_path debug plan executed_mock_fc
 debug = 2;
-if (exist('root_path') ~= 1 || isempty(root_path))
-    init('/Volumes/denton/Documents/morf/');
-end
-executed_conv_mock = 0;
-jsons = {};
-jsons{1} = struct('batch_size', 3, 'rows', 2, 'cols', 3, 'depth', 4, 'type', 'TestInput');
-jsons{2} = struct('function', 'LINEAR', 'rows', 1, 'cols', 1, 'depth', 10, 'type', 'FC', 'fully_connected', true);    
-jsons{3} = struct('type', 'Softmax');
+init('/Volumes/denton/Documents/morf/');
+load_mock_model();
+executed_mock_fc = 0;
+load_mock_model();
 
-plan = Plan(jsons);    
-
-S = MockScheduler(struct('acceptance', 0.99, 'no_compilation', 1));
+randn('seed', 1)
+plan.layer{2}.cpu.vars.B = randn(size(plan.layer{2}.cpu.vars.B)) / 1000;
+S = MockScheduler(struct('acceptance', 0.8, 'orig_test_error', 190, 'no_compilation', 1));
 approx = MockApprox('_test', struct('A', {3, 4}), ...
                      struct('B', {2, 3}));                                 
 S.Add(approx);
 S.approx_logs{1}.ClearLog();
 S.Printf();
 S.Run();
-assert(executed_conv_mock == 2);
+assert(executed_mock_fc == 2);

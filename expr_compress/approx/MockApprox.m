@@ -23,10 +23,13 @@ classdef MockApprox < Approximation
         
         function [Wapprox, ret] = Approx(obj, params)   
             global plan
-            Wapprox = 2 * plan.layer{2}.cpu.vars.W;
+            Wapprox = plan.layer{2}.cpu.vars.W;                        
             ret = struct();            
             ret.layer = 'MockFC';
+            ret.layer_nr = 2;
             ret.json = struct();
+            ret.vars.Wmock = 0.0001 * plan.layer{2}.cpu.vars.W;
+            ret.vars.Bmock = plan.layer{2}.cpu.vars.B;
         end        
     end
 end

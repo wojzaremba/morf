@@ -108,8 +108,8 @@ __global__ void filterActsMonoEven_YxX_color(float* images, float* filters, floa
     const int shFilterLoadX = tidx % (B_Y * filtersPerThread);
     const int myImgIdx = blockIdx.x * B_X * imgsPerThread + threadIdx.x;
     images += myImgIdx;
-    filters += globalFilterIdx
-             + shFilterLoadY * numFilters + shFilterLoadX;
+    const int filterIdx =  (int)perm[globalFilterIdx + shFilterLoadX];
+    filters += filterIdx + shFilterLoadY * numFilters;
     if (!conv) {
         filters += moduleIdx * numColors * filterPixels * numFilters;
     }
@@ -469,6 +469,7 @@ __global__ void filterActsMonoEvenManyCol_YxX_color(float* images, float* filter
     int imgSizeX = imgPixels / imgSizeY;
     int filterModuleMult = conv ? 1 : numModules;
     assert_(numImgColors > 0 && (numImgColors <= 3 || numImgColors % 2 == 0));
+    printf("images.getNumRows() = %d, imgPixels = %d, numImgColors = %d\n", images.getNumRows(), imgPixels, numImgColors);
     assert_(numFilters % 16 == 0);
     assert_(images.getNumRows() == imgPixels * numImgColors);
     assert_(imgSizeY * imgSizeX == imgPixels);
@@ -500,8 +501,7 @@ __global__ void filterActsMonoEvenManyCol_YxX_color(float* images, float* filter
     //int colorsPerBlock = filtersPerThread * B_Y / filtersPerColor;
     //int imgsPerThread = numImages % 128 == 0 ? 4 : numImages % 64 == 0 ? 2 : 1;
     //if (filtersPerColor < 24) imgsPerThread *= 2;
-
-
+   
     if (numImgColors <= 4) {
         dim3 blocks = dim3(DIVUP(numImages, #B_X * #imgsPerThread), (numModules * numFilters) / (#B_Y * #filtersPerThread));
         dim3 threads(#B_X, #B_Y); // B_Y always 4

@@ -5,6 +5,7 @@ classdef Scheduler < handle
         acceptance
         path
         no_compilation
+        orig_test_error
     end    
     
     methods
@@ -12,7 +13,7 @@ classdef Scheduler < handle
             obj.approxs = {};
             obj.approx_logs = {};
             obj.acceptance = opt.acceptance;
-            obj.acceptance = 21; % XXX (it should be relative).
+            obj.orig_test_error = opt.orig_test_error;
             obj.no_compilation = Val(opt, 'no_compilation', 0);
         end
         
@@ -48,14 +49,16 @@ classdef Scheduler < handle
                 % Iterate over approximation parameters
                 [success, approx_vars] = approx.GetApproxVars(); % struct('numImgColors', 4])
                 while (success)
-                    Wapprox = [];  
-                    
+                    Wapprox = [];                      
                     approx.ResetCudaVarsIter(); 
                     % Iterate over cuda variables
-                    [success2, cuda_vars] = approx.GetCudaVars(approx_vars);
+                    success2 = true;
                     while(success2)
+                        [success2, cuda_vars] = approx.GetCudaVars(approx_vars);   
+                        if (~success2)
+                            break;
+                        end
                         if (log.IsProcessed(approx_vars, cuda_vars))
-                            [success2, cuda_vars] = approx.GetCudaVars(approx_vars);
                             continue;
                         end 
                         
@@ -68,7 +71,7 @@ classdef Scheduler < handle
                         end
                         test_error = log.GetApproxInfo(approx_vars).test_error;
                         
-                        if (test_error > obj.acceptance)                            
+                        if (test_error > obj.orig_test_error * (1 + obj.acceptance))
                             continue;
                         end
                         % Compile, filling in template variables with
@@ -82,9 +85,7 @@ classdef Scheduler < handle
                         cuda_results = struct('time', time);
                         % Log the results specific to these approx_vars and
                         % cuda_vars
-                        log.AddCudaExecutionResults(approx_vars, cuda_vars, cuda_results);
-                        
-                        [success2, cuda_vars] = approx.GetCudaVars(approx_vars);
+                        log.AddCudaExecutionResults(approx_vars, cuda_vars, cuda_results);                        
                     end   
                     [success, approx_vars] = approx.GetApproxVars(); % struct('numImgColors', 4])
                 end

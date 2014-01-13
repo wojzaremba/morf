@@ -24,13 +24,13 @@ stride = 4;
 padding = 0;
 K = 11;
 numFilters = 96;
-numImgColors = 16;
+numImgColors = 4;
 perm = [0, 1, 2];
 
 if compile
 % set cuda kernel vars
 filtersPerColor = numFilters / numImgColors;
-filtersPerThread = 6; % only relevant if numImgColors <= 4
+filtersPerThread = 4; % only relevant if numImgColors <= 4
 B_Y = 6;
 B_X = 32;
 colorsPerBlock = 1;%filtersPerThread * B_Y / filtersPerColor;
@@ -39,8 +39,8 @@ scale = 0;
 checkImgBounds = mod(numImages, B_X*imgsPerThread) ~= 0;
 
 % replace template variables, and compile
-fid_read = fopen(strcat(morf_path, 'cuda/src/filter_acts_mono_template.cuh'), 'r');
-fid_write = fopen(strcat(morf_path, 'cuda/src/filter_acts_mono.cuh'), 'wt');
+fid_read = fopen(strcat(morf_path, 'expr_compress/cuda/src/monochromatic_input_template.cuh'), 'r');
+fid_write = fopen(strcat(morf_path, 'expr_compress/cuda/src/monochromatic_input_gen.cuh'), 'wt');
 line = fgets(fid_read);
 while ischar(line)
     %disp(rline);
@@ -60,8 +60,8 @@ end
 fclose(fid_read);
 fclose(fid_write);
 
-cd(strcat(morf_path, 'cuda/'));
-status = system('make mexmono');
+cd(strcat(morf_path, 'expr_compress/cuda/'));
+status = system('make mexapprox');
 
 end
 
@@ -81,6 +81,10 @@ for i=1:numImgColors
    W( bpt(i)+1:bpt(i+1), :, :, i) = W_mono( bpt(i)+1:bpt(i+1), :, : );
 end
 
+perm = randperm(numFilters) - 1;
+
+W_mono = W_mono(perm+1, :, :);
+
 % copy to GPU for regular conv
 C_(CopyToGPU, gids.W,  W);
 C_(CopyToGPU, gids.X,  X);
@@ -92,17 +96,17 @@ C_(CleanGPU);
 
 
 %copy to GPU for mono conv
-Cmono_(CopyToGPU, gids.W_mono,  W_mono);
-Cmono_(CopyToGPU, gids.X_mono,  X_mono);
-Cmono_(CopyToGPU, gids.out_mono,  out_mono_);
-Cmono_(CopyToGPU, gids.perm,  perm);
+Capprox_gen(CopyToGPU, gids.W_mono,  W_mono);
+Capprox_gen(CopyToGPU, gids.X_mono,  X_mono);
+Capprox_gen(CopyToGPU, gids.out_mono,  out_mono_);
+Capprox_gen(CopyToGPU, gids.perm,  single(perm));
 
-Cmono_(ConvActMono, gids.X_mono, gids.W_mono, gids.out_mono, size(X_mono, 2), size(X_mono, 4), size(W_mono, 2), stride, padding, gids.perm);
-out_mono = reshape(Cmono_(CopyFromGPU, gids.out_mono), size(out_mono_));
-Cmono_(CleanGPU);
+Capprox_gen(approx_pointer, gids.X_mono, gids.W_mono, gids.out_mono, size(X_mono, 2), size(X_mono, 4), size(W_mono, 2), stride, padding, gids.perm);
+out_mono = reshape(Capprox_gen(CopyFromGPU, gids.out_mono), size(out_mono_));
+Capprox_gen(CleanGPU);
 
 % are results equal?
-eq = sum(sum(sum(sum(out_mono ~= out))));
+eq = sum(out_mono(:) ~= out(:));
 if eq
     fprintf('Monochromatic conv output is incorrect\n');
 end 
@@ -119,7 +123,7 @@ out_mono_ = single(zeros(numImages, 55, 55, numFilters));
 W = single(randn(numFilters, K, K, 3));
 W_mono = single(zeros(numFilters, K, K));
 
-num_runs = 100;
+num_runs = 10;
 
 % copy to GPU for regular conv
 C_(CopyToGPU, gids.X,  X);
@@ -136,20 +140,20 @@ end
 C_(CleanGPU);
 
 % copy to GPU for mono conv
-Cmono_(CopyToGPU, gids.X_mono,  X_mono);
-Cmono_(CopyToGPU, gids.W_mono,  W_mono);
-Cmono_(CopyToGPU, gids.out_mono,  out_mono_);
-Cmono_(CopyToGPU, gids.perm,  perm);
+Capprox_gen(CopyToGPU, gids.X_mono,  X_mono);
+Capprox_gen(CopyToGPU, gids.W_mono,  W_mono);
+Capprox_gen(CopyToGPU, gids.out_mono,  out_mono_);
+Capprox_gen(CopyToGPU, gids.perm,  perm);
 
 lapse2 = [];
 for t=1:num_runs
-    Cmono_(StartTimer);
-    Cmono_(ConvActMono, gids.X_mono, gids.W_mono, gids.out_mono, size(X_mono, 2), size(X_mono, 4), size(W_mono, 2), stride, padding, gids.perm);
-    lapse = Cmono_(StopTimer); 
-    out_mono = reshape(Cmono_(CopyFromGPU, gids.out_mono), size(out_));
+    Capprox_gen(StartTimer);
+    Capprox_gen(approx_pointer, gids.X_mono, gids.W_mono, gids.out_mono, size(X_mono, 2), size(X_mono, 4), size(W_mono, 2), stride, padding, gids.perm);
+    lapse = Capprox_gen(StopTimer); 
+    out_mono = reshape(Capprox_gen(CopyFromGPU, gids.out_mono), size(out_));
     lapse2 = [lapse2, lapse];
 end
-Cmono_(CleanGPU);
+Capprox_gen(CleanGPU);
 
 speedup = lapse1 ./ lapse2;
 fprintf('average speedup = %f\n', mean(speedup));

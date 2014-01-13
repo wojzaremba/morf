@@ -1,9 +1,11 @@
 classdef TestInput < Input
     properties
+        number_of_classes
     end
     methods
         function obj = TestInput(json)
             obj@Input(FillDefault(json));
+            obj.number_of_classes = Val(json, 'number_of_classes', 4);
             obj.Finalize();
         end
         
@@ -11,9 +13,9 @@ classdef TestInput < Input
             randn('seed', step);
             rand('seed', step);
             X = 1 * randn([obj.batch_size, obj.dims]);
-            Y = zeros(obj.batch_size, obj.dims(3));
+            Y = zeros(obj.batch_size, obj.number_of_classes);
             for i = 1:obj.batch_size
-                Y(i, randi(obj.dims(3))) = 1;
+                Y(i, randi(obj.number_of_classes)) = 1;
             end
             step = 1;
         end

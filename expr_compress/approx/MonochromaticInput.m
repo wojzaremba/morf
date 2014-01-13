@@ -2,6 +2,20 @@ classdef MonochromaticInput < Approximation
     properties        
     end
     
+    methods(Static)
+        function Wapprox = ReconstructW(colors, dec, S, assignment, dims)
+            % dims order : (num_filters, num_colors, X, Y)
+            Wapprox = zeros(dims);
+            for f=1 : dims(1)
+                chunk = (colors(assignment(f),:)')*dec(f,1)*(S(f,:));
+                Wapprox(f, :, :, :) = reshape(chunk, [1, dims(2), dims(3), dims(4)]);
+            end            
+            % Rearrange so dims are : (num_filters, X, Y, num_colors) which
+            % is what plan layers expects.
+            Wapprox = permute(Wapprox, [1, 3, 4, 2]);
+        end
+    end
+    
     methods
         function obj = MonochromaticInput(suffix, approx_vars, cuda_vars)
             obj@Approximation(suffix, approx_vars, cuda_vars);
@@ -24,10 +38,10 @@ classdef MonochromaticInput < Approximation
                 ret = false;
             end
             
-            % If numImgColors <= 4, need filtersPerColors to be a multiple of 
+            % If num_image_colors <= 4, need filtersPerColors to be a multiple of 
             % B_Y * filtersPerThread.
-            filtersPerColor = numFilters / approx_vars.numImgColors;
-            if (approx_vars.numImgColors <= 4) 
+            filtersPerColor = numFilters / approx_vars.num_image_colors;
+            if (approx_vars.num_image_colors <= 4) 
                 if (mod(filtersPerColor, cuda_vars.B_Y * cuda_vars.filtersPerThread) )
                     ret = false;
                 end
@@ -41,7 +55,7 @@ classdef MonochromaticInput < Approximation
                     end                    
                 end
             else
-                if (mod(filtersPerColor, B_Y)) 
+                if (mod(filtersPerColor, cuda_vars.B_Y)) 
                     ret = false;
                 end                
             end
@@ -58,146 +72,25 @@ classdef MonochromaticInput < Approximation
                 dec(f,:) = diag(s);
             end
 
-            numImgColors = params.numImgColors;
-            [assignment,colors] = litekmeans(C',numImgColors);
+            num_image_colors = params.num_image_colors;
+            [assignment,colors] = litekmeans(C',num_image_colors);
             colors = colors';
-            %[ordsort,popo]=sort(perm);
+            % Permutaiton of W, back to orig form is done inside
+            % reconstruction function.
+            Wapprox = MonochromaticInput.ReconstructW(colors, dec, S, assignment, size(W));
+            Wmono = reshape(bsxfun(@times, S, dec(:, 1)),size(W,1),size(W,3),size(W,4));
 
-            for f=1:size(W,1)
-                chunk = (C(assignment(f),:)')*dec(f,1)*(S(f,:));
-                Wapprox(f,:,:,:) = reshape(chunk,1,size(W,2),size(W,3),size(W,4));
-            end
-
-            Wapprox = permute(Wapprox, [1, 3, 4, 2]);
-            Wmono = reshape(S,size(W,1),size(W,3),size(W,4));
-
-            ret.colors =  colors;
-            [~, ret.perm] = sort(assignment);
-            ret.Wmono = Wmono(ret.perm, :, :);
+            [~, perm] = sort(assignment);
+            ret.vars.Wmono = Wmono(perm, :, :);
+            ret.vars.Cmono = colors';
+            ret.vars.Xmono = zeros(plan.input.batch_size, plan.input.dims(1), plan.input.dims(2), plan.input.dims(3));
+            ret.vars.perm = perm;
             ret.Wapprox = Wapprox;
-            ret.layer = 'ConvMono';
+            ret.layer = 'MonoConv';
+            ret.layer_nr = 2;
+            ret.json = struct('num_image_colors', num_image_colors);
         end       
-%         
-%         function [test_error, time] = RunModifConv(obj, args)
-%             global plan;
-%             X = single(plan.layer{1}.cpu.vars.out);
-%             colors = args.colors;
-%             numImages = size(X, 1);
-%             imgWidth = size(X, 2);
-%             numImgColors = size(colors, 1);
-%             
-%             % Color transoformation of input.
-%             XX = reshape(X, [numImages * imgWidth * imgWidth, 3]);
-%             res = XX * colors';
-%             Xmono = single(reshape(res, [numImages, imgWidth, imgWidth, numImgColors]));
-%             
-%             Wmono = single(args.Wmono);
-%             numFilters = size(W, 1);
-% 
-%             perm = args.perm;
-%             
-%             padding = 0;
-%             stride = 4;
-%             
-%             % Define GPU ids.
-%             gids.Xmono = 1;
-%             gids.Wmono = 2;
-%             gids.out_mono = 3;
-%             gids.perm = 4;
-% 
-%             % Copy to GPU.
-%             Capprox_gen(CopyToGPU, gids.Wmono, Wmono);
-%             Capprox_gen(CopyToGPU, gids.Xmono, Xmono);
-%             Capprox_gen(CopyToGPU, gids.out_mono, out_mono_);
-%             Capprox_gen(CopyToGPU, gids.perm, perm);
-%             
-%             ForwardPass(plan.input);
-% 
-%             Capprox_gen(approx_pointer, gids.Xmono, gids.Wmono, gids.out_mono, size(Xmono, 2), size(Xmono, 4), size(Wmono, 2), stride, padding, gids.perm);
-%             out_mono = reshape(Capprox_gen(CopyFromGPU, gids.out_mono), size(out_mono_));
-%             Capprox_gen(CleanGPU);
-%             
-%             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%             % (2) Results with Wapprox should equal result with Wmono
-%             % ----> ret.cuda_wapprox_eq
-%             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%             out_ = single(zeros(numImages, 55, 55, numFilters));
-%             out_mono_ = single(zeros(numImages, 55, 55, numFilters));
-% 
-%             % copy to GPU for regular conv
-%             C_(CopyToGPU, gids.Wapprox,  Wapprox);
-%             C_(CopyToGPU, gids.X,  X);
-%             C_(CopyToGPU, gids.out,  out_);
-% 
-%             C_(ConvAct, gids.X, gids.Wapprox, gids.out, size(X, 2), size(X, 4), size(Wapprox, 2), stride, padding);
-%             out = reshape(C_(CopyFromGPU, gids.out), size(out_));
-%             C_(CleanGPU);
-% 
-%             %copy to GPU for mono conv
-%             Capprox_gen(CopyToGPU, gids.Wmono,  Wmono);
-%             Capprox_gen(CopyToGPU, gids.Xmono,  Xmono);
-%             Capprox_gen(CopyToGPU, gids.out_mono,  out_mono_);
-%             Capprox_gen(CopyToGPU, gids.perm,  perm);
-% 
-%             Capprox_gen(approx_pointer, gids.Xmono, gids.Wmono, gids.out_mono, size(Xmono, 2), size(Xmono, 4), size(Wmono, 2), stride, padding, gids.perm);
-%             out_mono = reshape(Capprox_gen(CopyFromGPU, gids.out_mono), size(out_mono_));
-%             Capprox_gen(CleanGPU);
-% 
-%             % are results equal?
-%             neq = sum(sum(sum(sum(out_mono ~= out))));
-%             if neq
-%                 printf(0, 'Results with Wapprox ~= results with Wmono\n');
-%             end
-%             ret.cuda_wapprox_eq = neq == 0;
-%             
-%             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%             % (2) Check test errors with approximated results
-%             % ----> ret.cuda_test_error
-%             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%             ret.cuda_test_error = 0;
-% 
-%             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%             % (3) Now check the runtime of regular vs. mono version
-%             % ----> ret.cuda_speedup
-%             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%             out_ = single(zeros(numImages, 55, 55, numFilters));
-%             out_mono_ = single(zeros(numImages, 55, 55, numFilters));
-% 
-%             num_runs = 100;
-% 
-%             % copy to GPU for regular conv
-%             C_(CopyToGPU, gids.X,  X);
-%             C_(CopyToGPU, gids.W,  W);
-%             C_(CopyToGPU, gids.out,  out_);
-%             lapse1 = [];
-%             for t=1:num_runs
-%                 C_(StartTimer);
-%                 C_(ConvAct, gids.X, gids.W, gids.out, size(X, 2), size(X, 4), size(W, 2), stride, padding);
-%                 lapse = C_(StopTimer); 
-%                 out = reshape(C_(CopyFromGPU, gids.out), size(out_));
-%                 lapse1 = [lapse1, lapse];
-%             end
-%             C_(CleanGPU);
-% 
-%             % copy to GPU for mono conv
-%             Capprox_gen(CopyToGPU, gids.Xmono,  Xmono);
-%             Capprox_gen(CopyToGPU, gids.Wmono,  Wmono);
-%             Capprox_gen(CopyToGPU, gids.out_mono,  out_mono_);
-%             Capprox_gen(CopyToGPU, gids.perm,  perm);
-% 
-%             lapse2 = [];
-%             for t=1:num_runs
-%                 Capprox_gen(StartTimer);
-%                 Capprox_gen(approx_pointer, gids.Xmono, gids.Wmono, gids.out_mono, size(Xmono, 2), size(Xmono, 4), size(Wmono, 2), stride, padding, gids.perm);
-%                 lapse = Capprox_gen(StopTimer); 
-%                 out_mono = reshape(Capprox_gen(CopyFromGPU, gids.out_mono), size(out_));
-%                 lapse2 = [lapse2, lapse];
-%             end
-%             Capprox_gen(CleanGPU);
-% 
-%             speedup = lapse1 ./ lapse2;
-%             ret.cuda_speedup = speedup;     
-%         end
+
     end
     
 end

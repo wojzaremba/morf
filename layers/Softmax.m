@@ -71,6 +71,8 @@ classdef Softmax < Layer
                 top = 1;
             end
             correct = 0;
+            assert(size(plan.input.cpu.vars.Y, 1) == size(X, 1));
+            assert(size(plan.input.cpu.vars.Y, 2) == size(X, 2));
             for i = 1:plan.input.batch_size
                 [~, idx] = sort(X(i, :), 'descend');    
                 for j = 1:top

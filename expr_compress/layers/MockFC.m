@@ -9,11 +9,12 @@ classdef MockFC < Layer
         end                      
        
         function FP_(obj)
-            global executed_conv_mock
-            executed_conv_mock = executed_conv_mock + 1;
+            global executed_mock_fc
+            executed_mock_fc = executed_mock_fc + 1;
             v = obj.gpu.vars;
-            C_(Mult, v.X, v.W, v.out);
-            C_(AddVector, v.out, v.B, v.out);
+            C_(Mult, v.X, v.Wmock, v.out);
+            C_(Scale, v.out, 10000, v.out);
+            C_(AddVector, v.out, v.Bmock, v.out);
             C_(obj.Fun_, v.out, v.out);            
         end
         
@@ -26,8 +27,8 @@ classdef MockFC < Layer
         end
         
         function InitWeights(obj)
-            obj.AddParam('B', [1, prod(obj.dims)], true);
-            obj.AddParam('W', [prod(obj.prev_dim()), prod(obj.dims)], true);                        
+            obj.AddParam('Bmock', [1, prod(obj.dims)], true);
+            obj.AddParam('Wmock', [prod(obj.prev_dim()), prod(obj.dims)], true);                        
         end
     end
 end
