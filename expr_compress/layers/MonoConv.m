@@ -11,34 +11,52 @@ classdef MonoConv < LayerApprox
         end                      
        
         function FP_(obj)
-            v = obj.gpu.vars;           
-            dims = obj.dims;
-            pdims = obj.prev_dim();     
-            bs = obj.prev{1}.batch_size;
-            %Capprox_gen(Mult, v.X, v.Cmono, v.Xmono);
-            %XXX : do transformation on GPU
-            X = Capprox_gen(CopyFromGPU, v.X); % This is redundant because ForwardPass just copied it onto the GPU, and we're removing it without doing any work
-            X = reshape(X, bs*pdims(1)*pdims(2), pdims(3));
-            Capprox_gen(CopyToGPU, v.X,  single(X));
+            global plan
+            bs = plan.input.batch_size;
+            v = obj.gpu.vars;
+            pdims = obj.prev_dim();
+            Capprox_gen(Reshape, v.X, pdims(3), bs * pdims(1) * pdims(2));
             Capprox_gen(Mult, v.X, v.Cmono, v.Xmono);
-            Xmono = Capprox_gen(CopyFromGPU, v.Xmono);
-            Xmono = reshape(Xmono, bs, pdims(1), pdims(2), obj.num_image_colors);
-            Capprox_gen(CopyToGPU, v.Xmono,  single(Xmono));
-            %Capprox_gen(Reshape, v.Xmono, pdims(1)*pdims(2)*obj.num_image_colors, bs);
+            Capprox_gen(Reshape, v.Xmono, pdims(1) * pdims(2) * obj.num_image_colors, bs);
             Capprox_gen(approx_pointer, v.Xmono, v.Wmono, v.out, pdims(2), obj.num_image_colors, obj.patch(1), obj.stride(1), obj.padding(1), v.perm);
             Capprox_gen(Reshape, v.out, bs * obj.dims(1) * obj.dims(2), obj.depth());
             Capprox_gen(AddVector, v.out, v.B, v.out);
             Capprox_gen(Reshape, v.out, obj.dims(1) * obj.dims(2) * obj.depth(), bs);
-            Capprox_gen(obj.Fun_, v.out, v.out);      
-            out = Capprox_gen(CopyFromGPU, v.out);
-            out = reshape(out, [bs, dims(1), dims(2), dims(3)]);
-            perm = Capprox_gen(CopyFromGPU, v.perm);
-            out = out(:, :, :, perm);
-            Capprox_gen(CopyToGPU, v.out, single(out));
+            Capprox_gen(obj.Fun_, v.out, v.out);  
         end
         
         function FP(obj)
-            assert(0);
+            prev_dim = obj.prev_dim();
+            v = obj.cpu.vars;
+            X = v.X;  
+            bs = size(X, 1);
+            % Color transform
+            X = reshape(X, [bs * prev_dim(1) * prev_dim(2), prev_dim(3)]) * v.Cmono;
+            X = reshape(X, [bs, prev_dim(1), prev_dim(2), obj.num_image_colors]);
+            
+            
+            filters_per_color = obj.dims(3) / obj.num_image_colors;
+            for c = 1 : obj.num_image_colors
+                X_ = zeros(size(X, 1), prev_dim(1) + obj.padding(1) * 2 + obj.patch(1), prev_dim(2) + obj.padding(2) * 2 + obj.patch(1));
+                X_(:, (obj.padding(1) + 1):(end - obj.patch(1) - obj.padding(1)), (obj.padding(2) + 1):(end - obj.patch(1) - obj.padding(2))) = X(:, :, :, c);
+                stacked = zeros(size(X, 1) * prod(obj.dims(1:2)), obj.patch(1) * obj.patch(2));
+                for x = 1:obj.dims(1)
+                    for y = 1:obj.dims(2)
+                        sx = (x - 1) * obj.stride(1) + 1;
+                        ex = sx + obj.patch(1) - 1;
+                        sy = (y - 1) * obj.stride(2) + 1;
+                        ey = sy + obj.patch(2) - 1;
+                        tmp = X_(:, sx:ex, sy:ey);
+                        idx = ((y - 1) * obj.dims(1) + x - 1) * bs + 1;
+                        stacked(idx : (idx + bs - 1), :) = tmp(:, :);
+                    end
+                end
+                filt_idx = v.perm((c - 1) * filters_per_color + 1: c* filters_per_color) + 1;
+                v.out(:, :, :, filt_idx) = reshape(stacked * v.Wmono(filt_idx, :)', [bs, obj.dims(1:2), filters_per_color]);
+            end
+            v.out = bsxfun(@plus, v.out, reshape(v.B, [1, 1, 1, length(v.B)]));
+            obj.cpu.vars.forward_act = v.out;              
+            obj.cpu.vars.out = obj.F(v.out);
         end     
         
         function BP(obj)

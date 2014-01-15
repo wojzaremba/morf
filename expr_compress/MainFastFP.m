@@ -15,7 +15,6 @@ clearvars -except root_path plan;
 init();
 load_imagenet_model();
 
-
 S = Scheduler(struct('max_errors', 110, 'no_compilation', 0));
 S.Add(MonochromaticInput('', struct('num_image_colors', {4}), ...
                          struct('B_X', {32, 32}, ...

@@ -3,7 +3,7 @@
 
 const int fsize = 26;
 static void (*func[fsize]) (int, mxArray **, int, const mxArray **) = 
-	{CopyToGPU, CopyFromGPU, AddVector, Mult, 
+	{CopyToGPU, CopyFromGPU, AddVector, Scale, 
 	 ActRELU, dActRELU, ActLINEAR, dActLINEAR,
 	 NULL, Reshape, NULL, PrintShape, ActEXP,
 	 Sum, Max, EltwiseDivideByVector, Mult, NULL, CleanGPU,

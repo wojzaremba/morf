@@ -64,8 +64,8 @@ classdef Scheduler < handle
                         % it here
                         if (isempty(Wapprox))
                             [Wapprox, approx_ret] = approx.ApproxGeneric(approx_vars);
-                            test_error = approx.RunOrigConv(Wapprox);
-                            log.SaveApproxInfo(approx_vars, struct('test_error', test_error));                
+                            [test_error, orig_time] = approx.RunOrigConv(Wapprox);
+                            log.SaveApproxInfo(approx_vars, struct('test_error', test_error, 'orig_time', orig_time));                
                         end
                         test_error = log.GetApproxInfo(approx_vars).test_error;
                         
@@ -78,14 +78,14 @@ classdef Scheduler < handle
                         
                         % Run the cuda code
                         printf(2, 'Running modified conv with approx_params = %s, cuda_params = %s\n', struct2str(approx_vars), struct2str(cuda_vars));
-                        [test_error_cuda, time] = approx.RunModifConv(approx_ret);
+                        [test_error_cuda, approx_time] = approx.RunModifConv(approx_ret);
                         assert(test_error_cuda == test_error);
-                        cuda_results = struct('time', time);
+                        cuda_results = struct('approx_time', approx_time);
                         % Log the results specific to these approx_vars and
                         % cuda_vars
                         log.AddCudaExecutionResults(approx_vars, cuda_vars, cuda_results);                        
                     end   
-                    [success, approx_vars] = approx.GetApproxVars(); % struct('numImgColors', 4])
+                    [success, approx_vars] = approx.GetApproxVars();
                 end
             end
         end
@@ -139,13 +139,6 @@ classdef Scheduler < handle
             
             if status
                 fprintf('Error compiling with target mexapprox : \n%s\n', cmdout);
-%                 fid_read = fopen(args.cuda_true, 'r');
-%                 line = fgets(fid_read);
-%                 while ischar(line)
-%                     disp(line);
-%                     line = fgets(fid_read);
-%                 end
-%                 fclose(fid_read);
                 assert(0);
             end
         end

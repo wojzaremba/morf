@@ -1,6 +1,7 @@
 classdef CudasLog < handle
     properties
         test_error
+        orig_time
         cuda_results % Hashmap: maps cuda parameters to cuda results
     end
     
@@ -9,6 +10,7 @@ classdef CudasLog < handle
     methods
         function obj = CudasLog(info)            
             obj.test_error = info.test_error;        
+            obj.orig_time = info.orig_time;   
             obj.cuda_results = containers.Map('KeyType', 'char', 'ValueType', 'any');
         end
         
@@ -28,12 +30,14 @@ classdef CudasLog < handle
         end
         
         function Printf(obj)
+            fprintf('test_error = %d \n', obj.test_error);
+            fprintf('orig_time = %d \n', obj.orig_time);
             key_set = keys(obj.cuda_results);
             for i = 1 : length(key_set)
                 key = key_set{i};
                 fprintf('\tCuda vars: %s \n', key);
                 cuda_result = obj.cuda_results(key);
-                fprintf('\t\ttime = %d\n', cuda_result.time);
+                fprintf('\t\ttime = %d\n', cuda_result.approx_time);
             end
         end
         
