@@ -3,7 +3,7 @@
 clc;
 clear all;
 global root_path
-init('/Volumes/denton/Documents/morf/');
+init();
 
 %flags
 do_compile = 1;
@@ -22,7 +22,7 @@ stride = 4;
 padding = 0;
 K = 11;
 numFilters = 96;
-numImgColors = 4;
+numImgColors = 16;
 
 if do_compile
     % set cuda kernel vars
@@ -59,6 +59,7 @@ if do_compile
 
     cd(strcat(root_path, 'expr_compress/cuda/'));
     status = system('make mexapprox');
+    cd(root_path);
 
 end
     
@@ -66,7 +67,6 @@ end
 X = randn(numImages, 224, 224, 3);
 Wtmp = randn(numFilters, 3, K, K);
 [W_approx, W_mono, colors, perm]  = monochromatic_approx(Wtmp, numImgColors);
-
 out_ = single(zeros(numImages, 55, 55, numFilters));
 out_mono_ = single(zeros(numImages, 55, 55, numFilters));
 

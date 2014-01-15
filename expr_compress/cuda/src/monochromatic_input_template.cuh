@@ -344,14 +344,15 @@ __global__ void filterActsMonoEvenManyCol_YxX_color(float* images, float* filter
     
     const int myImgIdx = blockIdx.x * B_X * imgsPerThread + threadIdx.x;
     images += myImgIdx;
-    filters += globalFilterIdx
-             + (shFilterLoadX / 4);//+ shFilterLoadY * numFilters + (shFilterLoadX / 4);
+    filters += (int)perm[globalFilterIdx + (shFilterLoadX / 4)];
+    //filters += globalFilterIdx
+     //        + (shFilterLoadX / 4);//+ shFilterLoadY * numFilters + (shFilterLoadX / 4);
     if (!conv) {
         filters += moduleIdx * numColors * filterPixels * numFilters;
     }
-
+    const int targetIdx =  (int) perm[globalFilterIdx + threadIdx.y];
     targets += moduleIdx * numImages
-            + (globalFilterIdx + threadIdx.y) * numImages * numModulesY * numModulesX
+            + targetIdx * numImages * numModulesY * numModulesX
             + myImgIdx;
 
 
@@ -525,7 +526,7 @@ __global__ void filterActsMonoEvenManyCol_YxX_color(float* images, float* filter
             assert_(targets.getNumRows() == numFilters * numModules);
             assert_(targets.getNumCols() == numImages);
         }
-        //printf("(G_X, G_Y) = (%d, %d) \n", DIVUP(numImages, #B_X * #imgsPerThread), (numKernelModulesX*numKernelModulesX * numFilters) / #B_Y);
+        printf("(G_X, G_Y) = (%d, %d) \n", DIVUP(numImages, #B_X * #imgsPerThread), (numKernelModulesX*numKernelModulesX * numFilters) / #B_Y);
         filterActsMonoEvenManyCol_YxX_color < #B_Y, #B_X, #imgsPerThread, #scale, #checkImgBounds > <<<blocks, threads>>>(images.getDevData(), filters.getDevData(), targets.getDevData(), perm.getDevData(),
             numImages, numFilters, numImgColors, imgSizeY, imgSizeX, filterSize, paddingStart, moduleStride, numModulesY, numModulesX, numKernelModulesX, imgStride, scaleTargets, scaleOutput, conv);
     

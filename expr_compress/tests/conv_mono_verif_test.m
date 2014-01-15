@@ -10,13 +10,13 @@ dims = [96, 11, 11, 3];
 jsons = {};
 jsons{1} = struct('batch_size', 128, 'rows', 224, 'cols', 224, 'depth', 3, 'number_of_classes', 10, 'type', 'TestInput');
 jsons{2} = struct('local_2d_patch', struct('patch_rows', 11, 'patch_cols', 11, 'stride_rows', 4, 'stride_cols', 4), ...
-                  'on_gpu', 1, 'depth', 96, 'function', 'LINEAR', 'type', 'Conv');
+                  'on_gpu', 0, 'depth', 96, 'function', 'LINEAR', 'type', 'Conv');
 jsons{3} = struct('function', 'LINEAR', 'rows', 1, 'cols', 1, 'depth', 10, 'type', 'FC', 'fully_connected', true);      
 jsons{4} = struct('type', 'Softmax');
 plan = Plan(jsons);    
 
 
-num_image_colors = 16;
+num_image_colors = 4;
 colors = randn([num_image_colors, dims(4)]);
 dec = randn(dims(1), dims(4));
 Wmono = randn([dims(1), dims(2), dims(3)]);
@@ -26,7 +26,7 @@ W = MonochromaticInput.ReconstructW(colors, dec, S, assignment, [dims(1), dims(4
 plan.layer{2}.cpu.vars.W = W;
 
 
-S = Scheduler(struct('acceptance', 0.8, 'orig_test_error', 110, 'no_compilation', 1));
+S = Scheduler(struct('acceptance', 0.8, 'orig_test_error', 110, 'no_compilation', 0));
 approx = MonochromaticInput('_test',  struct('num_image_colors', {num_image_colors}), ...
                             struct('B_X', {32, 32}, ...
                                    'B_Y', {4, 6}, ...
