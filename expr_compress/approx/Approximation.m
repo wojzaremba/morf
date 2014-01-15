@@ -43,11 +43,10 @@ classdef Approximation < handle
             plan.layer{2}.cpu.vars.W = Wapprox;
             plan.input.step = 1;
             plan.input.GetImage(0);
-            printf(1, 'Running Forward Pass in RunOrigConv\n');
+            printf(1, 'Running Forward Pass in RunOrigConv on CPU\n');
             ForwardPass(plan.input);    
             test_error = plan.classifier.GetScore();
             time = plan.time.fp(2);
-            C_(CleanGPU);
         end                      
         
         function [test_error, time] = RunModifConv(obj, args)        

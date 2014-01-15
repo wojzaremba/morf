@@ -1,4 +1,3 @@
-% XXX : Deal with passing between C_ and Capprox_gen.
 clear all;
 clc;
 global root_path debug plan executed_mock_fc
@@ -14,7 +13,7 @@ jsons{4} = struct('type', 'Softmax');
 plan = Plan(jsons);    
 
 
-S = Scheduler(struct('acceptance', 0.8, 'orig_test_error', 110, 'no_compilation', 1));
+S = Scheduler(struct('max_errors', 110, 'no_compilation', 1));
 approx = NoApproximation('_test',  struct(), struct());                                 
 S.Add(approx);
 S.approx_logs{1}.ClearLog();

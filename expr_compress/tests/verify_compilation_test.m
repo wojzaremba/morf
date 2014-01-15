@@ -3,7 +3,7 @@ global debug
 debug = 2;
 init();
 load_mock_model();
-S = MockScheduler(struct('acceptance', 0.99, 'orig_test_error', 128));
+S = MockScheduler(struct('max_errors', 128));
 approx = MockApprox('_test', struct('A', {3, 4, 6, 8}), ...
                      struct('B', {2, 3}));                                 
 S.Add(approx);
