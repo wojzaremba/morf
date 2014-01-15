@@ -28,26 +28,35 @@ classdef MonoConv < LayerApprox
         function FP(obj)
             prev_dim = obj.prev_dim();
             v = obj.cpu.vars;
-            X = v.X;            
+            X = v.X;  
             bs = size(X, 1);
-            obj.cpu.vars.X_ = zeros(size(X, 1), prev_dim(1) + obj.padding(1) * 2 + obj.patch(1), prev_dim(2) + obj.padding(2) * 2 + obj.patch(1), prev_dim(3));
-            obj.cpu.vars.X_(:, (obj.padding(1) + 1):(end - obj.patch(1) - obj.padding(1)), (obj.padding(2) + 1):(end - obj.patch(1) - obj.padding(2)), :) = X;
-            obj.cpu.vars.stacked = zeros(size(X, 1) * prod(obj.dims(1:2)), obj.patch(1) * obj.patch(2) * prev_dim(3));
-            for x = 1:obj.dims(1)
-                for y = 1:obj.dims(2)
-                    sx = (x - 1) * obj.stride(1) + 1;
-                    ex = sx + obj.patch(1) - 1;
-                    sy = (y - 1) * obj.stride(2) + 1;
-                    ey = sy + obj.patch(2) - 1;
-                    tmp = obj.cpu.vars.X_(:, sx:ex, sy:ey, :);
-                    idx = ((y - 1) * obj.dims(1) + x - 1) * bs + 1;
-                    obj.cpu.vars.stacked(idx : (idx + bs - 1), :) = tmp(:, :);
+            % Color transform
+            X = reshape(X, [bs * prev_dim(1) * prev_dim(2), prev_dim(3)]) * v.Cmono;
+            X = reshape(X, [bs, prev_dim(1), prev_dim(2), obj.num_image_colors]);
+            
+            
+            filters_per_color = obj.dims(3) / obj.num_image_colors;
+            for c = 1 : obj.num_image_colors
+                X_ = zeros(size(X, 1), prev_dim(1) + obj.padding(1) * 2 + obj.patch(1), prev_dim(2) + obj.padding(2) * 2 + obj.patch(1));
+                X_(:, (obj.padding(1) + 1):(end - obj.patch(1) - obj.padding(1)), (obj.padding(2) + 1):(end - obj.patch(1) - obj.padding(2))) = X(:, :, :, c);
+                stacked = zeros(size(X, 1) * prod(obj.dims(1:2)), obj.patch(1) * obj.patch(2));
+                for x = 1:obj.dims(1)
+                    for y = 1:obj.dims(2)
+                        sx = (x - 1) * obj.stride(1) + 1;
+                        ex = sx + obj.patch(1) - 1;
+                        sy = (y - 1) * obj.stride(2) + 1;
+                        ey = sy + obj.patch(2) - 1;
+                        tmp = X_(:, sx:ex, sy:ey);
+                        idx = ((y - 1) * obj.dims(1) + x - 1) * bs + 1;
+                        stacked(idx : (idx + bs - 1), :) = tmp(:, :);
+                    end
                 end
+                filt_idx = v.perm((c - 1) * filters_per_color + 1: c* filters_per_color) + 1;
+                v.out(:, :, :, filt_idx) = reshape(stacked * v.Wmono(filt_idx, :)', [bs, obj.dims(1:2), filters_per_color]);
             end
-            results = reshape(obj.cpu.vars.stacked * v.W(:, :)', [bs, obj.dims(1:2), obj.depth]);           
-            results = bsxfun(@plus, results, reshape(v.B, [1, 1, 1, length(v.B)]));
-            obj.cpu.vars.forward_act = results;              
-            obj.cpu.vars.out = obj.F(results);
+            v.out = bsxfun(@plus, v.out, reshape(v.B, [1, 1, 1, length(v.B)]));
+            obj.cpu.vars.forward_act = v.out;              
+            obj.cpu.vars.out = obj.F(v.out);
         end     
         
         function BP(obj)

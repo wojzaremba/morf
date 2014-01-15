@@ -94,7 +94,7 @@ classdef MonochromaticInput < Approximation
             ret.layer = 'MonoConv';
             ret.layer_nr = 2;
             ret.json = struct('num_image_colors', num_image_colors);
-            ret.on_gpu = 0;
+            ret.on_gpu = 1;
         end       
 
     end
