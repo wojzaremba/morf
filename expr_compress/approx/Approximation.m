@@ -43,6 +43,7 @@ classdef Approximation < handle
             plan.layer{2}.cpu.vars.W = Wapprox;
             plan.input.step = 1;
             plan.input.GetImage(0);
+            printf(1, 'Running Forward Pass in RunOrigConv\n');
             ForwardPass(plan.input);    
             test_error = plan.classifier.GetScore();
         end                      

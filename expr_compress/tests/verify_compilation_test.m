@@ -1,7 +1,7 @@
 clear all
-global root_path debug
+global debug
 debug = 2;
-init('/Volumes/denton/Documents/morf/');
+init();
 load_mock_model();
 S = MockScheduler(struct('acceptance', 0.99, 'no_compilation', 1, 'orig_test_error', 128));
 approx = MockApprox('_test', struct('A', {3, 4, 6, 8}), ...
@@ -14,7 +14,7 @@ assert(approx.nr_execution == 5);
 S.Printf();
 
 fprintf('Next execution\n');
-S = MockScheduler(struct('acceptance', 0.99, 'orig_test_error', 128));
+S = MockScheduler(struct('max_errors', 128));
 approx = MockApprox('_test', struct('A', {3, 4}), ...
                      struct('B', {2}));   
 

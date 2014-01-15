@@ -215,6 +215,51 @@ Spatially Separable
 
 Memory access constraints
 
+\section{Convolution in Transformed Domains}
+
+\subsection{FFT (referring to Micheal results}
+
+Suppose we have to compute $F$ spatial convolutions, 
+with kernels $W_1,\dots,W_F$ of maximum size $M$.
+The FFT is computed on chunks of data 
+of size $\tilde{M}$.
+ The resulting complexity is 
+\begin{align*}
+ &O(F\, \tilde{M}\, \log(\tilde{M})) + \\
+ &O( \frac{N}{\tilde{M} - M} ( \tilde{M}\, \log(\tilde{M}) + F \tilde{M} \Delta^{-2} \log(\tilde{M} \Delta^{-2}) )
+\end{align*}
+The value of $\tilde{M}$ is optimized as a function of $N$, the size of the input, 
+and $M$, the size of the kernel. Figure \ref{fftfig} shows for each pair $(N,M)$ the 
+optimum value of $\tilde{M}$, and compares the resulting cost 
+with the spatial convolution, which has a complexity of $O(F \, M \, N\, \Delta^{-2})$.
+ For standard choices of $\Delta=2^2$ and $F=32$, 
+and using a matlab implementation, figure \ref{fftfig} 
+shows that the optimum 
+strategy depends upon the value of parameters. For small kernels, 
+spatial implementation is more efficient. 
+is always to implement the convolution in the Fourier domain, but
+for kernels of size $\geq 8$, the resulting 
+using windowed transforms instead of the fully delocalized transform.
+
+
+\begin{figure}[ht]
+\includegraphics[scale=0.48]{img/fftconvanalysis1.eps}
+\caption{optimum value of $\tilde{M}$ as a function of $N$ and $M$ 
+using default parameters $\Delta=2^2$ and $F=96$. The value $0$ 
+corresponds to the spatial implementation.} 
+\label{fftfig}
+\end{figure}
+
+\begin{figure}[ht]
+\includegraphics[scale=0.48]{img/fftconvanalysis2.eps}
+\caption{optimum value of $\tilde{M}$ as a function of $N$ and $M$ 
+using default parameters $\Delta=1$ and $F=256$. The value $0$ 
+corresponds to the spatial implementation.} 
+\label{fftfig}
+\end{figure}
+
+\subsection{Multi-Resolution (Joan, reference to Wavelets and discret FFT.)}
+
 
 \section{Numerical Experiments}
 
@@ -243,18 +288,22 @@ Memory access constraints
 
 \subsection{Testing time}
 
+with FFT
+with FFT+Separable
+
 on GPU: Michael can help.
 
 on CPU
 
-\subsubsection{Monochromatic}
 
-\subsubsection{Linear combination of filters}
+\subsubsection{Monochromatic (Emily)}
 
-\subsubsection{Separable filters}
+\subsubsection{Linear combination of filters (Emily)}
+
+\subsubsection{Separable filters (Emily)}
 
 
-\subsection{ Denoising}
+\subsection{ Denoising (visual inspection, maybe meassure)}
 \begin{figure}[ht]
   \begin{minipage}[b]{0.48\linewidth}
   	\includegraphics[width=\textwidth]{img/first.png}

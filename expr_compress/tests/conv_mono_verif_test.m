@@ -1,9 +1,7 @@
-% XXX : Deal with passing between C_ and Capprox_gen.
-
-clc;
-global root_path debug plan executed_mock_fc
+clear all
+global debug plan
 debug = 2;
-init('/Volumes/denton/Documents/morf/');
+init();
 
 dims = [96, 4, 4, 3];
 
@@ -25,7 +23,7 @@ W = MonochromaticInput.ReconstructW(colors, dec, S, assignment, [dims(1), dims(4
 plan.layer{2}.cpu.vars.W = W;
 
 
-S = Scheduler(struct('acceptance', 0.8, 'orig_test_error', 110, 'no_compilation', 0));
+S = Scheduler(struct('max_errors', 110, 'no_compilation', 0));
 approx = MonochromaticInput('_test',  struct('num_image_colors', {num_image_colors}), ...
                             struct('B_X', {32, 32}, ...
                                    'B_Y', {4, 6}, ...

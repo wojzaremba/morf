@@ -16,6 +16,7 @@ classdef Plan < handle
         default_on_gpu
         maxIter
         upload_weights
+        all_uploaded_weights
         verbose
     end
     
@@ -45,7 +46,9 @@ classdef Plan < handle
             randn('seed', 1);
             rand('seed', 1);            
             obj.layer = {};
-            obj.upload_weights = (exist('weights', 'var')) && (~isempty(weights));
+            if (exist('weights', 'var')) && (~isempty(weights))
+                obj.all_uploaded_weights = load(weights);
+            end            
             global plan cuda
             plan = obj;     
             cuda = zeros(2, 1);            
@@ -59,29 +62,9 @@ classdef Plan < handle
                     obj.layer{end + 1} = eval(sprintf('%s(json);', json.type()));
                 end
             end
-            fprintf('Total number of\n\ttotal learnable vars = %d\n\ttotal vars = %d\n\ttotal vars on the gpu = %d\n', obj.stats.total_learnable_vars, obj.stats.total_vars, obj.stats.total_vars_gpu);
-            if (obj.upload_weights)
-                obj.UploadWeightsFromFile(weights);
-            end
-        end
-        
-        function UploadWeightsFromFile(obj, weights)
-            all_vals = load(weights);
-            for i = 1:length(all_vals.plan.layer)
-                layer = all_vals.plan.layer{i}.cpu;
-                if (~isfield(layer, 'vars'))
-                    continue;
-                end
-                vars = layer.vars;
-                f = fields(vars);
-                for j = 1:length(f)
-                    val = eval(sprintf('vars.%s;', f{j}));
-                    if (~isempty(val))
-                        obj.layer{i}.Upload(f{j}, val);
-                    end
-                end
-            end            
-        end
+            fprintf('Total number of\n\ttotal learnable vars = %d\n\ttotal vars = %d\n\ttotal vars on the gpu = %d\n', obj.stats.total_learnable_vars, obj.stats.total_vars, obj.stats.total_vars_gpu);            
+            obj.all_uploaded_weights = [];
+        end        
         
         function gid = GetGID(obj)
             gid = obj.gid; 

@@ -1,12 +1,12 @@
 function load_imagenet_model()
     global plan;
-    if (exist('plan') ~= 1 || isempty(plan))
+    if (exist('plan') ~= 1 || isempty(plan) || length(plan.layer) < 10)
         json = ParseJSON('plans/imagenet.txt');
         json{1}.batch_size = 128;
         if (~is_cluster())
-            Plan(json, '/Users/Denton/imagenet');
+            Plan(json, '~/imagenet.mat');
         else
-            Plan(json, 'trained/imagenet');
+            Plan(json, 'trained/imagenet.mat');
         end
         plan.training = 0;
         plan.input.step = 1;

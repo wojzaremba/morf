@@ -43,7 +43,12 @@ classdef ApproxLog < handle
         end
         
         function Save(obj)
+            global root_path
             cudas_logs = obj.cudas_logs;
+            dir = sprintf('%sexpr_compress/logs', root_path);
+            if (~exist(dir, 'dir'))
+                mkdir(dir);
+            end
             save(obj.LogName(), 'cudas_logs');            
         end
         

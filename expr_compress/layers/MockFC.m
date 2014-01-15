@@ -1,10 +1,10 @@
-classdef MockFC < Layer
+classdef MockFC < LayerApprox
     properties
     end
     
     methods
         function obj = MockFC(json)
-            obj@Layer(FillDefault(json));
+            obj@LayerApprox(FillDefault(json));
             obj.Finalize();
         end                      
        
