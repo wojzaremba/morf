@@ -38,13 +38,15 @@ classdef Approximation < handle
             end            
         end
         
-        function test_error = RunOrigConv(obj, Wapprox)
+        function [test_error, time] = RunOrigConv(obj, Wapprox)
             global plan
             plan.layer{2}.cpu.vars.W = Wapprox;
             plan.input.step = 1;
             plan.input.GetImage(0);
             ForwardPass(plan.input);    
             test_error = plan.classifier.GetScore();
+            time = plan.time.fp(2);
+            C_(CleanGPU);
         end                      
         
         function [test_error, time] = RunModifConv(obj, args)        
@@ -52,7 +54,7 @@ classdef Approximation < handle
             layer_orig = plan.layer{args.layer_nr};
             json_orig = layer_orig.json;
             json = catstruct(args.json, json_orig);
-            json.on_gpu = 1;
+            json.on_gpu = Val(args, 'on_gpu', 1);
             layers = {};
             layers = plan.layer;
             plan.layer = {};
@@ -66,13 +68,15 @@ classdef Approximation < handle
             end            
             plan.layer{args.layer_nr - 1}.next = {plan.layer{args.layer_nr}};            
             plan.layer{args.layer_nr}.next = {plan.layer{args.layer_nr + 1}};
-            obj.SetLayerVars(args);            
+            obj.SetLayerVars(args);     
+            plan.input.GetImage(0);
             ForwardPassApprox(plan.input);
             test_error = plan.classifier.GetScore();            
             time = plan.time.fp(2);
             plan.layer = layers;
             plan.layer{args.layer_nr - 1}.next = {plan.layer{args.layer_nr}};            
             plan.layer{args.layer_nr}.next = {plan.layer{args.layer_nr + 1}};
+            Capprox_gen(CleanGPU);
         end
         
         function SetLayerVars(obj, args)

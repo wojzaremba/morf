@@ -1,10 +1,10 @@
-classdef MockFC < Layer
+classdef MockFC < LayerApprox
     properties
     end
     
     methods
         function obj = MockFC(json)
-            obj@Layer(FillDefault(json));
+            obj@LayerApprox(FillDefault(json));
             obj.Finalize();
         end                      
        
@@ -12,10 +12,10 @@ classdef MockFC < Layer
             global executed_mock_fc
             executed_mock_fc = executed_mock_fc + 1;
             v = obj.gpu.vars;
-            C_(Mult, v.X, v.Wmock, v.out);
-            C_(Scale, v.out, 10000, v.out);
-            C_(AddVector, v.out, v.Bmock, v.out);
-            C_(obj.Fun_, v.out, v.out);            
+            Capprox_gen(Mult, v.X, v.Wmock, v.out);
+            Capprox_gen(Scale, v.out, 10000, v.out);
+            Capprox_gen(AddVector, v.out, v.Bmock, v.out);
+            Capprox_gen(obj.Fun_, v.out, v.out);            
         end
         
         function FP(obj)

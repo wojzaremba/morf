@@ -1,19 +1,20 @@
 % XXX : Deal with passing between C_ and Capprox_gen.
-
+%clear all;
 clc;
 global root_path debug plan executed_mock_fc
-debug = 2;
-init('/Volumes/denton/Documents/morf/');
+debug = 0;
+init();
 
-dims = [96, 4, 4, 3];
+dims = [96, 11, 11, 3];
 
 jsons = {};
-jsons{1} = struct('batch_size', 128, 'rows', 8, 'cols', 8, 'depth', 3, 'number_of_classes', 10, 'type', 'TestInput');
-jsons{2} = struct('local_2d_patch', struct('patch_rows', 4, 'patch_cols', 4), ...
-                  'depth', 96, 'function', 'LINEAR', 'type', 'Conv');
+jsons{1} = struct('batch_size', 128, 'rows', 224, 'cols', 224, 'depth', 3, 'number_of_classes', 10, 'type', 'TestInput');
+jsons{2} = struct('local_2d_patch', struct('patch_rows', 11, 'patch_cols', 11, 'stride_rows', 4, 'stride_cols', 4), ...
+                  'on_gpu', 1, 'depth', 96, 'function', 'LINEAR', 'type', 'Conv');
 jsons{3} = struct('function', 'LINEAR', 'rows', 1, 'cols', 1, 'depth', 10, 'type', 'FC', 'fully_connected', true);      
 jsons{4} = struct('type', 'Softmax');
 plan = Plan(jsons);    
+
 
 num_image_colors = 16;
 colors = randn([num_image_colors, dims(4)]);
@@ -25,7 +26,7 @@ W = MonochromaticInput.ReconstructW(colors, dec, S, assignment, [dims(1), dims(4
 plan.layer{2}.cpu.vars.W = W;
 
 
-S = Scheduler(struct('acceptance', 0.8, 'orig_test_error', 110, 'no_compilation', 0));
+S = Scheduler(struct('acceptance', 0.8, 'orig_test_error', 110, 'no_compilation', 1));
 approx = MonochromaticInput('_test',  struct('num_image_colors', {num_image_colors}), ...
                             struct('B_X', {32, 32}, ...
                                    'B_Y', {4, 6}, ...

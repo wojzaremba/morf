@@ -6,7 +6,7 @@ morf_path = '/Volumes/denton/Documents/morf/';
 addpath(genpath(morf_path));
 
 %flags
-compile = 1;
+compile = 0;
 correctness = 1;
 speedup = 0;
 
@@ -18,6 +18,7 @@ gids.W_mono = 4;
 gids.out = 5;
 gids.out_mono = 6;
 gids.perm = 7;
+gids.colors = 8;
 
 numImages = 128;
 stride = 4;
@@ -68,53 +69,46 @@ end
 if correctness
     
 % first check correctness
-X_mono = single(randn(numImages, 224, 224, numImgColors));
-X = X_mono;
+X = randn(numImages, 224, 224, 3);
+Wtmp = randn(numFilters, 3, K, K);
+[W_approx, W_mono, colors, perm]  = monochromatic_approx(Wtmp, numImgColors);
+% Xmono = reshape(reshape(X, [224*224*numImages, 3]) * colors, numImages, 224, 224, numImgColors);
+
 out_ = single(zeros(numImages, 55, 55, numFilters));
 out_mono_ = single(zeros(numImages, 55, 55, numFilters));
-W_mono = single(ones(numFilters, K, K));
-W = single(zeros(numFilters, K, K, numImgColors));
 
-bpt = 0:(numFilters/numImgColors):numFilters;
-for i=1:numImgColors
-   W_mono( bpt(i)+1:bpt(i+1), :, : ) = single(randn(bpt(i+1) - bpt(i), K, K));
-   W( bpt(i)+1:bpt(i+1), :, :, i) = W_mono( bpt(i)+1:bpt(i+1), :, : );
-end
-
-order = randperm(96);
-
-W_mono = W_mono(order, :, :);
-[~, perm] = sort(order);
-perm = perm-1;
 % copy to GPU for regular conv
-C_(CopyToGPU, gids.W,  W);
-C_(CopyToGPU, gids.X,  X);
+C_(CopyToGPU, gids.W,  single(W_approx));
+C_(CopyToGPU, gids.X,  single(X));
 C_(CopyToGPU, gids.out,  out_);
 
-C_(ConvAct, gids.X, gids.W, gids.out, size(X, 2), size(X, 4), size(W, 2), stride, padding);
+C_(ConvAct, gids.X, gids.W, gids.out, size(X, 2), size(X, 4), size(W_approx, 2), stride, padding);
 out = reshape(C_(CopyFromGPU, gids.out), size(out_));
 C_(CleanGPU);
 
 
 %copy to GPU for mono conv
-Capprox_gen(CopyToGPU, gids.W_mono,  W_mono);
-Capprox_gen(CopyToGPU, gids.X_mono,  X_mono);
+Capprox_gen(CopyToGPU, gids.X,  single(X));
+Capprox_gen(CopyToGPU, gids.W_mono,  single(W_mono));
 Capprox_gen(CopyToGPU, gids.out_mono,  out_mono_);
-Capprox_gen(CopyToGPU, gids.perm,  single(perm));
+Capprox_gen(CopyToGPU, gids.perm,  single(perm - 1));
+Capprox_gen(CopyToGPU, gids.colors,  single(colors));
+Capprox_gen(CopyToGPU, gids.X_mono,  single(zeros(numImages, 224, 224, numImgColors)));
 
-Capprox_gen(approx_pointer, gids.X_mono, gids.W_mono, gids.out_mono, size(X_mono, 2), size(X_mono, 4), size(W_mono, 2), stride, padding, gids.perm);
+Capprox_gen(Reshape, gids.X, 3, numImages * 224 * 224);
+Capprox_gen(Mult, gids.X, gids.colors, gids.X_mono);
+Capprox_gen(Reshape, gids.X_mono, 224*224*numImgColors, numImages);
+Capprox_gen(approx_pointer, gids.X_mono, gids.W_mono, gids.out_mono, 224, numImgColors, K, stride, padding, gids.perm);
+
+% Capprox_gen(approx_pointer, gids.X_mono, gids.W_mono, gids.out_mono, size(Xmono, 2), size(Xmono, 4), size(W_mono, 2), stride, padding, gids.perm);
 out_mono = reshape(Capprox_gen(CopyFromGPU, gids.out_mono), size(out_mono_));
 Capprox_gen(CleanGPU);
 
 % are results equal?
-eq = sum(out_mono(:) ~= out(:));
-if eq
+eq = norm(out_mono(:) - out(:)) / norm(out(:)) < 1e-5;
+if ~eq
     fprintf('Monochromatic conv output is incorrect\n');
-    for i = 1:96
-        if sum(sum(squeeze(out_mono(1, :, :, i)) ~= squeeze(out(1, :, :, i)))) > 0
-            fprintf('%d\n', i);
-        end
-    end
+    fprintf('norm(out_mono(:) - out(:)) / norm(out(:))  = %f\n', norm(out_mono(:) - out(:)) / norm(out(:)) );
 end 
 
 end

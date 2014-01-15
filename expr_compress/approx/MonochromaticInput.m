@@ -78,17 +78,23 @@ classdef MonochromaticInput < Approximation
             % Permutaiton of W, back to orig form is done inside
             % reconstruction function.
             Wapprox = MonochromaticInput.ReconstructW(colors, dec, S, assignment, size(W));
-            Wmono = reshape(bsxfun(@times, S, dec(:, 1)),size(W,1),size(W,3),size(W,4));
-
+            Wmono = reshape(bsxfun(@times, S, dec(:, 1)), size(W,1), size(W,3), size(W,4));
+            
+            assert(norm(squeeze(Wmono(1, :, :)) * colors(assignment(1), 1) + ...
+                        squeeze(Wmono(1, :, :)) * colors(assignment(1), 2) + ...
+                        squeeze(Wmono(1, :, :)) * colors(assignment(1), 3) - ...
+                        (squeeze(Wapprox(1, :, :, 1)) + squeeze(Wapprox(1, :, :, 2)) + squeeze(Wapprox(1, :, :, 3)))) <= 1e-10)
+        
             [~, perm] = sort(assignment);
-            ret.vars.Wmono = Wmono(perm, :, :);
+            ret.reconstruction_error = norm(Wapprox(:) - W(:)) / norm(W(:));
+            ret.vars.Wmono = Wmono;%(perm, :, :);
             ret.vars.Cmono = colors';
-            ret.vars.Xmono = zeros(plan.input.batch_size, plan.input.dims(1), plan.input.dims(2), plan.input.dims(3));
-            ret.vars.perm = perm;
+            ret.vars.perm = perm - 1; % Need -1 for indexing in C
             ret.Wapprox = Wapprox;
             ret.layer = 'MonoConv';
             ret.layer_nr = 2;
             ret.json = struct('num_image_colors', num_image_colors);
+            ret.on_gpu = 0;
         end       
 
     end

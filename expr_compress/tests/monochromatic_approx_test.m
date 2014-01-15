@@ -1,12 +1,12 @@
 clc;
 global root_path debug plan executed_mock_fc
 debug = 2;
-init('/Volumes/denton/Documents/morf/');
+init();
 load_mock_model();
 
 
 num_image_colors = 16;
-dims = [96, 4, 4, 3];
+dims = [96, 11, 11, 3];
 colors = randn([num_image_colors, dims(4)]);
 dec = randn(dims(1), dims(4));
 Wmono = randn([dims(1), dims(2), dims(3)]);

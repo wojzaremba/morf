@@ -114,9 +114,11 @@ __global__ void filterActsMonoEven_YxX_color(float* images, float* filters, floa
         filters += moduleIdx * numColors * filterPixels * numFilters;
     }
 
-    targets += moduleIdx * numImages
-            + (globalFilterIdx + threadIdx.y) * numImages * numModulesY * numModulesX
-            + myImgIdx;
+    targets += moduleIdx * numImages + myImgIdx;
+
+    //targets += moduleIdx * numImages
+      //      + (globalFilterIdx + threadIdx.y) * numImages * numModulesY * numModulesX
+        //    + myImgIdx;
 
 
     float prod[filtersPerThread][imgsPerThread];
@@ -258,7 +260,10 @@ __global__ void filterActsMonoEven_YxX_color(float* images, float* filters, floa
             if (!checkImgBounds || myImgIdx + g * B_X < numImages) {
                 #pragma unroll
                 for (int f = 0; f < filtersPerThread; f++) {
-                    targets[g * B_X + f * B_Y * numImages * numModulesY * numModulesX] = scaleTargets * targets[g * B_X + f * B_Y * numImages * numModulesY * numModulesX] + scaleOutputs * prod[f][g];
+                    //targets[g * B_X + f * B_Y * numImages * numModulesY * numModulesX] = scaleTargets * targets[g * B_X + f * B_Y * numImages * numModulesY * numModulesX] + scaleOutputs * prod[f][g];
+			int targetIdx =  (int) perm[globalFilterIdx + threadIdx.y + f * B_Y];
+			targets[g * B_X + targetIdx * numImages * numModulesY * numModulesX] = scaleTargets * targets[g * B_X + targetIdx * numImages * numModulesY * numModulesX] + scaleOutputs * prod[f][g];
+
                 }
             }
         }
@@ -268,7 +273,9 @@ __global__ void filterActsMonoEven_YxX_color(float* images, float* filters, floa
             if (!checkImgBounds || myImgIdx + g * B_X < numImages) {
                 #pragma unroll
                 for (int f = 0; f < filtersPerThread; f++) {
-                    targets[g * B_X + f * B_Y * numImages * numModulesY * numModulesX] = scaleOutputs * prod[f][g];
+                    //targets[g * B_X + f * B_Y * numImages * numModulesY * numModulesX] = scaleOutputs * prod[f][g];
+			int targetIdx =  (int) perm[globalFilterIdx + threadIdx.y + f * B_Y];
+                    targets[g * B_X + targetIdx * numImages * numModulesY * numModulesX] = scaleOutputs * prod[f][g];
                 }
             }
         }
@@ -469,7 +476,7 @@ __global__ void filterActsMonoEvenManyCol_YxX_color(float* images, float* filter
     int imgSizeX = imgPixels / imgSizeY;
     int filterModuleMult = conv ? 1 : numModules;
     assert_(numImgColors > 0 && (numImgColors <= 3 || numImgColors % 2 == 0));
-    printf("images.getNumRows() = %d, imgPixels = %d, numImgColors = %d\n", images.getNumRows(), imgPixels, numImgColors);
+    //printf("images.getNumRows() = %d, imgPixels = %d, numImgColors = %d\n", images.getNumRows(), imgPixels, numImgColors);
     assert_(numFilters % 16 == 0);
     assert_(images.getNumRows() == imgPixels * numImgColors);
     assert_(imgSizeY * imgSizeX == imgPixels);
@@ -493,19 +500,10 @@ __global__ void filterActsMonoEvenManyCol_YxX_color(float* images, float* filter
 
     assert_(filters.isContiguous());
     assert_(targets.isContiguous());
-
-    //int filtersPerColor = numFilters / numImgColors; // must be 32, 24, 16, 12, 8 or 6
-    //int filtersPerThread = filtersPerColor % 32 == 0 ? 8 : filtersPerColor % 24 == 0 ? 6 : filtersPerColor % 16 == 0 ? 4 : filtersPerColor % 12 == 0 ? 3 : filtersPerColor % 8 == 0 ? 2 : filtersPerColor % 6 == 0 ? 2 : 1;
-    //int B_Y = filtersPerColor == 3 || filtersPerColor == 6 ? 3 : 4;
-
-    //int colorsPerBlock = filtersPerThread * B_Y / filtersPerColor;
-    //int imgsPerThread = numImages % 128 == 0 ? 4 : numImages % 64 == 0 ? 2 : 1;
-    //if (filtersPerColor < 24) imgsPerThread *= 2;
    
     if (numImgColors <= 4) {
         dim3 blocks = dim3(DIVUP(numImages, #B_X * #imgsPerThread), (numModules * numFilters) / (#B_Y * #filtersPerThread));
         dim3 threads(#B_X, #B_Y); // B_Y always 4
-        //bool checkImgBounds = numImages % (32*imgsPerThread) != 0;
         if (scaleTargets == 0) {
             targets.resize(numFilters * numModules, numImages);
         } else {
@@ -521,7 +519,6 @@ __global__ void filterActsMonoEvenManyCol_YxX_color(float* images, float* filter
         int numKernelModulesX = DIVUP(numModulesX, 2); // kernelModulesX == kernelModulesY
         dim3 blocks = dim3(DIVUP(numImages, #B_X * #imgsPerThread), (numKernelModulesX*numKernelModulesX * numFilters) / #B_Y);
         dim3 threads(#B_X, #B_Y); // B_Y always 4
-        //bool checkImgBounds = numImages % (32*imgsPerThread) != 0;
         if (scaleTargets == 0) {
             targets.resize(numFilters * numModules, numImages);
         } else {
