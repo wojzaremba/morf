@@ -12,9 +12,9 @@ if (obj.on_gpu)
             obj.gpu.vars.X = plan.layer{obj.layer_nr - 1}.gpu.vars.out;            
         end
     end
-    %Capprox_gen(StartTimer);
+    Capprox_gen(StartTimer);
     obj.FP_();
-    lapse = -1;% Capprox_gen(StopTimer);
+    lapse = Capprox_gen(StopTimer);
 else
     if (obj.layer_nr > 1) 
         if (plan.layer{obj.layer_nr - 1}.on_gpu == 1)

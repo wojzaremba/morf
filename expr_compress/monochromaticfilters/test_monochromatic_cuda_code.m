@@ -6,7 +6,7 @@ global root_path
 init();
 
 %flags
-do_compile = 1;
+do_compile = 0;
 
 gids.X = 1;
 gids.X_mono = 2;
@@ -22,7 +22,7 @@ stride = 4;
 padding = 0;
 K = 11;
 numFilters = 96;
-numImgColors = 16;
+numImgColors = 4;
 
 if do_compile
     % set cuda kernel vars
@@ -75,7 +75,14 @@ C_(CopyToGPU, gids.W,  single(W_approx));
 C_(CopyToGPU, gids.X,  single(X));
 C_(CopyToGPU, gids.out,  out_);
 
-C_(ConvAct, gids.X, gids.W, gids.out, size(X, 2), size(X, 4), size(W_approx, 2), stride, padding);
+num_runs = 10;
+lapse1 = [];
+for t=1:num_runs
+    C_(StartTimer);
+    C_(ConvAct, gids.X, gids.W, gids.out, size(X, 2), size(X, 4), size(W_approx, 2), stride, padding);
+    lapse = C_(StopTimer); 
+    lapse1 = [lapse1, lapse];
+end
 out = reshape(C_(CopyFromGPU, gids.out), size(out_));
 C_(CleanGPU);
 
@@ -88,10 +95,21 @@ Capprox_gen(CopyToGPU, gids.perm,  single(perm - 1));
 Capprox_gen(CopyToGPU, gids.colors,  single(colors));
 Capprox_gen(CopyToGPU, gids.X_mono,  single(zeros(numImages, 224, 224, numImgColors)));
 
-Capprox_gen(Reshape, gids.X, 3, numImages * 224 * 224);
-Capprox_gen(Mult, gids.X, gids.colors, gids.X_mono);
-Capprox_gen(Reshape, gids.X_mono, 224*224*numImgColors, numImages);
-Capprox_gen(approx_pointer, gids.X_mono, gids.W_mono, gids.out_mono, 224, numImgColors, K, stride, padding, gids.perm);
+lapse2 = [];
+lapse3 = [];
+for t=1:num_runs
+    Capprox_gen(StartTimer);
+    Capprox_gen(Reshape, gids.X, 3, numImages * 224 * 224);
+    Capprox_gen(Mult, gids.X, gids.colors, gids.X_mono);
+    Capprox_gen(Reshape, gids.X_mono, 224*224*numImgColors, numImages);
+    lapse = Capprox_gen(StopTimer); 
+    lapse2 = [lapse2, lapse];
+    
+    Capprox_gen(StartTimer);
+    Capprox_gen(approx_pointer, gids.X_mono, gids.W_mono, gids.out_mono, 224, numImgColors, K, stride, padding, gids.perm);
+    lapse = Capprox_gen(StopTimer); 
+    lapse3 = [lapse3, lapse];
+end
 
 % Capprox_gen(approx_pointer, gids.X_mono, gids.W_mono, gids.out_mono, size(Xmono, 2), size(Xmono, 4), size(W_mono, 2), stride, padding, gids.perm);
 out_mono = reshape(Capprox_gen(CopyFromGPU, gids.out_mono), size(out_mono_));
@@ -99,3 +117,7 @@ Capprox_gen(CleanGPU);
 
 % are results equal?
 assert(norm(out_mono(:) - out(:)) / norm(out(:)) < 1e-5);
+
+speedup = lapse1 ./ lapse2;
+fprintf('average speedup = %f\n', mean(speedup));
+fprintf('std speedup = %f\n', std(speedup));

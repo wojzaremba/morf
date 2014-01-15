@@ -18,14 +18,11 @@ classdef MonoConv < LayerApprox
             Capprox_gen(Reshape, v.X, pdims(3), bs * pdims(1) * pdims(2));
             Capprox_gen(Mult, v.X, v.Cmono, v.Xmono);
             Capprox_gen(Reshape, v.Xmono, pdims(1) * pdims(2) * obj.num_image_colors, bs);
-            Capprox_gen(StartTimer);
             Capprox_gen(approx_pointer, v.Xmono, v.Wmono, v.out, pdims(2), obj.num_image_colors, obj.patch(1), obj.stride(1), obj.padding(1), v.perm);
             Capprox_gen(Reshape, v.out, bs * obj.dims(1) * obj.dims(2), obj.depth());
             Capprox_gen(AddVector, v.out, v.B, v.out);
             Capprox_gen(Reshape, v.out, obj.dims(1) * obj.dims(2) * obj.depth(), bs);
             Capprox_gen(obj.Fun_, v.out, v.out);  
-            lapse = Capprox_gen(StopTimer);
-            fprintf('lapse = %f\n', lapse);
         end
         
         function FP(obj)
