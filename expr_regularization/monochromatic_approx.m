@@ -1,4 +1,4 @@
-function [Wapprox, recon_error] =  monochromatic_approx(W, num_colors)
+function [Wapprox, recon_error] =  monochromatic_approx(W, params)
     % W dimensions : (Nout, X, Y, Nin)
     
     W = permute(W, [1, 4, 2, 3]);
@@ -9,7 +9,7 @@ function [Wapprox, recon_error] =  monochromatic_approx(W, num_colors)
         dec(f, :) = diag(s);
     end
 
-    [assignment, colors] = litekmeans(C', num_colors);
+    [assignment, colors] = litekmeans(C', params.num_colors);
     colors = colors';
     
     % Reconstruct weights

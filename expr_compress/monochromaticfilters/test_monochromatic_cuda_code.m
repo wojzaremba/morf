@@ -21,7 +21,7 @@ stride = 4;
 padding = 0;
 K = 11;
 numFilters = 96;
-newNumColors = 4;
+newNumColors = 16;
 
 if do_compile
     % set cuda kernel vars
@@ -61,7 +61,7 @@ end
     
 % Check correctness
 X = ones(numImages, 224, 224, 3);
-Wtmp = randn(numFilters, 3, K, K);
+Wtmp = randn(numFilters, K, K, 3);
 [W_approx, W_mono, colors, perm]  = monochromatic_approx(Wtmp, newNumColors);
 out_ = single(zeros(numImages, 55, 55, numFilters));
 out_mono_ = single(zeros(numImages, 55, 55, numFilters));

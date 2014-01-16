@@ -1,5 +1,6 @@
 function [Wapprox, Wmono, colors, perm] = monochromatic_approx(W, num_colors)
 
+    W = permute(W, [1, 4, 2, 3]);
     % Simple re-parametrization of first layer with monochromatic filters
     for f = 1 : size(W,1)
         [u,s,v]=svd(squeeze(W(f,:,:)),0);
@@ -21,8 +22,8 @@ function [Wapprox, Wmono, colors, perm] = monochromatic_approx(W, num_colors)
         Wapprox(f,:,:,:)=reshape(chunk,1,size(W,2),size(W,3),size(W,4));
     end 
     
-    Wapprox = permute(Wapprox, [1, 3, 4, 2]);
     Wmono = reshape(bsxfun(@times, S, dec(:, 1)),size(W,1),size(W,3),size(W,4));
+    Wapprox = permute(Wapprox, [1, 3, 4, 2]);
     
     assert(norm(squeeze(Wmono(1, :, :)) * colors(assignment(1), 1) + ...
                         squeeze(Wmono(1, :, :)) * colors(assignment(1), 2) + ...
