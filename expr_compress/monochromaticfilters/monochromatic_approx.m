@@ -32,9 +32,5 @@ function [Wapprox, Wmono, colors, perm] = monochromatic_approx(W, num_colors)
     
     [~, perm] = sort(assignment);
     colors = colors';
-    %Wmono = Wmono(perm, :, :);
-    
-    
-
 end
 

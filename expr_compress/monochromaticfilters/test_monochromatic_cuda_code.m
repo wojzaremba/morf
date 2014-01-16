@@ -1,12 +1,11 @@
 % compiles cuda code for monochromatic filter aproximation and tests for
 % correctness.
-clc;
 clear all;
 global root_path
 init();
 
 %flags
-do_compile = 0;
+do_compile = 1;
 
 gids.X = 1;
 gids.X_mono = 2;
@@ -22,32 +21,29 @@ stride = 4;
 padding = 0;
 K = 11;
 numFilters = 96;
-numImgColors = 4;
+newNumColors = 4;
 
 if do_compile
     % set cuda kernel vars
-    filtersPerColor = numFilters / numImgColors;
-    filtersPerThread = 4; % only relevant if numImgColors <= 4
-    B_Y = 6;
-    B_X = 32;
-    colorsPerBlock = 1;%filtersPerThread * B_Y / filtersPerColor;
-    imgsPerThread = 4; %numImages % 128 == 0 ? 4 : numImages % 64 == 0 ? 2 : 1;
-    scale = 0;
-    checkImgBounds = mod(numImages, B_X*imgsPerThread) ~= 0;
+    cuda_vars.origNumColors = 3;
+    cuda_vars.filtersPerColor = numFilters / newNumColors;
+    cuda_vars.filtersPerThread = 4; % only relevant if newNumColors <= 4
+    cuda_vars.B_Y = 6;
+    cuda_vars.B_X = 32;
+    cuda_vars.colorsPerBlock = 1;%filtersPerThread * B_Y / filtersPerColor;
+    cuda_vars.imgsPerThread = 4; %numImages % 128 == 0 ? 4 : numImages % 64 == 0 ? 2 : 1;
+    cuda_vars.scale = 0;
+    cuda_vars.checkImgBounds = mod(numImages, cuda_vars.B_X*cuda_vars.imgsPerThread) ~= 0;
 
     % replace template variables, and compile
     fid_read = fopen(strcat(root_path, 'expr_compress/cuda/src/monochromatic_input_template.cuh'), 'r');
     fid_write = fopen(strcat(root_path, 'expr_compress/cuda/src/monochromatic_input_gen.cuh'), 'wt');
     line = fgets(fid_read);
     while ischar(line)
-        %disp(rline);
-        line = strrep(line, '#B_Y', num2str(B_Y));
-        line = strrep(line, '#B_X', num2str(B_X));
-        line = strrep(line, '#imgsPerThread', num2str(imgsPerThread));
-        line = strrep(line, '#filtersPerThread', num2str(filtersPerThread));
-        line = strrep(line, '#colorsPerBlock', num2str(colorsPerBlock));
-        line = strrep(line, '#scale', num2str(scale));
-        line = strrep(line, '#checkImgBounds', num2str(checkImgBounds));
+        fields = fieldnames(cuda_vars);
+        for f = 1:length(fields)
+           line = strrep(line, strcat('#', fields{f}), num2str(getfield(cuda_vars, fields{f}))); 
+        end
         line = strrep(line, '\n', '\\n');
         line = strrep(line, '%', '%%');
         fprintf(fid_write, line);
@@ -64,18 +60,38 @@ if do_compile
 end
     
 % Check correctness
-X = randn(numImages, 224, 224, 3);
+X = ones(numImages, 224, 224, 3);
 Wtmp = randn(numFilters, 3, K, K);
-[W_approx, W_mono, colors, perm]  = monochromatic_approx(Wtmp, numImgColors);
+[W_approx, W_mono, colors, perm]  = monochromatic_approx(Wtmp, newNumColors);
 out_ = single(zeros(numImages, 55, 55, numFilters));
 out_mono_ = single(zeros(numImages, 55, 55, numFilters));
+
+num_runs = 100;
+
+%copy to GPU for mono conv
+Capprox_gen(CopyToGPU, gids.X,  single(X));
+Capprox_gen(CopyToGPU, gids.W_mono,  single(W_mono));
+Capprox_gen(CopyToGPU, gids.out_mono,  out_mono_);
+Capprox_gen(CopyToGPU, gids.perm,  single(perm - 1));
+Capprox_gen(CopyToGPU, gids.colors,  single(colors));
+
+lapse2 = [];
+for t=1:num_runs
+    Capprox_gen(StartTimer);
+    Capprox_gen(approx_pointer, gids.X, gids.W_mono, gids.out_mono, 224, newNumColors, K, stride, padding, gids.perm, gids.colors);
+    lapse = Capprox_gen(StopTimer); 
+    lapse2 = [lapse2, lapse];
+end
+
+out_mono = reshape(Capprox_gen(CopyFromGPU, gids.out_mono), size(out_mono_));
+Capprox_gen(CleanGPU);
 
 % copy to GPU for regular conv
 C_(CopyToGPU, gids.W,  single(W_approx));
 C_(CopyToGPU, gids.X,  single(X));
 C_(CopyToGPU, gids.out,  out_);
 
-num_runs = 10;
+
 lapse1 = [];
 for t=1:num_runs
     C_(StartTimer);
@@ -87,33 +103,6 @@ out = reshape(C_(CopyFromGPU, gids.out), size(out_));
 C_(CleanGPU);
 
 
-%copy to GPU for mono conv
-Capprox_gen(CopyToGPU, gids.X,  single(X));
-Capprox_gen(CopyToGPU, gids.W_mono,  single(W_mono));
-Capprox_gen(CopyToGPU, gids.out_mono,  out_mono_);
-Capprox_gen(CopyToGPU, gids.perm,  single(perm - 1));
-Capprox_gen(CopyToGPU, gids.colors,  single(colors));
-Capprox_gen(CopyToGPU, gids.X_mono,  single(zeros(numImages, 224, 224, numImgColors)));
-
-lapse2 = [];
-lapse3 = [];
-for t=1:num_runs
-    Capprox_gen(StartTimer);
-    Capprox_gen(Reshape, gids.X, 3, numImages * 224 * 224);
-    Capprox_gen(Mult, gids.X, gids.colors, gids.X_mono);
-    Capprox_gen(Reshape, gids.X_mono, 224*224*numImgColors, numImages);
-    lapse = Capprox_gen(StopTimer); 
-    lapse2 = [lapse2, lapse];
-    
-    Capprox_gen(StartTimer);
-    Capprox_gen(approx_pointer, gids.X_mono, gids.W_mono, gids.out_mono, 224, numImgColors, K, stride, padding, gids.perm);
-    lapse = Capprox_gen(StopTimer); 
-    lapse3 = [lapse3, lapse];
-end
-
-% Capprox_gen(approx_pointer, gids.X_mono, gids.W_mono, gids.out_mono, size(Xmono, 2), size(Xmono, 4), size(W_mono, 2), stride, padding, gids.perm);
-out_mono = reshape(Capprox_gen(CopyFromGPU, gids.out_mono), size(out_mono_));
-Capprox_gen(CleanGPU);
 
 % are results equal?
 assert(norm(out_mono(:) - out(:)) / norm(out(:)) < 1e-5);
