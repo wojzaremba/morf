@@ -25,8 +25,16 @@ classdef Scheduler < handle
         
         function Printf(obj)
            for i = 1:length(obj.approx_logs)
-               printf(0, 'Printing approx_log for %s\n', obj.approxs{i}.name);
+               printf(0, 'Printing approx_log for %s (on_gpu = %d)\n', obj.approxs{i}.name, obj.approxs{i}.on_gpu);
                obj.approx_logs{i}.Printf(); 
+               printf(0, '====================================================\n');
+           end
+        end
+        
+        function BestSpeedup(obj)
+           for i = 1:length(obj.approx_logs)
+               printf(0, 'Printing best speedup for %s\n', obj.approxs{i}.name);
+               obj.approx_logs{i}.BestSpeedup(); 
            end
         end
 
@@ -67,7 +75,7 @@ classdef Scheduler < handle
                         if (isempty(Wapprox))
                             [Wapprox, approx_ret] = approx.ApproxGeneric(approx_vars);
                             [test_error, orig_time] = approx.RunOrigConv(Wapprox);
-                            log.SaveApproxInfo(approx_vars, struct('test_error', test_error, 'orig_time', orig_time));                
+                            log.SaveApproxInfo(approx_vars, struct('test_error', test_error, 'orig_time', orig_time, 'on_gpu', approx.on_gpu));                
                         end
                         test_error = log.GetApproxInfo(approx_vars).test_error;
                         

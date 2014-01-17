@@ -15,7 +15,8 @@ plan = Plan(jsons);
 
 
 S = Scheduler(struct('acceptance', 0.8, 'orig_test_error', 110, 'no_compilation', 1));
-approx = NoApproximation('_test',  struct('json', { jsons{2} }), struct());                                 
+approx = NoApproximation(struct('suffix', '_test'), ...
+                         struct('json', { jsons{2} }), struct());                                 
 S.Add(approx);
 S.approx_logs{1}.ClearLog();
 S.Run();

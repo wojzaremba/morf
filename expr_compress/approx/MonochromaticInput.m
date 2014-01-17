@@ -1,5 +1,5 @@
 classdef MonochromaticInput < Approximation
-    properties        
+    properties  
     end
     
     methods(Static)
@@ -17,8 +17,8 @@ classdef MonochromaticInput < Approximation
     end
     
     methods
-        function obj = MonochromaticInput(suffix, approx_vars, cuda_vars)
-            obj@Approximation(suffix, approx_vars, cuda_vars);
+        function obj = MonochromaticInput(general_vars, approx_vars, cuda_vars)
+            obj@Approximation(general_vars, approx_vars, cuda_vars);
             obj.name = 'monochromatic_input';
         end
         
@@ -38,33 +38,41 @@ classdef MonochromaticInput < Approximation
                 ret = false;
             end
             
-            % If num_image_colors <= 4, need filtersPerColors to be a multiple of 
-            % B_Y * filtersPerThread.
+            % colorsPerBlock must be 1 or a multiple of 2
+            if (cuda_vars.colorsPerBlock > 1 && mod(cuda_vars.colorsPerBlock, 2))
+                ret = false;
+            end
+            
+            % Make sure filtersPerColor is correct
             filtersPerColor = numFilters / approx_vars.num_image_colors;
-            if (approx_vars.num_image_colors <= 4) 
+            if (cuda_vars.filtersPerThread * cuda_vars.B_Y < filtersPerColor)
                 if (mod(filtersPerColor, cuda_vars.B_Y * cuda_vars.filtersPerThread) )
                     ret = false;
                 end
-                if (cuda_vars.B_Y * cuda_vars.filtersPerThread > filtersPerColor) 
-                    if (cuda_vars.B_Y * cuda_vars.filtersPerThread / filtersPerColor ~= 2) 
-                        ret = false;
-                    end
-                       
-                    if (cuda_vars.B_Y * cuda_vars.filtersPerThread / filtersPerColor == 2 && cuda_vars.colorsPerBlock ~= 2)
-                       ret = false;
-                    end                    
-                end
             else
-                if (mod(filtersPerColor, cuda_vars.B_Y)) 
-                    ret = false;
-                end                
+               if (mod(cuda_vars.filtersPerThread * cuda_vars.B_Y, filtersPerColor))
+                   ret = false;
+               else
+                   if (cuda_vars.filtersPerThread * cuda_vars.B_Y/ filtersPerColor ~= cuda_vars.colorsPerBlock)
+                       ret = false;
+                   end
+               end
             end
         end        
         
         function [Wapprox, ret] = Approx(obj, params)            
             global plan;
             global root_path;
-            W = permute(plan.layer{2}.cpu.vars.W, [1, 4, 2, 3]);
+            
+            % Get original W
+            if (plan.layer{2}.on_gpu)
+                W = C_(CopyFromGPU, plan.layer{2}.gpu.vars.W);
+                W = reshape(W, [96, 11, 11, 3]);
+                W = double(permute(W, [1, 4, 2, 3]));
+            else
+                W = permute(plan.layer{2}.cpu.vars.W, [1, 4, 2, 3]);
+            end
+            
             for f=1:size(W, 1)
                 [u,s,v] = svd(squeeze(W(f,:,:)),0);
                 C(f,:) = u(:,1);
@@ -75,6 +83,7 @@ classdef MonochromaticInput < Approximation
             num_image_colors = params.num_image_colors;
             [assignment,colors] = litekmeans(C',num_image_colors);
             colors = colors';
+            
             % Permutaiton of W, back to orig form is done inside
             % reconstruction function.
             Wapprox = MonochromaticInput.ReconstructW(colors, dec, S, assignment, size(W));
@@ -94,7 +103,7 @@ classdef MonochromaticInput < Approximation
             ret.layer = 'MonoConv';
             ret.layer_nr = 2;
             ret.json = struct('num_image_colors', num_image_colors);
-            ret.on_gpu = 1;
+            ret.on_gpu = Val(params, 'on_gpu', obj.on_gpu);
         end       
 
     end

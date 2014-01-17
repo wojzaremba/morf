@@ -30,8 +30,8 @@ classdef CudasLog < handle
         end
         
         function Printf(obj)
-            fprintf('test_error = %d \n', obj.test_error);
-            fprintf('orig_time = %d \n', obj.orig_time);
+            fprintf('\ttest_error = %d \n', obj.test_error);
+            fprintf('\torig_time = %d \n', obj.orig_time);
             key_set = keys(obj.cuda_results);
             for i = 1 : length(key_set)
                 key = key_set{i};
@@ -47,12 +47,13 @@ classdef CudasLog < handle
             best_cuda_vars = '';
             for i = 1 : length(key_set)
                 key = key_set{i};
-                speedup = obj.cuda_results(key).cuda_speedup;
+                speedup = obj.cuda_results(key).approx_time;
                 if (speedup > best_speedup)
                     best_speedup = speedup;
                     best_cuda_vars = key;
                 end
             end
+            best_speedup = obj.orig_time / speedup;
         end
         
     end

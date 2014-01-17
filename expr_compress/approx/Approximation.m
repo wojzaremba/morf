@@ -6,15 +6,17 @@ classdef Approximation < handle
         approx_vars
         cuda_vars        
         suffix
+        on_gpu
     end
     
     methods
-        function obj = Approximation(suffix, approx_vars, cuda_vars)
+        function obj = Approximation(general_vars, approx_vars, cuda_vars)
             obj.approx_vars = approx_vars;
             obj.cuda_vars = cuda_vars;            
             obj.iter_approx_vars = 1;
             obj.iter_cuda_vars = 1;
-            obj.suffix = suffix;
+            obj.suffix = general_vars.suffix;
+            obj.on_gpu = Val(general_vars, 'on_gpu', 0);
         end
         
         function str = FullName(obj)
@@ -40,7 +42,11 @@ classdef Approximation < handle
         
         function [test_error, time] = RunOrigConv(obj, Wapprox)
             global plan
-            plan.layer{2}.cpu.vars.W = Wapprox;
+            if (plan.layer{2}.on_gpu)
+                C_(CopyToGPU, plan.layer{2}.gpu.vars.W, single(Wapprox));
+            else
+                plan.layer{2}.cpu.vars.W = Wapprox;
+            end
             plan.input.step = 1;
             plan.input.GetImage(0);
             ForwardPass(plan.input);    

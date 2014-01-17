@@ -17,7 +17,7 @@ plan.layer{2}.cpu.vars.W = W;
 
 approx_params = struct('num_image_colors', num_image_colors);
 
-approx = MonochromaticInput('_test',  struct(), struct());
+approx = MonochromaticInput(struct('suffix', '_test'),  struct(), struct());
 
 [Wapprox, ret] = approx.Approx(approx_params);
 
