@@ -15,10 +15,7 @@ classdef MonoConv < LayerApprox
             bs = plan.input.batch_size;
             v = obj.gpu.vars;
             pdims = obj.prev_dim();
-            Capprox_gen(Reshape, v.X, pdims(3), bs * pdims(1) * pdims(2));
-            Capprox_gen(Mult, v.X, v.Cmono, v.Xmono);
-            Capprox_gen(Reshape, v.Xmono, pdims(1) * pdims(2) * obj.num_image_colors, bs);
-            Capprox_gen(approx_pointer, v.Xmono, v.Wmono, v.out, pdims(2), obj.num_image_colors, obj.patch(1), obj.stride(1), obj.padding(1), v.perm);
+            Capprox_gen(approx_pointer, v.X, v.Wmono, v.out, pdims(2), obj.num_image_colors, obj.patch(1), obj.stride(1), obj.padding(1), v.perm, v.Cmono);
             Capprox_gen(Reshape, v.out, bs * obj.dims(1) * obj.dims(2), obj.depth());
             Capprox_gen(AddVector, v.out, v.B, v.out);
             Capprox_gen(Reshape, v.out, obj.dims(1) * obj.dims(2) * obj.depth(), bs);
@@ -71,7 +68,6 @@ classdef MonoConv < LayerApprox
             obj.AddParam('Cmono', [obj.num_image_colors, prev_dim(3)], false);            
             obj.AddParam('Wmono', [obj.depth, obj.patch(1), obj.patch(2)], false);     
             obj.AddParam('perm', [obj.depth], false); 
-            obj.AddParam('Xmono', [obj.prev{1}.batch_size, prev_dim(1), prev_dim(2), prev_dim(3)], false); 
         end
     end
 end

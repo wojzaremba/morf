@@ -104,6 +104,22 @@ classdef ApproxLog < handle
                 cudas_log.Printf();
             end
         end
+        
+        function [best_cuda_vars, best_speedups] = BestSpeedup(obj)
+            cudas_logs = obj.cudas_logs;
+            key_set = keys(cudas_logs);
+            best_cuda_vars = [];
+            best_speedups = [];
+            for i = 1 : length(key_set)
+                key = key_set{i};
+                cudas_log = cudas_logs(key);
+                [cuda_vars, speedup] = cudas_log.BestSpeedup();
+                best_cuda_vars = [best_cuda_vars, cuda_vars];
+                best_speedups = [best_speedups, speedup];
+                fprintf('\tApprox vars: %s \n', key);
+                fprintf('\t\tBest Speedup: %f with cuda_vars = %s\n\n', speedup, cuda_vars);
+            end
+        end
     end
     
 end

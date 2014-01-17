@@ -15,7 +15,7 @@ assignment = reshape(repmat(1:num_image_colors', [1, dims(1) / num_image_colors]
 W = MonochromaticInput.ReconstructW(colors, dec, S, assignment, [dims(1), dims(4), dims(2), dims(3)]);
 plan.layer{2}.cpu.vars.W = W;
 approx_params = struct('num_image_colors', num_image_colors);
-approx = MonochromaticInput('_test',  struct(), struct());
+approx = MonochromaticInput(struct('suffix', '_test'),  struct(), struct());
 [Wapprox, ret] = approx.Approx(approx_params);
 
 assert(norm(W(:) - Wapprox(:)) < 1e-4);
