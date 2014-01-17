@@ -3,44 +3,44 @@ Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: compress.aux
 The style file: icml2014.bst
 Database file #1: bibliography.bib
-You've used 5 entries,
+You've used 7 entries,
             2773 wiz_defined-function locations,
-            622 strings with 5890 characters,
-and the built_in function-call counts, 3046 in all, are:
-= -- 261
-> -- 220
+            630 strings with 6226 characters,
+and the built_in function-call counts, 3902 in all, are:
+= -- 329
+> -- 280
 < -- 4
-+ -- 74
-- -- 69
-* -- 247
-:= -- 462
-add.period$ -- 17
-call.type$ -- 5
-change.case$ -- 38
-chr.to.int$ -- 5
-cite$ -- 10
-duplicate$ -- 133
-empty$ -- 217
-format.name$ -- 74
-if$ -- 645
++ -- 94
+- -- 87
+* -- 316
+:= -- 596
+add.period$ -- 23
+call.type$ -- 7
+change.case$ -- 50
+chr.to.int$ -- 7
+cite$ -- 14
+duplicate$ -- 177
+empty$ -- 289
+format.name$ -- 94
+if$ -- 823
 int.to.chr$ -- 1
 int.to.str$ -- 1
-missing$ -- 5
-newline$ -- 33
-num.names$ -- 20
-pop$ -- 86
+missing$ -- 7
+newline$ -- 43
+num.names$ -- 28
+pop$ -- 114
 preamble$ -- 1
-purify$ -- 33
+purify$ -- 43
 quote$ -- 0
-skip$ -- 113
+skip$ -- 143
 stack$ -- 0
-substring$ -- 90
-swap$ -- 31
+substring$ -- 94
+swap$ -- 34
 text.length$ -- 3
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 55
+type$ -- 77
 warning$ -- 0
-while$ -- 21
+while$ -- 27
 width$ -- 0
-write$ -- 72
+write$ -- 96

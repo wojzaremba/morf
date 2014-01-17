@@ -83,33 +83,44 @@ prediction accuracy (approximated kernels give prediction within $\sim 1\%$ of t
 
 \section{Related Work}
 There have been extensive research devoted speeding up forward pass of neural network. 
-Most efforts are computational architecture specific, i.e. to CPU or GPU architecture.
+There are few different pathways, how the speed up can be achieved. 
+
+
+Vanhoucke et. al. \cite{vanhoucke2011improving} examined how to exploit properties of CPUs to speed up execution.
+They present many solutions specific to Intel and AMD CPUs, however some of their propositions are general enough to be 
+used for any type of processor.
+They describe how to align memory, and use SIMD operations (vectorized operations on CPU) to get more efficient matrix multiplication. 
+Moreover, they propose to use linearly quantize for weights, and input. Linear quantization
+replaces 32-bit values of weights with 8-bits (range $[-128, 127]$). This approximation is similar
+to our approach, which replaces kernel $W$ with few other operations, 
+which give result approximately equal to convolution with $W$. Moreover, linear quantization
+can be used in conjunction with methods presented in this paper.
 
 
 
-Vanhoucke et. al. examined how to exploit properties of CPUs to speed up execution.
-This includes aligning memory, using vectorized operations, and values quantized 
-(this is conceptually most similar to what we do). They were able to achieve $4 \times$ speed up
-by combining this techniques. Methods presented in aforomented paper are orthogonal to 
-our low-rank approximations, and can be used simulteniously. 
+Most expensive operation in neural networks for vision is convolution. Complexity of this operation
+grows proportionally to the square size of local receptive field (in direct implementation). 
+However, Mathieu et. al. \cite{mathieu2013fast} shown that convolution can be efficiently
+computed in Fourier domain, where it becomes element-wise multiplication (there is no cost
+associated with size of receptive field). It is worth to note, that to operate in Fourier domain, 
+one has to perform Fourier transform, and inverse Fourier transform, which are
+not without cost. They report speed up in forward pass up to $10x$ (depending on kernel size etc.).
+Moreover, this method can be used jointly with most of techniques presented in this paper.
 
 
 
+This paper get inspired by work of Denil et. al \cite{denil2013predicting} on redundancies in neural 
+networks. They shown that based on small fraction of weights (e.g. $\sim 5\%$), one can accurately 
+predict rest of weights. This indicates that neural networks are heavily over-parametrized.
+All the methods presented here focus on exploiting linear structure of this over-parametrization.
 
 
-Denil et. al \cite{denil2013predicting} noticed that 
+\section{Tensor Low Rank Approximations}
+In this section, we give theoretical background on low rank approximations of
 
-Classical optimizations for convolutions. 
+\subsection{Matrix Low Rank Approximation}
 
-Quantization.
-
-Sparse arrays of signatures for online character
-recognition.
-
-Understanding of ConvNets. 
-
-
-\section{Tensor Low Rank Approximation}
+\section{Tensor Low Rank Approximations}
 
 This section describes a low-rank approximation of a generic 
 convolutional layer. 

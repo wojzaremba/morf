@@ -17,20 +17,13 @@ endif
 
 ################################################################################
 
-all: clean mextemp
+all: clean mexapprox
 
 nvccapprox:
 	$(NVCC) Capprox_gen.cpp --cuda src/Capprox_gen.cu
 
 mexapprox: nvccapprox
 	$(MEX) Capprox_gen.cpp
-
-nvcctemp:
-	$(NVCC) temp.cpp --cuda src/temp.cu
-
-mextemp: nvcctemp
-	$(MEX) temp.cpp
-
 
 clean:
 	rm -rf *.mex*
