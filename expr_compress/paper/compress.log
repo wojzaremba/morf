@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/MacPorts 2013_5) (format=pdflatex 2014.1.6)  17 JAN 2014 16:05
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/MacPorts 2013_5) (format=pdflatex 2014.1.6)  17 JAN 2014 16:36
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -463,92 +463,89 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 {/opt/local/var/db/texmf/fonts/map/pdftex/updmap/pdftex.map}]
-Underfull \hbox (badness 1394) in paragraph at lines 128--132
+Underfull \hbox (badness 1394) in paragraph at lines 149--153
 []\OT1/cmr/m/n/10 Let $\OML/cmm/m/it/10 W$ \OT1/cmr/m/n/10 be a $4$-dimensional
  ten-sor of di-men-sions
  []
 
 
-LaTeX Warning: Reference `firsttable' on page 2 undefined on input line 192.
+LaTeX Warning: Reference `firsttable' on page 2 undefined on input line 213.
 
 
-Underfull \hbox (badness 1430) in paragraph at lines 201--207
+Underfull \hbox (badness 1430) in paragraph at lines 222--228
 \OT1/cmr/m/n/10 of the first co-or-di-nate space $\OML/cmm/m/it/10 C$ \OT1/cmr/
 m/n/10 and a par-ti-tion
  []
 
-<img/eval_per_batch.png, id=32, 578.16pt x 434.1018pt>
+[2] <img/eval_per_batch.png, id=51, 578.16pt x 434.1018pt>
 File: img/eval_per_batch.png Graphic file (type png)
 
 <use img/eval_per_batch.png>
-Package pdftex.def Info: img/eval_per_batch.png used on input line 233.
+Package pdftex.def Info: img/eval_per_batch.png used on input line 254.
 (pdftex.def)             Requested size: 234.15271pt x 175.81027pt.
 
-<img/eval_per_layer_per_batch_128_batch_size.png, id=33, 968.61874pt x 340.2712
+<img/eval_per_layer_per_batch_128_batch_size.png, id=52, 968.61874pt x 340.2712
 6pt>
 File: img/eval_per_layer_per_batch_128_batch_size.png Graphic file (type png)
  <use img/eval_per_layer_per_batch_128_batch_size.png>
 Package pdftex.def Info: img/eval_per_layer_per_batch_128_batch_size.png used o
-n input line 237.
+n input line 258.
 (pdftex.def)             Requested size: 234.15271pt x 82.25346pt.
 
-<img/eval_per_layer_per_batch_1_batch_size.png, id=34, 978.65625pt x 340.27126p
+<img/eval_per_layer_per_batch_1_batch_size.png, id=53, 978.65625pt x 340.27126p
 t>
 File: img/eval_per_layer_per_batch_1_batch_size.png Graphic file (type png)
  <use img/eval_per_layer_per_batch_1_batch_size.png>
 Package pdftex.def Info: img/eval_per_layer_per_batch_1_batch_size.png used on 
-input line 241.
+input line 262.
 (pdftex.def)             Requested size: 234.15271pt x 81.41235pt.
 
-<img/eval_per_batch_GPU.png, id=35, 578.16pt x 434.1018pt>
+<img/eval_per_batch_GPU.png, id=54, 578.16pt x 434.1018pt>
 File: img/eval_per_batch_GPU.png Graphic file (type png)
 
 <use img/eval_per_batch_GPU.png>
-Package pdftex.def Info: img/eval_per_batch_GPU.png used on input line 247.
+Package pdftex.def Info: img/eval_per_batch_GPU.png used on input line 268.
 (pdftex.def)             Requested size: 234.15271pt x 175.81027pt.
 
-<img/eval_per_layer_per_batch_GPU_128_batch_size.png, id=36, 985.6825pt x 340.2
+<img/eval_per_layer_per_batch_GPU_128_batch_size.png, id=55, 985.6825pt x 340.2
 7126pt>
 File: img/eval_per_layer_per_batch_GPU_128_batch_size.png Graphic file (type pn
 g)
  <use img/eval_per_layer_per_batch_GPU_128_batch_size.png>
 Package pdftex.def Info: img/eval_per_layer_per_batch_GPU_128_batch_size.png us
-ed on input line 251.
+ed on input line 272.
 (pdftex.def)             Requested size: 234.15271pt x 80.83083pt.
 
-<img/first.png, id=37, 78.2925pt x 208.78pt>
+<img/first.png, id=56, 78.2925pt x 208.78pt>
 File: img/first.png Graphic file (type png)
  <use img/first.png>
-Package pdftex.def Info: img/first.png used on input line 271.
+Package pdftex.def Info: img/first.png used on input line 292.
 (pdftex.def)             Requested size: 112.74019pt x 300.65248pt.
 
-<img/first_appr.png, id=38, 78.2925pt x 208.78pt>
+<img/first_appr.png, id=57, 78.2925pt x 208.78pt>
 File: img/first_appr.png Graphic file (type png)
  <use img/first_appr.png>
-Package pdftex.def Info: img/first_appr.png used on input line 274.
+Package pdftex.def Info: img/first_appr.png used on input line 295.
 (pdftex.def)             Requested size: 112.74019pt x 300.65248pt.
 
+(./compress.bbl
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [2]
-(./compress.bbl
-Underfull \vbox (badness 1803) has occurred while \output is active []
-
-
+ [3 <./img/eval_per_batch.png (PNG copy)> <./img/eval_per_layer_per_batch_128_b
+atch_size.png (PNG copy)> <./img/eval_per_layer_per_batch_1_batch_size.png (PNG
+ copy)> <./img/eval_per_batch_GPU.png (PNG copy)>]
 Underfull \hbox (badness 1910) in paragraph at lines 41--45
 []\OT1/cmr/m/n/10 Vanhoucke, Vin-cent, Se-nior, An-drew, and Mao,
  []
 
-[3 <./img/eval_per_batch.png (PNG copy)> <./img/eval_per_layer_per_batch_128_ba
-tch_size.png (PNG copy)> <./img/eval_per_layer_per_batch_1_batch_size.png (PNG 
-copy)> <./img/eval_per_batch_GPU.png (PNG copy)>])
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 295.
+)
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 316.
  [4 <./img/eval_per_layer_per_batch_GPU_128_batch_size.png (PNG copy)> <./img/f
 irst.png (PNG copy)> <./img/first_appr.png (PNG copy)>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 295.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 316.
  (./compress.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 295.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 295.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 316.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 316.
 Package rerunfilecheck Info: File `compress.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
 
@@ -558,16 +555,16 @@ LaTeX Warning: There were undefined references.
 
 LaTeX Warning: There were multiply-defined labels.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 295.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 316.
  ) 
 Here is how much of TeX's memory you used:
  7288 strings out of 493315
  103193 string characters out of 6139671
- 201922 words of memory out of 5000000
+ 199922 words of memory out of 5000000
  10581 multiletter control sequences out of 15000+600000
  12658 words of font info for 47 fonts, out of 8000000 for 9000
  957 hyphenation exceptions out of 8191
- 29i,11n,45p,242b,438s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 29i,12n,45p,242b,428s stack positions out of 5000i,500n,10000p,200000b,80000s
 </opt/local/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmbx10.pfb></o
 pt/local/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmbx12.pfb></opt/lo
 cal/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmbx9.pfb></opt/local/sh
@@ -583,11 +580,12 @@ cm/cmsl9.pfb></opt/local/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cms
 y10.pfb></opt/local/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmsy5.pf
 b></opt/local/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmsy7.pfb></op
 t/local/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmti10.pfb></opt/loc
-al/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmti9.pfb>
-Output written on compress.pdf (4 pages, 327578 bytes).
+al/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmti9.pfb></opt/local/sha
+re/texmf-texlive/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on compress.pdf (4 pages, 334479 bytes).
 PDF statistics:
- 152 PDF objects out of 1000 (max. 8388607)
- 120 compressed objects within 2 object streams
+ 156 PDF objects out of 1000 (max. 8388607)
+ 123 compressed objects within 2 object streams
  40 named destinations out of 1000 (max. 500000)
  36 words of extra memory for PDF output out of 10000 (max. 10000000)
 

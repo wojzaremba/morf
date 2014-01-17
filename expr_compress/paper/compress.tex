@@ -99,26 +99,47 @@ can be used in conjunction with methods presented in this paper.
 
 
 Most expensive operation in neural networks for vision is convolution. Complexity of this operation
-grows proportionally to the square size of local receptive field (in direct implementation). 
+grows proportionally to the square size of local receptive field (in the direct, common implementation). 
 However, Mathieu et. al. \cite{mathieu2013fast} shown that convolution can be efficiently
 computed in Fourier domain, where it becomes element-wise multiplication (there is no cost
 associated with size of receptive field). It is worth to note, that to operate in Fourier domain, 
-one has to perform Fourier transform, and inverse Fourier transform, which are
-not without cost. They report speed up in forward pass up to $10x$ (depending on kernel size etc.).
+one has to perform Fourier transform, and inverse Fourier transform to bring data back to original domain, which are
+operations not without cost. They report speed up in forward pass up to $10x$ (depending on the kernel size, number of features etc.).
 Moreover, this method can be used jointly with most of techniques presented in this paper.
 
 
 
-This paper get inspired by work of Denil et. al \cite{denil2013predicting} on redundancies in neural 
+Our low-rank approximations get inspired by work of Denil et. al \cite{denil2013predicting} on redundancies in neural 
 networks. They shown that based on small fraction of weights (e.g. $\sim 5\%$), one can accurately 
 predict rest of weights. This indicates that neural networks are heavily over-parametrized.
 All the methods presented here focus on exploiting linear structure of this over-parametrization.
 
 
 \section{Tensor Low Rank Approximations}
-In this section, we give theoretical background on low rank approximations of
+In this section, we give theoretical background on low rank approximations. First, we discuss simplest setting, which is
+for matrices (two dimensional tensors). Further, we move to approximation of 4-dimensional tensors with 2 convolutional (spacial)
+dimensions.
+
 
 \subsection{Matrix Low Rank Approximation}
+Let's consider input $X \in \mathbb{R}^{n \times m}$, and matrix of weights $W \in \mathbb{R}^{m \times k}$. Matrix multiplication
+, which is the main operation for fully connected layers costs $O(nmk)$. However, potentially $W$ might have a low-rank (many 
+eigenvalues close to zero), and operation $XW$ can be computed much faster. 
+
+
+Every matrix can be expressed using singular value decomposition:
+\begin{equation*}
+	W = USV^T\text{, where }U \in \mathbb{R}^{m \times m}, S \in \mathbb{R}^{m \times k}, V \in \mathbb{R}^{k \times k}
+\end{equation*}
+$S$ is has eigenvalues on the diagonal, and apart from it has zeros. $W$ can be approximated by using $t$ most significant
+eigenvalues from $S$. We can write approximation as
+\begin{equation*}
+	\hat{W} = \hat{U}\hat{S}\hat{V}^T\text{, where }\hat{U} \in \mathbb{R}^{m \times t}, \hat{S} \in \mathbb{R}^{t \times t}, \hat{V} \in \mathbb{R}^{t \times k}
+\end{equation*}
+
+Cost of multiplication $X$ with $\hat{W}$ is $O(nmt + nt^2 + ntk)$, which can be significantly smaller than $O(nmk)$ (for sufficiently small $t$).
+It is worth to note, that often major cost is in memory management, and aforementioned complexities might be only relevant for large matrices.
+
 
 \section{Tensor Low Rank Approximations}
 
