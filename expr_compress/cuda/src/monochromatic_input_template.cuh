@@ -107,7 +107,9 @@ __global__ void filterActsMonoEven_YxX_color(float* images, float* filters, floa
     const int myImgIdx = blockIdx.x * B_X * imgsPerThread + threadIdx.x;
     
 	images += myImgIdx;
-    filters += (int)perm[globalFilterIdx + shFilterLoadX] + shFilterLoadY * numFilters;
+    if (shFilterLoadY < B_Y) {
+		filters += (int)perm[globalFilterIdx + shFilterLoadX] + shFilterLoadY * numFilters;
+	}
     targets += moduleIdx * numImages + myImgIdx;
 
     float prod[filtersPerThread][imgsPerThread];
@@ -119,156 +121,107 @@ __global__ void filterActsMonoEven_YxX_color(float* images, float* filters, floa
         }
     }
 
-    if (colorsPerBlock == 1) {
-         /*
-          * Fill shColorCoeff with the color coefficients
-          */
-         if (tidx < 3) {
-                  shColorCoeff[0][tidx] = colors[colorStartIdx * origNumColors + tidx];
-        }
-        __syncthreads();
-
-            for (int p = 0; p < filterPixels; p += B_Y) {
-            /*
-             * Load B_Y pixels from B_Y*filtersPerThread filters
-             */
-            if (shFilterLoadY < B_Y) {
-                #pragma unroll
-                for (int p2 = 0; p2 < B_Y; p2 += B_X/filtersPerThread) {
-                    if (p + p2 + shFilterLoadY < filterPixels) {
-                        shFilters[shFilterLoadY + p2][shFilterLoadX] = filters[(p + p2) * numFilters];
-                    } else {
-                        shFilters[shFilterLoadY + p2][shFilterLoadX] = 0;
-                    }
-                }
-            }
-
-            /*
-             * Load B_Y pixels from B_X*imgsPerThread images
-             */
-            const int pixIdx = p + threadIdx.y;
-            if (pixIdx < filterPixels) {
-                const int x = paddingStart + imgLoadModPosX + pixIdx % filterSize;
-                const int y = paddingStart + imgLoadModPosY + pixIdx / filterSize;
-                if (y >= 0 && y< imgSizeY && x >= 0 && x < imgSizeX) {
-                    #pragma unroll
-                    for (int i = 0; i < imgsPerThread; i++) {
-                        if (!checkImgBounds || myImgIdx + i * B_X < numImages) {
-                        	if (origNumColors == 3) {
-                            	shImages[threadIdx.y][threadIdx.x + i * B_X] = shColorCoeff[0][0] * images[imgStride * ( 0 * imgPixels + y * imgSizeX + x) + i * B_X] +
-                                                                               shColorCoeff[0][1] * images[imgStride * ( 1 * imgPixels + y * imgSizeX + x) + i * B_X] +
-                                                                               shColorCoeff[0][2] * images[imgStride * ( 2 * imgPixels + y * imgSizeX + x) + i * B_X];
-                            } 
-                        } else {
-                            shImages[threadIdx.y][threadIdx.x + i * B_X] = 0;
-                        }
-                    }
-                } else { // Padding
-                    #pragma unroll
-                    for (int i = 0; i < imgsPerThread; i++) {
-                        shImages[threadIdx.y][threadIdx.x + i * B_X] = 0;
-                    }
-                }
-            }
-            __syncthreads();
+    /*
+    * Fill shColorCoeff with the color coefficients
+    */
+    if (tidx < origNumColors * colorsPerBlock) {
+            const int shColorLoadY = tidx / origNumColors;
+            const int shColorLoadX = tidx % origNumColors;
+            shColorCoeff[shColorLoadY][shColorLoadX] = colors[(colorStartIdx + shColorLoadY) * origNumColors + shColorLoadX];
+    }
+    __syncthreads();
+    for (int p = 0; p < filterPixels; p += B_Y) {
+        /*
+         * Load B_Y pixels from B_Y*filtersPerThread filters
+         */
+        if (shFilterLoadY < B_Y) {
             #pragma unroll
-            for(int f = 0; f < filtersPerThread; f++) {
-                #pragma unroll
-                for (int i = 0; i < B_Y; i++) {
-                    #pragma unroll
-                    for(int g = 0; g < imgsPerThread; g++) {
-                        prod[f][g] += shImages[i][g * B_X + threadIdx.x] * shFilters[i][threadIdx.y + f * B_Y];
-                    }                
-                 }
+            for (int p2 = 0; p2 < B_Y; p2 += B_X/filtersPerThread) {
+                if (p + p2 + shFilterLoadY < filterPixels) {
+                    shFilters[shFilterLoadY + p2][shFilterLoadX] = filters[(p + p2) * numFilters];
+                } else {
+                    shFilters[shFilterLoadY + p2][shFilterLoadX] = 0;
+                }
             }
-            __syncthreads();
         }
-    } else { //colorsPerBlock == 2
-            /*
-                Fill shColorCoeff with the color coefficients
-                */
-                if (tidx < 6) {
-                        const int shColorLoadY = tidx / 3;
-                        const int shColorLoadX = tidx % 3;
-                        shColorCoeff[shColorLoadY][shColorLoadX] = colors[(colorStartIdx + shColorLoadY) * origNumColors + shColorLoadX];
-                }
-        __syncthreads();
-        for (int p = 0; p < filterPixels; p += B_Y) {
-            /*
-             * Load B_Y pixels from B_Y*filtersPerThread filters
-             */
-            if (shFilterLoadY < B_Y) {
-                #pragma unroll
-                for (int p2 = 0; p2 < B_Y; p2 += B_X/filtersPerThread) {
-                    if (p + p2 + shFilterLoadY < filterPixels) {
-                        shFilters[shFilterLoadY + p2][shFilterLoadX] = filters[(p + p2) * numFilters];
-                    } else {
-                        shFilters[shFilterLoadY + p2][shFilterLoadX] = 0;
-                    }
-                }
-            }
 
-            /*
-             * Load B_Y pixels from B_X*imgsPerThread images
-             */
-            const int pixIdx = p + threadIdx.y;
-            if (pixIdx < filterPixels) {
-                const int x = paddingStart + imgLoadModPosX + pixIdx % filterSize;
-                const int y = paddingStart + imgLoadModPosY + pixIdx / filterSize;
-                if (y >= 0 && y< imgSizeY && x >= 0 && x < imgSizeX) {
-                    #pragma unroll
-                    for (int i = 0; i < imgsPerThread; i++) {
-                        if (!checkImgBounds || myImgIdx + i * B_X < numImages) {
-                            #pragma unroll
-                            for (int c = 0; c < colorsPerBlock; c++) {
-                                //shImages[threadIdx.y + c * B_Y][threadIdx.x + i * B_X] = images[imgStride * ( (colorStartIdx + c) * imgPixels + y * imgSizeX + x) + i * B_X];
-                                if (origNumColors == 3) {
-                                	shImages[threadIdx.y + c * B_Y][threadIdx.x + i * B_X] = shColorCoeff[c][0] * images[imgStride * ( 0 * imgPixels + y * imgSizeX + x) + i * B_X] +
-                                    shColorCoeff[c][1] * images[imgStride * ( 1 * imgPixels + y * imgSizeX + x) + i * B_X] +
-                                    shColorCoeff[c][2] * images[imgStride * ( 2 * imgPixels + y * imgSizeX + x) + i * B_X];
-                               } 
-                            }
-                        } else {
-                            #pragma unroll
-                            for (int c = 0; c < colorsPerBlock; c++) {
-                                shImages[threadIdx.y + c * B_Y][threadIdx.x + i * B_X] = 0;
-                            }
+        /*
+         * Load B_Y pixels from B_X*imgsPerThread images
+         */
+        const int pixIdx = p + threadIdx.y;
+        if (pixIdx < filterPixels) {
+            const int x = paddingStart + imgLoadModPosX + pixIdx % filterSize;
+            const int y = paddingStart + imgLoadModPosY + pixIdx / filterSize;
+            if (y >= 0 && y< imgSizeY && x >= 0 && x < imgSizeX) {
+                #pragma unroll
+                for (int i = 0; i < imgsPerThread; i++) {
+                    if (!checkImgBounds || myImgIdx + i * B_X < numImages) {
+                        #pragma unroll
+                        for (int c = 0; c < colorsPerBlock; c++) {
+						 	shImages[threadIdx.y + c * B_Y][threadIdx.x + i * B_X] = 0; 
+							#pragma unroll				
+                            for (int j = 0; j < origNumColors; j++) {
+                            	shImages[threadIdx.y + c * B_Y][threadIdx.x + i * B_X] += shColorCoeff[c][j] * images[imgStride * ( j * imgPixels + y * imgSizeX + x) + i * B_X]; 
+                           } 
                         }
-                    }
-                } else { // Padding
-                    #pragma unroll
-                    for (int i = 0; i < imgsPerThread; i++) {
+                    } else {
                         #pragma unroll
                         for (int c = 0; c < colorsPerBlock; c++) {
                             shImages[threadIdx.y + c * B_Y][threadIdx.x + i * B_X] = 0;
                         }
                     }
                 }
-            }
-            __syncthreads();
-            #pragma unroll
-            for(int f = 0; f < filtersPerThread; f++) {
-                if (colorStartIdx + threadIdx.y + f * B_Y < colorStartIdx + numFilters / newNumColors) { 
+            } else { // Padding
+                #pragma unroll
+                for (int i = 0; i < imgsPerThread; i++) {
                     #pragma unroll
-                    for (int i = 0; i < B_Y*1; i++) {
-                        #pragma unroll
-                        for(int g = 0; g < imgsPerThread; g++) {
-                            prod[f][g] += shImages[i][g * B_X + threadIdx.x] * shFilters[i][threadIdx.y + f * B_Y];
-                        }                
-                     }
-                } else {
-                    #pragma unroll
-                    for (int i = B_Y; i < B_Y*2; i++) {
-                        #pragma unroll
-                        for(int g = 0; g < imgsPerThread; g++) {
-                            prod[f][g] += shImages[i][g * B_X + threadIdx.x] * shFilters[i - B_Y][threadIdx.y + f * B_Y];
-                        }                
-                     }
+                    for (int c = 0; c < colorsPerBlock; c++) {
+                        shImages[threadIdx.y + c * B_Y][threadIdx.x + i * B_X] = 0;
+                    }
                 }
             }
-            __syncthreads();
         }
+        __syncthreads();
+		
+		const int skip = filtersPerThread / colorsPerBlock;
+		#pragma unroll	
+		for (int c = 0; c < colorsPerBlock; c++) {
+			#pragma unroll	
+			for (int f = c * skip; f < (c+1) * skip; f++) {
+            	#pragma unroll
+            	for (int i = 0; i < B_Y; i++) {
+                	#pragma unroll
+                	for(int g = 0; g < imgsPerThread; g++) {
+                    	prod[f][g] += shImages[i + c * B_Y][g * B_X + threadIdx.x] * shFilters[i][threadIdx.y + f * B_Y];
+                	}                
+             	}
+			}				
+		}	
+		/*
+		#pragma unroll	
+		for (int f = 0; f < filtersPerThread / colorsPerBlock; f++) {
+            #pragma unroll
+            for (int i = 0; i < B_Y; i++) {
+                #pragma unroll
+                for(int g = 0; g < imgsPerThread; g++) {
+                    prod[f][g] += shImages[i][g * B_X + threadIdx.x] * shFilters[i][threadIdx.y + f * B_Y];
+                }                
+             }
+		}
+		#pragma unroll
+		for (int f = filtersPerThread / colorsPerBlock; f < filtersPerThread; f++) {
+            #pragma unroll
+            for (int i = 0; i < B_Y; i++) {
+                #pragma unroll
+                for(int g = 0; g < imgsPerThread; g++) {
+                    prod[f][g] += shImages[i + B_Y][g * B_X + threadIdx.x] * shFilters[i][threadIdx.y + f * B_Y];
+                }                
+             }
+		}
+		*/
+        __syncthreads();
     }
+    
     if (scale) {
         #pragma unroll
         for (int g = 0; g < imgsPerThread; g++) {
@@ -525,7 +478,7 @@ __global__ void filterActsMonoEvenManyCol_YxX_color(float* images, float* filter
     assert_(filters.isContiguous());
     assert_(targets.isContiguous());
    
-    if (newNumColors <= 4) {
+    if (newNumColors <= 16) {
         dim3 blocks = dim3(DIVUP(numImages, #B_X * #imgsPerThread), (numModules * numFilters) / (#B_Y * #filtersPerThread));
         dim3 threads(#B_X, #B_Y); // B_Y always 4
         if (scaleTargets == 0) {

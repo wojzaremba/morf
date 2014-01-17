@@ -27,10 +27,10 @@ if do_compile
     % set cuda kernel vars
     cuda_vars.origNumColors = 3;
     cuda_vars.filtersPerColor = numFilters / newNumColors;
-    cuda_vars.filtersPerThread = 4; % only relevant if newNumColors <= 4
+    cuda_vars.filtersPerThread = 2; % only relevant if newNumColors <= 4
     cuda_vars.B_Y = 6;
     cuda_vars.B_X = 32;
-    cuda_vars.colorsPerBlock = 1;%filtersPerThread * B_Y / filtersPerColor;
+    cuda_vars.colorsPerBlock = 2;%filtersPerThread * B_Y / filtersPerColor;
     cuda_vars.imgsPerThread = 4; %numImages % 128 == 0 ? 4 : numImages % 64 == 0 ? 2 : 1;
     cuda_vars.scale = 0;
     cuda_vars.checkImgBounds = mod(numImages, cuda_vars.B_X*cuda_vars.imgsPerThread) ~= 0;
