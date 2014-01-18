@@ -137,24 +137,31 @@ eigenvalues from $S$. We can write approximation as
 	\hat{W} = \hat{U}\hat{S}\hat{V}^T\text{, where }\hat{U} \in \mathbb{R}^{m \times t}, \hat{S} \in \mathbb{R}^{t \times t}, \hat{V} \in \mathbb{R}^{t \times k}
 \end{equation*}
 
-Cost of multiplication $X$ with $\hat{W}$ is $O(nmt + nt^2 + ntk)$, which can be significantly smaller than $O(nmk)$ (for sufficiently small $t$).
-It is worth to note, that often major cost is in memory management, and aforementioned complexities might be only relevant for large matrices.
+Cost of multiplication $X$ with $\hat{W}$ is $O(nmt + nt^2 + ntk)$, which can be significantly smaller than $O(nmk)$ (for sufficiently small $t$). E.g.
+for $n = 1000, m = 1000, k = 1000$ and $t = 100$, we have that exact computation takes $10^9$ operations, while the approximated one takes
+$2 * 10^8 + 10^7$ operations. This would give $\times 5$ theoretical speed up. However, often major cost is in memory management, 
+and theoretical speed up might be infeasible or very difficult to achieve. 
 
 
 \section{Tensor Low Rank Approximations}
 
-This section describes a low-rank approximation of a generic 
-convolutional layer. 
-
-Let $W$ be a $4$-dimensional tensor of dimensions $(C,X,Y,F)$,
-and let $I(c,x,y)$ denote an input signal, 
-where $c=1\dots C$ and $(x,y) \in \{1,\dots,N\}\times \{1,\dots,M\}$.
+We are going to focus on kernels of convolutional layers, and their approximations. 
+Such kernels can be described as a $4$-dimensional tensors. Let $W$ 
+be convolutional kernel. We refer to its dimensions as $(C, X, Y, F)$, where 
+$C$ is input number of feature maps (or colors), $X, Y$ are special dimensions
+over which we compute convolution, and $F$ is the target number of feature maps.
+Let $I \in \mathbb{R}^{C \times N \times M}$ denote an input signal.
 A generic convolutional layer is defined as
 \begin{align*}
 \label{convlayereq}
 &I \ast W (f,x,y) = \\
 &\sum_{c=1}^C \sum_{x'=-X/2}^{X/2} \sum_{y'=-Y/2}^{Y/2} I(c,x-x',y-y') W(c,x',y',f)
 \end{align*}
+
+Low-rank approximation of tensors is very similar to low-rank approximation of matrices.
+However, first we have to choose $2$ dimensions with respect to which we are approximating, and treat
+rest of tensor as it would be a matrix. Moreover, we show how to perform approximation in the way to
+exploit computation on GPU (e.g. enforce memory alignment).
 
 \subsection{Linear Compression of Convolutional Filter bank}
 
