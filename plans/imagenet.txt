@@ -11,10 +11,13 @@
     {
         "type": "Conv",
         "local_2d_patch" : {
-           "patch_rows": 11,
-           "patch_cols": 11,
-           "stride_rows": 4,
-           "stride_cols": 4,
+           "patch_rows": 7,
+           "patch_cols": 7,
+           "stride_rows": 2,
+           "stride_cols": 2,
+           "padding_rows" : 0,
+           "padding_cols" : 0,
+
         },
         "depth": 96,
         "function": "RELU"
@@ -35,7 +38,7 @@
         "one2one": true,
         "k": 2,
         "n": 5,
-        "alpha": 2e-5,
+        "alpha": 2e-4,
         "beta": 0.75
     },
 
@@ -44,8 +47,6 @@
         "local_2d_patch" : {
            "patch_rows": 5,
            "patch_cols": 5,
-           "padding_rows": 2,
-           "padding_cols": 2
         },
         "depth": 256,
         "function": "RELU"
@@ -66,7 +67,7 @@
         "one2one": true,
         "k": 2,
         "n": 5,
-        "alpha": 2e-5,
+        "alpha": 2e-4,
         "beta": 0.75
     },
 
@@ -78,7 +79,29 @@
            "padding_rows": 1,
            "padding_cols": 1
         },
-        "depth": 384,
+        "depth": 512,
+        "function": "RELU"
+    },
+
+    {
+        "type": "MaxPooling",
+        "local_2d_patch" : {
+           "patch_rows": 3,
+           "patch_cols": 3,
+           "stride_rows": 2,
+           "stride_cols": 2
+        },
+    },
+
+    {
+        "type": "Conv",
+        "local_2d_patch" : {
+           "patch_rows": 3,
+           "patch_cols": 3,
+           "padding_rows": 1,
+           "padding_cols": 1
+        },
+        "depth": 1024,
         "function": "RELU"
     },
 
@@ -90,19 +113,7 @@
            "padding_rows": 1,
            "padding_cols": 1
         },
-        "depth": 384,
-        "function": "RELU"
-    },
-
-    {
-        "type": "Conv",
-        "local_2d_patch" : {
-           "patch_rows": 3,
-           "patch_cols": 3,
-           "padding_rows": 1,
-           "padding_cols": 1
-        },
-        "depth": 256,
+        "depth": 512,
         "function": "RELU"
     },
 

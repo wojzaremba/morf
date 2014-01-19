@@ -29,8 +29,8 @@ classdef ImageInput < Input
             X = cell(batches, 1);
             Y = cell(batches, 1);
             for step = 1:batches
-                X_tmp = zeros([batch_size, real_input_dim]);
-                Y_tmp = zeros([batch_size, obj.output_size]);
+                X_tmp = zeros([batch_size, real_input_dim], class(data{1}.X));
+                Y_tmp = zeros([batch_size, obj.output_size], class(data{1}.Y));
                 for j = 1:batch_size
                     datapoint = data{(step - 1) * batch_size + j};
                     X_tmp(j, :) = datapoint.X(:);

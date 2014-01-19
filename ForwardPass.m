@@ -1,6 +1,6 @@
 function ForwardPass(obj)
 global plan
-
+printf(2, 'FP for %s\n', obj.name);
 if (obj.on_gpu)
     if (obj.layer_nr > 1) 
         if (plan.layer{obj.layer_nr - 1}.on_gpu == 0)

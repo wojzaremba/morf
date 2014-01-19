@@ -1,14 +1,14 @@
-clear all
+% clear all
 global plan
 w = load('~/morf/trained/epoch0000_phase1');
 
 addpath(genpath('../'));
-Plan('plans/imagenet_matthew.txt');
+Plan('plans/imagenet.txt');
 
 plan.input.train = [];
 plan.input.test = [];
-convs = [2, 5, 8, 9, 10];
-fulls = [12, 14, 16];
+convs = [2, 5, 8, 10, 11];
+fulls = [13, 14, 15];
 for i = 1:length(plan.layer)
     try 
         if (sum(convs == i) > 0) || (sum(fulls == i) > 0)
@@ -44,4 +44,4 @@ for i = 1:length(fulls)
     plan.layer{fulls(i)}.cpu.vars.W = W;
     plan.layer{fulls(i)}.cpu.vars.B = B;
 end
-save('../trained/imagenet_matthew', 'plan', '-v7.3');
+save('../trained/imagenet', 'plan', '-v7.3');

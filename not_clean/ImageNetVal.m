@@ -1,18 +1,9 @@
 clear all
-test = load('~/morf/data/imagenet/test');
-X = zeros(128, 224, 224, 3);
-for i = 1:128
-   X(i, :, :, :) = test.data{i}.X;
-end
-minX = double(squeeze(-min(X, [], 1)));
-maxX = double(squeeze(255 - max(X, [], 1)));
-meanX = (minX + maxX) / 2;
-
 f = dir('~/val/');
-X = zeros(128, 224, 224, 3);
+X = zeros(1024, 224, 224, 3);
 Y = zeros(size(X, 1), 1);
 idx = 1;
-offset = 2000;
+offset = 0;
 for i = 1 : length(f)
     fprintf('%d\n', i);
     if (f(i).name(end) ~= 'G')
@@ -31,7 +22,7 @@ for i = 1 : length(f)
         break;
     end    
 end
-X = X - repmat(reshape(meanX, [1, size(meanX, 1), size(meanX, 2), size(meanX, 3)]), [size(X, 1), 1, 1, 1]);
+X = X - repmat(mean(X, 1), [size(X, 1), 1, 1, 1]);
 
 meta = load('~/morf/data/imagenet/meta.mat');
 fid1 = fopen('~/morf/data/imagenet/labels.txt');
@@ -66,11 +57,7 @@ for i = 1:size(X, 1);
     data{i}.X = single(squeeze(X(i, :, :, :)));
     tmp = zeros(1000, 1);
     tmp(Y(i)) = 1;
-    data{i}.Y = tmp;
+    data{i}.Y = single(tmp);
 end
 assert(sum(Y == 0) == 0);
-save('~/morf/data/imagenet/val', 'data')
-
-X = [reshape(data{3}.X, [1, 3, 224, 224]); reshape(data{5}.X, [1, 3, 224, 224])];
-
-imagesc(min(max((data{1}.X + 200) / 400, 0), 1))
+save('~/morf/data/imagenet/test', 'data')

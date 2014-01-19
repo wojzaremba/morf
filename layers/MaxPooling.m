@@ -18,15 +18,15 @@ classdef MaxPooling < Layer
             dims = obj.dims;
             dims_prev = obj.prev_dim();
             bs = size(X, 1);
-            out = zeros([bs, dims(3), dims(1), dims(2)]);
-            idx = zeros([bs, dims(3), dims(1), dims(2)]);
+            out = zeros([bs, dims(3), dims(1), dims(2)], class(X));
+            idx = zeros([bs, dims(3), dims(1), dims(2)], class(X));
             X = permute(X, [1, 4, 2, 3]);
             X = reshape(X, [bs, dims_prev(3), dims_prev(1),  dims_prev(2)]);
             for b = 1:dims(1)
                 for c = 1:dims(2)
                     sx = (b - 1) * obj.stride(1) + 1;
                     sy = (c - 1) * obj.stride(2) + 1;
-                    tmp = X(:, :, sx:(sx + obj.patch(1) - 1), sy:(sy + obj.patch(2) - 1));
+                    tmp = X(:, :, sx:min(sx + obj.patch(1) - 1, size(X, 3)), sy:min(sy + obj.patch(2) - 1, size(X, 4)));
                     [out(:, :, b, c), idx(:, :, b, c)] = max(tmp(:, :, :), [], 3);
                 end
             end         
@@ -39,7 +39,7 @@ classdef MaxPooling < Layer
             global plan;
             data = obj.cpu.dvars.out;
             X = obj.cpu.vars.X;
-            dX = zeros([size(X, 1), size(X, 4), size(X, 2), size(X, 3)]);
+            dX = zeros([size(X, 1), size(X, 4), size(X, 2), size(X, 3)], class(X));
             idx = obj.cpu.vars.idx;
             idx1 = mod(idx - 1, obj.patch(2));
             idx2 = floor((idx - 1) / obj.patch(2));

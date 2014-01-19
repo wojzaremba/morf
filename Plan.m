@@ -18,6 +18,7 @@ classdef Plan < handle
         upload_weights
         all_uploaded_weights
         verbose
+        only_fp
     end
     
     methods
@@ -34,6 +35,7 @@ classdef Plan < handle
             end
             obj.jsons = jsons;
             obj.gid = 0;  
+            obj.only_fp = 0;
             try
                 C_(CleanGPU);
             catch

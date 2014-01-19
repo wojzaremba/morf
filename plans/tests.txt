@@ -1,4 +1,5 @@
 [
+
     {
         "type": "Conv",
         "local_2d_patch" : {

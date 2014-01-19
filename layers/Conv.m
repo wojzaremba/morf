@@ -21,29 +21,36 @@ classdef Conv < Layer
         end
         
         function FP(obj)
+            global plan
             prev_dim = obj.prev_dim();
             v = obj.cpu.vars;
             X = v.X;            
             bs = size(X, 1);
-            obj.cpu.vars.X_ = zeros(size(X, 1), prev_dim(1) + obj.padding(1) * 2 + obj.patch(1), prev_dim(2) + obj.padding(2) * 2 + obj.patch(1), prev_dim(3));
-            obj.cpu.vars.X_(:, (obj.padding(1) + 1):(obj.padding(1) + size(X, 2)), (obj.padding(2) + 1):(obj.padding(2) + size(X, 3)), :) = X;
-            obj.cpu.vars.stacked = zeros(size(X, 1) * prod(obj.dims(1:2)), obj.patch(1) * obj.patch(2) * prev_dim(3));
+            X_ = zeros(size(X, 1), prev_dim(1) + obj.padding(1) * 2 + obj.patch(1), prev_dim(2) + obj.padding(2) * 2 + obj.patch(1), prev_dim(3), class(X));
+            X_(:, (obj.padding(1) + 1):(obj.padding(1) + size(X, 2)), (obj.padding(2) + 1):(obj.padding(2) + size(X, 3)), :) = X;
+            stacked = zeros(size(X, 1) * prod(obj.dims(1:2)), obj.patch(1) * obj.patch(2) * prev_dim(3), class(X));
             for x = 1:obj.dims(1)
                 for y = 1:obj.dims(2)
                     sx = (x - 1) * obj.stride(1) + 1;
                     ex = sx + obj.patch(1) - 1;
                     sy = (y - 1) * obj.stride(2) + 1;
                     ey = sy + obj.patch(2) - 1;
-                    tmp = obj.cpu.vars.X_(:, sx:ex, sy:ey, :);
+                    tmp = X_(:, sx:ex, sy:ey, :);
                     idx = ((y - 1) * obj.dims(1) + x - 1) * bs + 1;
-                    obj.cpu.vars.stacked(idx : (idx + bs - 1), :) = tmp(:, :);
+                    stacked(idx : (idx + bs - 1), :) = tmp(:, :);
                 end
             end
-            results = reshape(obj.cpu.vars.stacked * v.W(:, :)', [bs, obj.dims(1:2), obj.depth]);           
+            results = stacked * v.W(:, :)';
+            results = reshape(results, [bs, obj.dims(1:2), obj.depth]);           
             results = bsxfun(@plus, results, reshape(v.B, [1, 1, 1, length(v.B)]));
-            obj.cpu.vars.forward_act = results;              
+            if (plan.only_fp == 0)            
+                obj.cpu.vars.forward_act = results;              
+                obj.cpu.vars.X_ = X_;
+                obj.cpu.vars.stacked = stacked;
+            end
             obj.cpu.vars.out = obj.F(results);
-        end     
+        end         
+          
         
         function BP(obj)
             global plan
@@ -75,7 +82,6 @@ classdef Conv < Layer
             obj.cpu.dvars.B = reshape(sum(pact(:, :), 2), size(v.B));
         end
         
-        % XXX: allocate forward_act var and other missing.
         function InitWeights(obj)
             global plan
             prev_dim = obj.prev_dim();

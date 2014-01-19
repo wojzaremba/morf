@@ -23,7 +23,7 @@ classdef LRNormal < Layer
         
         function FP(obj)
             X = obj.cpu.vars.X;
-            normal = zeros(size(X));
+            normal = zeros(size(X), class(X));
             for i = 1:obj.depth
                 normal(:, :, :, i) = obj.k + obj.alpha * sum(X(:, :, :, max(i - (obj.n - 1) / 2, 1):min(i + (obj.n - 1) / 2, obj.depth)) .^ 2, 4);
             end
@@ -37,7 +37,7 @@ classdef LRNormal < Layer
             data = obj.cpu.dvars.out;
             bs = size(data, 1);
             normal = obj.cpu.vars.normal;
-            dX = zeros(size(v.X));            
+            dX = zeros(size(v.X), class(v.X));            
             for b = 1:bs
                 for i = 1:obj.depth
                     dX(b, :, :, i) = ((normal(b, :, :, i) .^ obj.beta) - 2 .* (v.X(b, :, :, i) .^ 2) .* obj.alpha .* obj.beta .* (normal(b, :, :, i) .^ (obj.beta - 1))) ./ (normal(b, :, :, i) .^ (2 * obj.beta));
