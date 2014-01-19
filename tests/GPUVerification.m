@@ -1,5 +1,6 @@
 function GPUVerification()
 clc;
+clear all
 plan_json = ParseJSON('plans/tests.txt');
 for i = 1 : length(plan_json)
     jsons = {};

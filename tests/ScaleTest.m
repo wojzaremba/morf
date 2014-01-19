@@ -1,3 +1,4 @@
+clear all
 A = single(randn(10, 20, 30));
 C_(CopyToGPU, 1, A);
 C_(Scale, 1, single(4.), 1);

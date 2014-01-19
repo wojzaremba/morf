@@ -14,7 +14,11 @@ classdef NoApproximation < Approximation
         
         function [Wapprox, ret] = Approx(obj, params)            
             global plan;
-            Wapprox = plan.layer{2}.cpu.vars.W;          
+            if (plan.layer{2}.on_gpu) 
+                Wapprox = C_(CopyFromGPU, plan.layer{2}.gpu.vars.W);
+            else
+                Wapprox = plan.layer{2}.cpu.vars.W; 
+            end
             ret.Wapprox = Wapprox;
             ret.layer_nr = 2;
             ret.vars.W = Wapprox;
@@ -24,7 +28,7 @@ classdef NoApproximation < Approximation
             global plan
             layer_orig = plan.layer{args.layer_nr};
             json = layer_orig.json;
-            json.on_gpu = Val(args, 'on_gpu', 1);
+            json.on_gpu = Val(args, 'on_gpu', 0);
             layers = {};
             layers = plan.layer;
             plan.layer = {};
@@ -40,7 +44,7 @@ classdef NoApproximation < Approximation
             obj.SetLayerVars(args);     
             plan.input.GetImage(0);
             ForwardPass(plan.input);
-            test_error = plan.classifier.GetScore();            
+            test_error = plan.classifier.GetScore(5);            
             time = plan.time.fp(2);
             plan.layer = layers;
             plan.layer{args.layer_nr - 1}.next = {plan.layer{args.layer_nr}};            

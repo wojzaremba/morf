@@ -1,3 +1,4 @@
+clear all
 global plan
 jsons{1} = struct('batch_size', 2, 'rows', 1, 'cols', 1, 'depth', 4, 'type', 'TestInput');
 jsons{2} = struct('type', 'FC', 'depth', 5, 'function', 'RELU');

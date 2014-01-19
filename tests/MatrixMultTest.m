@@ -1,3 +1,4 @@
+clear all
 A = single(randn(10, 20));
 B = single(randn(20, 5));
 C_(CopyToGPU, 1, A);

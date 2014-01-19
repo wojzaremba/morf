@@ -9,8 +9,8 @@ n = size(X,2);
 last = 0;
 
 minener = 1e+20;
-outiters=4;
-maxiters=100;
+outiters=16;
+maxiters=200;
 
 for j=1:outiters
 
@@ -37,6 +37,7 @@ end
 if ener < minener
     outlabel = label;
     outm = m;
+    minener = ener;
 end
 
 end

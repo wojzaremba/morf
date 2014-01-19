@@ -1,3 +1,4 @@
+clear all
 images = single(randn([128, 8, 8, 32]));
 filters = single(randn([64, 8, 8, 32]));
 targets = single(zeros([128, 1, 1, 64]));

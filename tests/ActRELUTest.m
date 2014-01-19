@@ -1,3 +1,4 @@
+clear all
 A = single(randn(3, 5));
 B = single(zeros(3, 5));
 C_(CopyToGPU, 1, A);
