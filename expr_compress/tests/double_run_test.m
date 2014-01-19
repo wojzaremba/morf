@@ -1,5 +1,5 @@
 clear all
-global root_path debug
+global debug
 debug = 2;
 init();
 load_mock_model();

@@ -1,4 +1,3 @@
-% XXX : Deal with passing between C_ and Capprox_gen.
 clear all;
 global root_path debug plan executed_mock_fc
 debug = 0;

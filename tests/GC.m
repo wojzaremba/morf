@@ -10,6 +10,7 @@ for i = 1 : length(plan_json)
     end
     jsons{end + 1} = plan_json{i};
     plan = Plan(jsons);
+    plan.layer{2}.bp_dx_on_first = 1;
     fprintf('\n\nVerifing %d layer %s\n', i, plan.layer{end}.type);
     if (~VerifyLayer())
         assert(0);

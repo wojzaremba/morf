@@ -1,6 +1,5 @@
-% XXX : Deal with passing between C_ and Capprox_gen.
-clear all;
-global root_path debug plan executed_mock_fc
+clear all
+global debug plan
 debug = 0;
 init();
 
@@ -28,7 +27,6 @@ if (plan.layer{2}.on_gpu)
 else
     plan.layer{2}.cpu.vars.W = W;
 end
-
 
 S = Scheduler(struct('acceptance', 0.8, 'orig_test_error', 110, 'no_compilation', 0));
 approx = MonochromaticInput(struct('suffix', '_test', 'on_gpu', 1),...

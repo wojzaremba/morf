@@ -1,5 +1,5 @@
 clear all
-global root_path debug plan executed_mock_fc
+global debug plan executed_mock_fc
 debug = 2;
 init();
 load_mock_model();

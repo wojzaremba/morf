@@ -2,25 +2,23 @@ classdef Scheduler < handle
     properties
         approxs
         approx_logs
-        acceptance
         path
         no_compilation
-        orig_test_error
+        max_errors
     end    
     
     methods
         function obj = Scheduler(opt)
             obj.approxs = {};
             obj.approx_logs = {};
-            obj.acceptance = opt.acceptance;
-            obj.orig_test_error = opt.orig_test_error;
+            obj.max_errors = opt.max_errors;
             obj.no_compilation = Val(opt, 'no_compilation', 0);
         end
         
         function Add(obj, approx)
             obj.approxs{end + 1} = approx;
             obj.approx_logs{end + 1} = ApproxLog(approx.FullName(), ...
-                struct('acceptance', obj.acceptance, 'no_compilation', obj.no_compilation));
+                struct('max_errors', obj.max_errors, 'no_compilation', obj.no_compilation));
         end
         
         function Printf(obj)
@@ -79,7 +77,7 @@ classdef Scheduler < handle
                         end
                         test_error = log.GetApproxInfo(approx_vars).test_error;
                         
-                        if (test_error > obj.orig_test_error * (1 + obj.acceptance))
+                        if (test_error > obj.max_errors)
                             continue;
                         end
                         % Compile, filling in template variables with
@@ -108,8 +106,8 @@ classdef Scheduler < handle
             end
             global root_path;
             % replace #mock with, func_name 
-            fid_read = fopen(strcat(root_path, 'expr_compress/cuda/src/Capprox_template.cu'), 'r');
-            fid_write = fopen(strcat(root_path, 'expr_compress/cuda/src/Capprox_gen.cu'), 'wt');
+            fid_read = fopen(strcat(root_path, '/expr_compress/cuda/src/Capprox_template.cu'), 'r');
+            fid_write = fopen(strcat(root_path, '/expr_compress/cuda/src/Capprox_gen.cu'), 'wt');
             line = fgets(fid_read);
             while ischar(line)
                 line = strrep(line, '#mock' , func_name); 

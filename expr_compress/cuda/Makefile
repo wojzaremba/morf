@@ -17,7 +17,7 @@ endif
 
 ################################################################################
 
-all: clean mex
+all: clean mexapprox
 
 nvccapprox:
 	$(NVCC) Capprox_gen.cpp --cuda src/Capprox_gen.cu

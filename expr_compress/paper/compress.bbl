@@ -1,4 +1,4 @@
-\begin{thebibliography}{5}
+\begin{thebibliography}{7}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -30,6 +30,18 @@ Lowe, David~G.
 \newblock Object recognition from local scale-invariant features.
 \newblock In \emph{Computer vision, 1999. The proceedings of the seventh IEEE
   international conference on}, volume~2, pp.\  1150--1157. Ieee, 1999.
+
+\bibitem[Mathieu et~al.(2013)Mathieu, Henaff, and LeCun]{mathieu2013fast}
+Mathieu, Michael, Henaff, Mikael, and LeCun, Yann.
+\newblock Fast training of convolutional networks through ffts.
+\newblock \emph{arXiv preprint arXiv:1312.5851}, 2013.
+
+\bibitem[Vanhoucke et~al.(2011)Vanhoucke, Senior, and
+  Mao]{vanhoucke2011improving}
+Vanhoucke, Vincent, Senior, Andrew, and Mao, Mark~Z.
+\newblock Improving the speed of neural networks on cpus.
+\newblock In \emph{Proc. Deep Learning and Unsupervised Feature Learning NIPS
+  Workshop}, 2011.
 
 \bibitem[Zeiler et~al.(2011)Zeiler, Taylor, and Fergus]{zeiler2011adaptive}
 Zeiler, Matthew~D, Taylor, Graham~W, and Fergus, Rob.

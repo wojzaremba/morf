@@ -269,7 +269,11 @@ classdef Layer < handle
         
         function AddParamsOnlyCPU(obj, name, dims, includeDer)
             global plan
-            obj.RandomWeights(name, dims);           
+            if (isempty(plan.all_uploaded_weights) || ~includeDer || strcmp(name, 'out') || strcmp(name, 'X'))
+                obj.RandomWeights(name, dims);
+            else
+                eval(sprintf('obj.cpu.vars.%s = plan.all_uploaded_weights.plan.layer{length(plan.layer) + 1}.cpu.vars.%s;', name, name));
+            end
             plan.stats.total_vars = plan.stats.total_vars + prod(dims);
             if (includeDer)
                 plan.stats.total_learnable_vars = plan.stats.total_learnable_vars + prod(dims);

@@ -51,9 +51,11 @@ classdef Approximation < handle
             end
             plan.input.step = 1;
             plan.input.GetImage(0);
+            printf(1, 'Running Forward Pass in RunOrigConv on CPU\n');
             ForwardPass(plan.input);    
             test_error = plan.classifier.GetScore(5);
             time = plan.time.fp(2);
+<<<<<<< HEAD
             C_(CleanGPU);
             % Replace weights with original in case we want to resuse this
             % plan.
@@ -62,6 +64,8 @@ classdef Approximation < handle
             else
                 plan.layer{2}.cpu.vars.W = W;
             end
+=======
+>>>>>>> 052caf02c73e7e8eef13024249a19d043967608d
         end                      
         
         function [test_error, time] = RunModifConv(obj, args)        
