@@ -19,7 +19,7 @@ endif
 all: clean mex
 
 gpu_headers:
-	$(NVCC) --compile --cuda src/C_.cpp src/matlab_operations.cu
+	$(NVCC) --compile --cuda src/C_.cu
 
 mex: gpu_headers
 	$(MEX) src/C_.cpp

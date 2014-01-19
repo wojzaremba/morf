@@ -12,7 +12,7 @@ jsons{4} = struct('type', 'Softmax');
 plan = Plan(jsons);    
 
 
-S = MockScheduler(struct('acceptance', 0.8, 'orig_test_error', 110));
+S = MockScheduler(struct('max_errors', 110));
 approx = NoApproximation(struct('suffix', '_test'), ...
                          struct('json', { jsons{2} }), struct());                                 
 S.Add(approx);
