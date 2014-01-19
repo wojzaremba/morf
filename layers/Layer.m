@@ -63,7 +63,7 @@ classdef Layer < handle
                 obj.stride = [Val(patch, 'stride_rows', 1), Val(patch, 'stride_cols', 1)];
                 obj.padding = [Val(patch, 'padding_rows', 0), Val(patch, 'padding_cols', 0)];
                 dims = obj.prev_dim();
-                new_dims = [ceil((dims(1:2) - obj.patch + 2 * obj.padding) ./ obj.stride) + 1, Val(json, 'depth', dims(3))];
+                new_dims = [ceil((dims(1:2) - obj.patch + 2 * obj.padding) ./ obj.stride), Val(json, 'depth', dims(3))];
                 obj.dims = new_dims;
             else
                 obj.patch = [1, 1];

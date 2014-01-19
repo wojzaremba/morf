@@ -24,10 +24,7 @@ cuda/C_.cpp
 data/mnist/test1*.mat
 data/mnist/val1*.mat
 data/mnist/train1*.mat
-data/imagenet/test1*.mat
-data/imagenet/train1*.mat
-data/imagenet/val1*.mat
-data/imagenet/meta.mat
+data/imagenet/*
 cuda/*.mat
 expr_compress/logs/*
 
@@ -36,3 +33,7 @@ trained/*imagenet*
 *_gen.*
 .smb*
 ._*
+*.aux
+*.log
+trained/epoch0000_phase1.mat
+trained/model_00000008.mat

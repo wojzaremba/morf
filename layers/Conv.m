@@ -26,7 +26,7 @@ classdef Conv < Layer
             X = v.X;            
             bs = size(X, 1);
             obj.cpu.vars.X_ = zeros(size(X, 1), prev_dim(1) + obj.padding(1) * 2 + obj.patch(1), prev_dim(2) + obj.padding(2) * 2 + obj.patch(1), prev_dim(3));
-            obj.cpu.vars.X_(:, (obj.padding(1) + 1):(end - obj.patch(1) - obj.padding(1)), (obj.padding(2) + 1):(end - obj.patch(1) - obj.padding(2)), :) = X;
+            obj.cpu.vars.X_(:, (obj.padding(1) + 1):(obj.padding(1) + size(X, 2)), (obj.padding(2) + 1):(obj.padding(2) + size(X, 3)), :) = X;
             obj.cpu.vars.stacked = zeros(size(X, 1) * prod(obj.dims(1:2)), obj.patch(1) * obj.patch(2) * prev_dim(3));
             for x = 1:obj.dims(1)
                 for y = 1:obj.dims(2)
@@ -69,7 +69,7 @@ classdef Conv < Layer
                         dX_(:, sx:ex, sy:ey, :) = dX_(:, sx:ex, sy:ey, :) + reshape(pact(:, idx : (idx + bs - 1))' * W(:, :), size(dX_(:, sx:ex, sy:ey, :)));
                     end
                 end
-                obj.cpu.dvars.X = dX_(:, (obj.padding(1) + 1):(end - obj.padding(1) - obj.patch(1)), (obj.padding(2) + 1):(end - obj.padding(2) - obj.patch(2)), :);                
+                obj.cpu.dvars.X = dX_(:, (obj.padding(1) + 1):(obj.padding(1) + size(X, 2)), (obj.padding(2) + 1):(obj.padding(2) + size(X, 3)), :);                
             end
             obj.cpu.dvars.W = reshape(pact(:, :) * stacked, size(W));
             obj.cpu.dvars.B = reshape(sum(pact(:, :), 2), size(v.B));
