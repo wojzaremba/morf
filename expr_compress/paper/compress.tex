@@ -115,7 +115,7 @@ predict rest of weights. This indicates that neural networks are heavily over-pa
 All the methods presented here focus on exploiting linear structure of this over-parametrization.
 
 
-\section{Tensor Low Rank Approximations}
+\section{Low Rank Approximations}
 In this section, we give theoretical background on low rank approximations. First, we discuss simplest setting, which is
 for matrices (two dimensional tensors). Further, we move to approximation of 4-dimensional tensors with 2 convolutional (spacial)
 dimensions.
@@ -143,10 +143,15 @@ $2 * 10^8 + 10^7$ operations. This would give $\times 5$ theoretical speed up. H
 and theoretical speed up might be infeasible or very difficult to achieve. 
 
 
-\section{Tensor Low Rank Approximations}
+\subsection{Tensor Low Rank Approximations}
 
-We are going to focus on kernels of convolutional layers, and their approximations. 
-Such kernels can be described as a $4$-dimensional tensors. Let $W \in \mathbb{R}^{C \times X \times Y \times F}$ 
+In typical object recognition architectures, the convolutional tensors resulting
+from the training exhibit strong redundancy and regularity across all its 
+dimensions. A particularly simple way to exploit such regularity is to 
+linearly compress the tensors, which amounts to finding low-rank 
+approximations.
+
+Convolution kernels can be described as a $4$-dimensional tensors. Let $W \in \mathbb{R}^{C \times X \times Y \times F}$ 
 be convolutional kernel. 
 $C$ is input number of feature maps (or colors), $X, Y$ are special dimensions
 over which we compute convolution, and $F$ is the target number of feature maps.
@@ -164,7 +169,7 @@ rest of tensor as it would be a matrix. Moreover, we show how to perform approxi
 exploit computation on GPU (e.g. enforce memory alignment).
 
 
-\subsection{Monochromatic filters}
+\subsubsection{Monochromatic filters}
 For generic convolution there are connections between all output feature maps, and all input feature maps.
 However, one could imagine that this connections in trained network in some basis could become sparse. 
 Sparsity of this connections would allow to save number of multiplications. Concretely, we look for such a 
@@ -176,16 +181,7 @@ linear transformation of input $I \in \mathbb{R}$
 We denote by $W_C \in \mathbb{R}^{C \times XYF}$ reshaped version of kernel $W \in \mathbb{R}^{C \times X \times Y \times F}$
 
 
-
 \subsection{Linear Compression of Convolutional Filter bank}
-
-In typical object recognition architectures, the convolutional tensors resulting
-from the training exhibit strong redundancy and regularity across all its 
-dimensions. This redundancy affects performance since it exposes
-the architecture to more overfitting, and run-time speed. 
-A particularly simple way to exploit such regularity is to 
-linearly compress the tensors, which amounts to finding low-rank 
-approximations.
 
 Given a $4$-tensor $W$ of dimensions $(C,X,Y,F)$, we search for decompositions 
 that minimize 
