@@ -1,4 +1,4 @@
-% clear all;
+clear all;
 addpath(genpath('.'));
 global plan
 json = ParseJSON('plans/imagenet.txt');

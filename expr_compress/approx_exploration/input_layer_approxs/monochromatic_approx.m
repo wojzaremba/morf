@@ -1,4 +1,15 @@
-function [Wapprox, Wmono, colors, perm] = monochromatic_approx(W, num_colors)
+function [Wapprox, Wmono, colors, perm] = monochromatic_approx(W, args)
+% This approximation clusters the first left singular vectors of each of
+% the convolution kernels associated with each output feature. Filters in 
+% the same cluster share the same inner color component. The reconstructed 
+% weight matrix, Wapprox, is returned along with the the color
+% transformation matrix, the monochromatic weights and the permutation of
+% the weights. These matrices can be used to more efficiently compute the 
+% output of the convolution.
+%
+% args.even : 1 if clusters should be constrained to be equal sizes, 0 
+%             otherwise
+% args.num_colors : number of clusters (or "colors") to use
 
     W = permute(W, [1, 4, 2, 3]);
     % Simple re-parametrization of first layer with monochromatic filters
@@ -10,12 +21,16 @@ function [Wapprox, Wmono, colors, perm] = monochromatic_approx(W, num_colors)
         chunk = u(:,1)*s(1,1)*v(:,1)';
         approx0(f,:,:,:)=reshape(chunk,1,size(W,2),size(W,3),size(W,4));
     end
-
-    MAXiter = 1000; % Maximum iteration for KMeans Algorithm
-    REPlic = 10; % Replication for KMeans Algorithm
-    [assignment,colors] = litekmeans(C',num_colors);
-
-    colors = colors';
+    
+    if args.even
+        [assignment,colors] = litekmeans(C', args.num_colors);
+        colors = colors';
+    else
+        MAXiter = 1000; % Maximum iteration for KMeans Algorithm
+        REPlic = 10; % Replication for KMeans Algorithm
+        [assignment,colors] = kmeans(C, args.num_colors, 'start', 'sample', 'maxiter', MAXiter, 'replicates', REPlic, 'EmptyAction', 'singleton');
+    end
+    
     Wapprox = zeros(size(W));
     for f=1:size(W,1)
         chunk = (colors(assignment(f),:)')*dec(f,1)*(S(f,:));

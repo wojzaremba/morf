@@ -1,4 +1,4 @@
-% compiles cuda code for monochromatic filter aproximation and tests for
+% compiles cuda code for monochromatic filter approximation (with SVD) and tests for
 % correctness.
 clear all;
 global root_path

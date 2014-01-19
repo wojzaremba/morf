@@ -70,7 +70,7 @@ classdef MonochromaticInput < Approximation
                 W = reshape(W, [96, 11, 11, 3]);
                 W = double(permute(W, [1, 4, 2, 3]));
             else
-                W = permute(plan.layer{2}.cpu.vars.W, [1, 4, 2, 3]);
+                W = double(permute(plan.layer{2}.cpu.vars.W, [1, 4, 2, 3]));
             end
             
             for f=1:size(W, 1)
@@ -84,7 +84,7 @@ classdef MonochromaticInput < Approximation
             [assignment,colors] = litekmeans(C',num_image_colors);
             colors = colors';
             
-            % Permutaiton of W, back to orig form is done inside
+            % Permutation of W, back to orig form is done inside
             % reconstruction function.
             Wapprox = MonochromaticInput.ReconstructW(colors, dec, S, assignment, size(W));
             Wmono = reshape(bsxfun(@times, S, dec(:, 1)), size(W,1), size(W,3), size(W,4));

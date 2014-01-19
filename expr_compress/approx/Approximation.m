@@ -43,16 +43,25 @@ classdef Approximation < handle
         function [test_error, time] = RunOrigConv(obj, Wapprox)
             global plan
             if (plan.layer{2}.on_gpu)
-                C_(CopyToGPU, plan.layer{2}.gpu.vars.W, single(Wapprox));
+                W = C_(CopyFromGPU, plan.layer{2}.gpu.vars.W);
+                plan.layer{2}.Upload('W', Wapprox);
             else
+                W = plan.layer{2}.cpu.vars.W;
                 plan.layer{2}.cpu.vars.W = Wapprox;
             end
             plan.input.step = 1;
             plan.input.GetImage(0);
             ForwardPass(plan.input);    
-            test_error = plan.classifier.GetScore();
+            test_error = plan.classifier.GetScore(5);
             time = plan.time.fp(2);
             C_(CleanGPU);
+            % Replace weights with original in case we want to resuse this
+            % plan.
+            if (plan.layer{2}.on_gpu)
+                plan.layer{2}.Upload('W', W);
+            else
+                plan.layer{2}.cpu.vars.W = W;
+            end
         end                      
         
         function [test_error, time] = RunModifConv(obj, args)        
@@ -74,10 +83,11 @@ classdef Approximation < handle
             end            
             plan.layer{args.layer_nr - 1}.next = {plan.layer{args.layer_nr}};            
             plan.layer{args.layer_nr}.next = {plan.layer{args.layer_nr + 1}};
-            obj.SetLayerVars(args);     
+            obj.SetLayerVars(args);   
+            plan.input.step = 1;
             plan.input.GetImage(0);
             ForwardPassApprox(plan.input);
-            test_error = plan.classifier.GetScore();            
+            test_error = plan.classifier.GetScore(5);            
             time = plan.time.fp(2);
             plan.layer = layers;
             plan.layer{args.layer_nr - 1}.next = {plan.layer{args.layer_nr}};            
