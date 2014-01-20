@@ -9,6 +9,12 @@
 
     {
         "type": "FC",
+        "depth": 500,
+        "function": "RELU"
+    },
+
+    {
+        "type": "FC",
         "depth": 200,
         "function": "RELU"
     },

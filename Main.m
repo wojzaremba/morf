@@ -7,8 +7,6 @@ Run();
 
 
 
-% XXX: specify -arch=sm_35 -O3
-
 
 % Tasks
 % 3. Create branched objective.
