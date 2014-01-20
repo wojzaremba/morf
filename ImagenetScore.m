@@ -1,7 +1,7 @@
-% clear all;
+clear all;
 global plan debug
 addpath(genpath('.'));
-Plan('plans/imagenet.txt', 'trained/imagenet');
+Plan('plans/imagenet.txt', '~/imagenet_data/imagenet');
 plan.training = 0;
 plan.only_fp = 1;
 debug = 2;

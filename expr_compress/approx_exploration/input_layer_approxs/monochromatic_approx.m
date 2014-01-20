@@ -15,11 +15,11 @@ function [Wapprox, Wmono, colors, perm] = monochromatic_approx(W, args)
     % Simple re-parametrization of first layer with monochromatic filters
     for f = 1 : size(W,1)
         [u,s,v]=svd(squeeze(W(f,:,:)),0);
-        C(f,:)=u(:,1);
-        S(f,:)=v(:,1);
-        dec(f,:)=diag(s);
-        chunk = u(:,1)*s(1,1)*v(:,1)';
-        approx0(f,:,:,:)=reshape(chunk,1,size(W,2),size(W,3),size(W,4));
+        C(f, :) = u(:, 1);
+        S(f, :) = s(1, 1) * v(:, 1); %v(:,1);
+        %dec(f,:)=diag(s);
+        chunk = u(:, 1) * s(1, 1) * v(:, 1)';
+        approx0(f, :, :, :) = reshape(chunk, 1, size(W, 2), size(W, 3), size(W, 4));
     end
     
     if args.even
@@ -27,23 +27,23 @@ function [Wapprox, Wmono, colors, perm] = monochromatic_approx(W, args)
         colors = colors';
     else
         MAXiter = 1000; % Maximum iteration for KMeans Algorithm
-        REPlic = 10; % Replication for KMeans Algorithm
+        REPlic = Val(args, 'rep', 100); % Replication for KMeans Algorithm
         [assignment,colors] = kmeans(C, args.num_colors, 'start', 'sample', 'maxiter', MAXiter, 'replicates', REPlic, 'EmptyAction', 'singleton');
     end
     
     Wapprox = zeros(size(W));
     for f=1:size(W,1)
-        chunk = (colors(assignment(f),:)')*dec(f,1)*(S(f,:));
+        chunk = (colors(assignment(f),:)') * (S(f,:));
         Wapprox(f,:,:,:)=reshape(chunk,1,size(W,2),size(W,3),size(W,4));
     end 
     
-    Wmono = reshape(bsxfun(@times, S, dec(:, 1)),size(W,1),size(W,3),size(W,4));
+    Wmono = reshape(S,size(W,1),size(W,3),size(W,4));
     Wapprox = permute(Wapprox, [1, 3, 4, 2]);
     
     assert(norm(squeeze(Wmono(1, :, :)) * colors(assignment(1), 1) + ...
                         squeeze(Wmono(1, :, :)) * colors(assignment(1), 2) + ...
                         squeeze(Wmono(1, :, :)) * colors(assignment(1), 3) - ...
-                        (squeeze(Wapprox(1, :, :, 1)) + squeeze(Wapprox(1, :, :, 2)) + squeeze(Wapprox(1, :, :, 3)))) < 1e-10);
+                        (squeeze(Wapprox(1, :, :, 1)) + squeeze(Wapprox(1, :, :, 2)) + squeeze(Wapprox(1, :, :, 3)))) < 1e-7);
                     
     
     [~, perm] = sort(assignment);
