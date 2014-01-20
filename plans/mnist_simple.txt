@@ -9,13 +9,13 @@
 
     {
         "type": "FC",
-        "depth": 500,
+        "depth": 400,
         "function": "RELU"
     },
 
     {
         "type": "FC",
-        "depth": 200,
+        "depth": 400,
         "function": "RELU"
     },
 

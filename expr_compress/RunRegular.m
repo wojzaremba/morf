@@ -1,5 +1,5 @@
 function RunRegular()
-global plan;
+global plan incr_tests incr_trains
 plan.training = 1;
 assert(length(plan.layer) > 1);
 input = plan.input;
@@ -32,22 +32,30 @@ for repeat = last_repeat:input.max_repeat
             fprintf('incorrect = %d, all = %d\n', incorrect, all);
         end
     end
-    if (repeat > 10)
-        fprintf('Regularizing\n');
-        W = plan.layer{2}.cpu.vars.W;
-        [U, S, V] = svd(W);
-        s = 80;
-        plan.layer{2}.cpu.vars.W = U(:, 1:s) * S(1:s, 1:s) * V(:, 1:s)';        
-        
-        W = plan.layer{3}.cpu.vars.W;
-        [U, S, V] = svd(W);
-        s = 40;
-        plan.layer{3}.cpu.vars.W = U(:, 1:s) * S(1:s, 1:s) * V(:, 1:s)';                
-    end
+%     if (repeat > 10)
+%         fprintf('Regularizing\n');
+%         W = plan.layer{2}.cpu.vars.W;
+%         [U, S, V] = svd(W);
+%         s = 80;
+%         plan.layer{2}.cpu.vars.W = U(:, 1:s) * S(1:s, 1:s) * V(:, 1:s)';        
+%         
+%         W = plan.layer{3}.cpu.vars.W;
+%         [U, S, V] = svd(W);
+%         s = 40;
+%         plan.layer{3}.cpu.vars.W = U(:, 1:s) * S(1:s, 1:s) * V(:, 1:s)';                
+%     end
     input.repeat = repeat + 1;
     fprintf('\nEpoch took = %f\n', toc(repeattime));   
     [incr_test, err] = Test(0);
     fprintf('\nepoch = %d, incr_test = %d, err = %f\n', repeat, incr_test, err);
+    incr_tests = [incr_tests; incr_test];
+    incr_trains = [incr_trains; incorrect / 6];
+    plot(min(find(incr_tests < 400)):length(incr_tests), incr_tests(incr_tests < 400), 'r');
+    hold on
+    plot(min(find(incr_trains < 400)):length(incr_trains), incr_trains(incr_trains < 400), 'b');
+    legend('Test data', 'Train data');
+    hold off
+    drawnow
 end
 end
 
