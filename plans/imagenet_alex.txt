@@ -1,7 +1,7 @@
 [    
     {
         "type" : "ImageInput",
-        "file_pattern": "data/imagenet/",
+        "file_pattern": "~/imagenet_data/",
         "batch_size": 128,
         "rows": 224,
         "cols": 224,
