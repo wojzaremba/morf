@@ -1,7 +1,7 @@
 morf
 ====
 
-Download all heavy files from http://www.cs.nyu.edu/~zaremba/morf_rest and placed them in the main directory. This are files with weights, and test images.
+All imagenet weights, and test data can be downloaded from http://cs.nyu.edu/~zaremba/imagenet_data
 
 Build cuda wrappers by running Makefile in cuda directory.
 
