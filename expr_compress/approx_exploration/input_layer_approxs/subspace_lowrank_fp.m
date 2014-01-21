@@ -6,8 +6,8 @@ load_imagenet_model();
 
 
 % Replace first convolutional layer weights with approximated weights
-args.num_colors = 8;
-args.terms_per_element = 3; 
+args.num_colors = 16;
+args.terms_per_element = 4; 
 W = plan.layer{2}.cpu.vars.W;
 [Wapprox, F, C, X, Y] = subspace_lowrank_approx(double(W), args);
 plan.layer{2}.cpu.vars.W = Wapprox;

@@ -9,8 +9,15 @@ K = 11;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Plot subspace clustered low rank weights
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-args.num_colors = 3;
-args.terms_per_element = 1;
+
+figure1 = figure('Position', [0, 0, 1000, 1000]);
+axes1 = axes('Parent',figure1);
+view(axes1,[14.5 34]);
+grid(axes1,'on');
+hold(axes1,'all');
+
+args.num_colors = 6;
+args.terms_per_element = 3;
 [Wapprox, F, C, X, Y] = subspace_lowrank_approx(double(W), args);
 figure1 = figure('Position', [0, 0, 1000, 1000]);
 axes1 = axes('Parent',figure1);

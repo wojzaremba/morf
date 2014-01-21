@@ -22,5 +22,11 @@ ForwardPass(plan.input);
 plan.layer{5}.cpu.vars.W = W;
 
 % Get error
-test_error = plan.classifier.GetScore(5);
-fprintf('errors = %d / %d\n', test_error, plan.input.batch_size);
+error = 0;
+plan.input.step = 1;
+for i = 1:8
+    plan.input.GetImage(0);
+    ForwardPass(plan.input); 
+    error = error + plan.classifier.GetScore(5);
+    fprintf('%d / %d\n', error, i * plan.input.batch_size);
+end

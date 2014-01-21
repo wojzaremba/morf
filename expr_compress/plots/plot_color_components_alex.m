@@ -9,10 +9,9 @@ K = 11;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Plot original weights
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 figure1 = figure('Position', [0, 0, 1000, 1000]);
 axes1 = axes('Parent',figure1);
-view(axes1,[14.5 34]);
+view(axes1,[-165.5 36]);
 grid(axes1,'on');
 hold(axes1,'all');
 
@@ -23,7 +22,7 @@ WW = WW(:, :)';
 
 colors = repmat(1:length(to_plot), [K, K, 1]);
 
-scatter3(WW(:,1), WW(:,2), WW(:,3), 20, colors(:), 'filled');
+scatter3(WW(:,1), WW(:,2), WW(:,3), 10, colors(:), 'filled');
 hold on
 
 set(gca,'XtickLabel',[],'YtickLabel',[],'ZtickLabel',[]);

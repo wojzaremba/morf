@@ -9,6 +9,12 @@ K = 11;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Plot monochromatic approximated weights
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+figure1 = figure('Position', [0, 0, 1000, 1000]);
+axes1 = axes('Parent',figure1);
+view(axes1,[-165.5 36]);
+grid(axes1,'on');
+hold(axes1,'all');
+
 args.num_colors = 12;
 args.even = 0;
 [Wapprox, Wmono, colors, perm] = monochromatic_approx(W, args);
