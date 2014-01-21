@@ -10,7 +10,7 @@ last = 0;
 
 minener = 1e+20;
 outiters=16;
-maxiters=200;
+maxiters=1000;
 
 for j=1:outiters
 

@@ -8,9 +8,9 @@ load_imagenet_model();
 % Replace first convolutional layer weights with approximated weights
 args.iclust = 12;
 args.oclust = 32;
-args.k = 40;
+args.k = 12;
 W = plan.layer{5}.cpu.vars.W;
-[Wapprox, F, C, X, Y] = bisubspace_lowrank_approx(double(W), args);
+[Wapprox, F, C, X, Y, assignment] = bisubspace_lowrank_approx(double(W), args);
 plan.layer{5}.cpu.vars.W = Wapprox;
 
 
