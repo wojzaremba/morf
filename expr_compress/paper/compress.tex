@@ -71,7 +71,7 @@ learnable parameters). Moreover, we explore consequences of this low-rank linear
 \section{Related Work}
 
 
-Our low-rank approximations get inspired by work of Denil et. al \cite{denil2013predicting} on redundancies in neural 
+Our low-rank approximations get inspired by work of \cite{denil2013predicting} on redundancies in neural 
 networks. They shown that based on small fraction of weights (e.g. $\sim 5\%$), one can accurately 
 predict rest of weights. This indicates that neural networks are heavily over-parametrized.
 All the methods presented here focus on exploiting linear structure of such over-parametrization.
@@ -129,6 +129,42 @@ However, one could imagine that this connections in trained network in some basi
 
 \section{Consequences}
 
+\subsection{Understanding computation of neural networks}
+Low-rank analysis can reveal underlaying computation. Moreover, it can be a corner stone
+in understanding why neural networks works. In this section, we treat this topic briefly 
+(it is focus of a future work), and we show evaluation for a simple network trained to classify MNIST.
+
+
+We took networks considered previously during development of dropout \cite{hinton2012improving}.
+We look on trained filters from fully-connected layers from perspective of low-rank analysis.
+First, we trained fully connected 768-800-800-10 with, and without $50\%$ dropout until convergence.
+Figure \ref{filters_mnist} compares arbitrary filters of such networks versus left-singular values. 
+Moreover, it can be quantified that left-singular values for dropout network are better than for non dropout network. 
+
+
+Left-singular values are normalized, i.e. square norm of images from the Figure \ref{filters_svd_mnist} are all one.
+
+
+\begin{figure}[h]
+\centering
+  \subfigure[Visualization of arbitrary filters for fully connected MNIST network.]{
+      \includegraphics[width=0.95\linewidth]{img/filters_mnist.png}
+      \label{filters_no_svd_mnist}
+  }\
+  
+  \subfigure[Visualization of left singular vectors for fully connected MNIST network.]{
+      \includegraphics[width=0.95\linewidth]{img/filters_svd_mnist.png}
+      \label{filters_svd_mnist}
+   }
+\caption{Visualization of filters for fully connected network trained on MNIST dataset. For every subfigure, first 
+	 row is a network trained with dropout, and the second is trained without.}
+\label{filters_mnist}
+\end{figure}
+
+
+
+% visualization of principle components for mnist, mnist dropout, vs a single filter.
+
 \subsection{Regularization}
 
 \subsection{Speeding up testing}
@@ -159,11 +195,11 @@ maps to the cost of executing NN on internet-scale data.
 \centering
 \mbox{
   \subfigure[aaa]{
-      \includegraphics[width=0.55\linewidth]{img/color_components_matthew_3d.eps}
+      \includegraphics[width=0.45\linewidth]{img/color_components_matthew_3d.eps}
       \label{color_components_matts_3d}
   }\quad
   \subfigure[aaa]{
-      \includegraphics[width=0.55\linewidth]{img/color_components_matthew_3d-2.eps}
+      \includegraphics[width=0.45\linewidth]{img/color_components_matthew_3d-2.eps}
       \label{color_components_matts_3d-2}
    }\quad
 }

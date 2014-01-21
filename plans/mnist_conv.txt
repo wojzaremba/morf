@@ -32,14 +32,14 @@
     },
 
     {
-        "type": "FC",
-        "depth": 100,
-        "function": "RELU"
+        "type": "Dropout",
+        "p": 0.5
     },
 
     {
-        "type": "Dropout",
-        "p": 0.5
+        "type": "FC",
+        "depth": 100,
+        "function": "RELU"
     },
 
     {

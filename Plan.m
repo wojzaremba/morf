@@ -19,6 +19,8 @@ classdef Plan < handle
         all_uploaded_weights
         verbose
         only_fp
+        incr_tests 
+        incr_trains
     end
     
     methods
