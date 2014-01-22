@@ -1,4 +1,4 @@
-function [Wapprox, F, C, X, Y, assignment] = bisubspace_lowrank_approx(W, args)
+function [Wapprox, F, C, X, Y, assignment, num_weights] = bisubspace_lowrank_approx(W, args)
 % This approximation performs bi-clustering on input and output feature
 % coordinates. After clustering, each kernel is then approximated by a sum
 % of k rank one tensors. 
@@ -47,6 +47,10 @@ function [Wapprox, F, C, X, Y, assignment] = bisubspace_lowrank_approx(W, args)
             rast = rast + 1;
         end
     end
+    
+    iclust_sz = size(W, 4) / args.iclust;
+    oclust_sz = size(W, 1) / args.oclust;
+    num_weights = (iclust_sz + oclust_sz + size(W, 2) + size(W, 2)) * args.iclust * args.oclust * args.k;
 
 end
 
