@@ -21,18 +21,36 @@ function understanding_svd
         img_{k} = max(min(img_{k}, 1), 0);
         bad_{k} = max(min(bad_{k}, 1), 0);
     end
-    cmap = colormap;
+    cmap = colormap(gray);
     cmap(end, :) = 0;    
     imwrite(convertimg([bad_{1}; bad_{2}], cmap), '../paper/img/filters_mnist.png');
     imwrite(convertimg([img_{1}; img_{2}], cmap), '../paper/img/filters_svd_mnist.png');
-    for k = 1:2
-        fprintf('k = %d, top, norm = %f\n', k, norm(imgorig{k}(1, :)));
-        fprintf('k = %d, bottom, norm = %f\n', k, norm(imgorig{k}(end, :)));
-        tmp = imgorig{k}(:, 1:28:end);
-        fprintf('k = %d, left, norm = %f\n', k, norm(tmp(:)));
-        tmp = imgorig{k}(:, 28:28:end);
-        fprintf('k = %d, right, norm = %f\n', k, norm(tmp(:)));
+    [U, ~, ~] = svd(W{1});
+    inspectedges('svd dropout', U, 10);
+    [U, ~, ~] = svd(W{2});
+    inspectedges('svd no dropout', U, 10);    
+    inspectedges('original dropout', W{1}, 800);
+    inspectedges('original no dropout', W{2}, 800);
+end
+
+function inspectedges(name, M, range)
+    top = [];
+    bottom = [];
+    left = [];
+    right = [];
+    for i = 1 : range
+        tmp = reshape(M(:, i), 28, 28);
+        top = [top, norm(tmp(1, :))];
+        bottom = [bottom, norm(tmp(end, :))];
+        left = [left, norm(tmp(:, 1))];
+        right = [right, norm(tmp(:, end))];
     end
+    fprintf('name = %s\n', name);
+    fprintf('\ttop norm = %f, std = %f\n', mean(top), std(top));
+    fprintf('\tbottom norm = %f, std = %f\n', mean(bottom), std(bottom));
+    fprintf('\tleft norm = %f, std = %f\n', mean(left), std(left));
+    fprintf('\tright norm = %f, std = %f\n', mean(right), std(right));
+    fprintf('\n');
 end
 
 function ret = convertimg(img, cmap)

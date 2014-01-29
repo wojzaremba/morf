@@ -46,8 +46,12 @@ classdef Layer < handle
             obj.bp_dx_on_first = Val(json, 'bp_dx_on_first', 0);
             obj.Fun = eval(sprintf('@%s;', fname));
             obj.dFun = eval(sprintf('@d%s;', fname));
-            obj.Fun_ = eval(sprintf('Act%s', fname));
-            obj.dFun_ = eval(sprintf('dAct%s', fname));                        
+            try
+                obj.Fun_ = eval(sprintf('Act%s', fname));
+                obj.dFun_ = eval(sprintf('dAct%s', fname));                        
+            catch
+                fprintf('Act%s or dAct%s not implemented on GPU\n', fname, fname);
+            end
             obj.cpu = struct('vars', struct(), 'dvars', struct(), 'accum', struct());
             obj.gpu = struct('vars', struct(), 'dvars', struct(), 'accum', struct());
             obj.on_gpu = Val(json, 'on_gpu', plan.default_on_gpu);
@@ -162,6 +166,22 @@ classdef Layer < handle
         function ret = dF(obj, X)
             ret = obj.dFun(obj, X);
         end
+
+        function ret = X3(obj, X)
+            ret = X .^ 3;
+        end
+        
+        function ret = dX3(obj, X)
+            ret = 3 * X .^ 2;
+        end                
+        
+        function ret = X5(obj, X)
+            ret = X .^ 5;
+        end
+        
+        function ret = dX5(obj, X)
+            ret = 5 * X .^ 4;
+        end        
         
         function ret = LINEAR(obj, X)
             ret = X;
