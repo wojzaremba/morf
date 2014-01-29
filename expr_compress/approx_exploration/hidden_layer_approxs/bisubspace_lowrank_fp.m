@@ -2,23 +2,18 @@ global root_path;
 global plan;
 clearvars -except root_path plan;
 init();
-load_imagenet_model();
+load_imagenet_model(); % By default, loads Matt's model.
 
 
 % Replace first convolutional layer weights with approximated weights
-args.iclust = 12;
-args.oclust = 32;
-args.k = 2;
+args.iclust = 32;
+args.oclust = 16;
+args.k = 8;
 W = plan.layer{5}.cpu.vars.W;
-[Wapprox, F, C, X, Y, assignment] = bisubspace_lowrank_approx(double(W), args);
+  
+[Wapprox, ~, ~, ~, ~, ~, ~] = bisubspace_lowrank_approx(double(W), args);
 plan.layer{5}.cpu.vars.W = Wapprox;
 
-
-% Forward prop
-plan.training = 0;
-plan.input.step = 1;
-plan.input.GetImage(0);
-ForwardPass(plan.input);
 
 % Get error
 error = 0;

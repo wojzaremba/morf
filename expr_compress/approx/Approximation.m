@@ -31,27 +31,28 @@ classdef Approximation < handle
             if obj.iter_approx_vars <= length(obj.approx_vars) 
                 success = 1;
                 params = obj.approx_vars(obj.iter_approx_vars);
-                printf(2, 'Getting %d ApproxVars, success = %d\n', obj.iter_approx_vars, success);
+%                 printf(2, 'Getting %d ApproxVars, success = %d\n', obj.iter_approx_vars, success);
                 obj.iter_approx_vars = obj.iter_approx_vars + 1;
             else
                success = 0;
                params = [];
-               printf(2, 'Out of range ApproxVars, success = %d\n', success);
+%                printf(2, 'Out of range ApproxVars, success = %d\n', success);
             end            
         end
         
         function [test_error, time] = RunOrigConv(obj, Wapprox)
             global plan
             if (plan.layer{2}.on_gpu)
+                printf(1, 'Running Forward Pass in RunOrigConv on GPU\n');
                 W = C_(CopyFromGPU, plan.layer{2}.gpu.vars.W);
                 plan.layer{2}.Upload('W', Wapprox);
             else
+                printf(1, 'Running Forward Pass in RunOrigConv on CPU\n');
                 W = plan.layer{2}.cpu.vars.W;
                 plan.layer{2}.cpu.vars.W = Wapprox;
             end
             plan.input.step = 1;
             plan.input.GetImage(0);
-            printf(1, 'Running Forward Pass in RunOrigConv on CPU\n');
             ForwardPass(plan.input);    
             test_error = plan.classifier.GetScore(5);
             time = plan.time.fp(2);
@@ -65,7 +66,43 @@ classdef Approximation < handle
             end
         end                      
         
-        function [test_error, time] = RunModifConv(obj, args)        
+        function [time] = RunModifConv(obj, args)        
+            global plan
+            layer_orig = plan.layer{args.layer_nr};
+            json_orig = layer_orig.json;
+            json = catstruct(args.json, json_orig);
+            json.on_gpu = Val(args, 'on_gpu', 1); % XXX :  does nothing. runs on gpu regardless.
+            layers = plan.layer;
+            plan.layer = {};
+            json.type = args.layer;            
+            plan.layer{1} = layers{args.layer_nr - 1};
+            layer = eval(sprintf('%s(json)', args.layer));                                               
+            obj.SetLayerVars(layer, args);                           
+            
+            if layer.on_gpu
+                if (strcmp(args.layer, 'Conv'))
+                    fun = @C_;
+                else
+                    fun = @Capprox_gen;
+                end
+                fun(CopyToGPU, layer.gpu.vars.X, single(plan.layer{1}.cpu.vars.out));   
+                fun(StartTimer);  
+                layer.FP_();   
+                time = fun(StopTimer);  
+                fun(CleanGPU);
+            else
+               layer.cpu.vars.X =  plan.layer{1}.cpu.vars.out;
+               fptic = tic;
+               layer.FP();
+               time = toc(fptic);
+            end
+                                              
+            plan.layer = layers;
+            plan.layer{args.layer_nr - 1}.next = {plan.layer{args.layer_nr}};
+            plan.layer{args.layer_nr}.next = {plan.layer{args.layer_nr + 1}};
+        end
+        
+        function [test_error, time] = RunModifFP(obj, args)        
             global plan
             layer_orig = plan.layer{args.layer_nr};
             json_orig = layer_orig.json;
@@ -84,7 +121,7 @@ classdef Approximation < handle
             end            
             plan.layer{args.layer_nr - 1}.next = {plan.layer{args.layer_nr}};            
             plan.layer{args.layer_nr}.next = {plan.layer{args.layer_nr + 1}};
-            obj.SetLayerVars(args);   
+            obj.SetLayerVars(plan.layer{args.layer_nr}, args);   
             plan.input.step = 1;
             plan.input.GetImage(0);
             ForwardPassApprox(plan.input);
@@ -94,16 +131,17 @@ classdef Approximation < handle
             plan.layer{args.layer_nr - 1}.next = {plan.layer{args.layer_nr}};            
             plan.layer{args.layer_nr}.next = {plan.layer{args.layer_nr + 1}};
             Capprox_gen(CleanGPU);
+
         end
         
-        function SetLayerVars(obj, args)
+        function SetLayerVars(obj, layer, args)
             global plan
             layer_vars = args.vars;
             fields = fieldnames(layer_vars);
             for f = 1: length(fields)
                 field = fields{f};
                 W = getfield(layer_vars, field);
-                plan.layer{args.layer_nr}.Upload(field, W);
+                layer.Upload(field, W);
             end            
         end
         
@@ -114,7 +152,7 @@ classdef Approximation < handle
                     continue;
                 end          
                 success = 1;                                    
-                printf(2, 'Getting %d GetCudaVars, success = %d\n\n', obj.iter_cuda_vars, success);
+%                 printf(2, 'Getting %d GetCudaVars, success = %d\n\n', obj.iter_cuda_vars, success);
                 obj.iter_cuda_vars = i + 1;
                 return;
             end

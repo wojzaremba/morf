@@ -38,11 +38,21 @@ classdef MonochromaticInput < Approximation
                 ret = false;
             end
             
+            % colorsPerBlock must divide filtersPerThread
+            if (mod(cuda_vars.filtersPerThread, cuda_vars.colorsPerBlock))
+                ret = false;
+            end
+            
             % colorsPerBlock must be 1 or a multiple of 2
             if (cuda_vars.colorsPerBlock > 1 && mod(cuda_vars.colorsPerBlock, 2))
                 ret = false;
             end
-            
+	        
+		    % numFilters should be divisible by num_image_colors
+			if (mod(numFilters, approx_vars.num_image_colors)) 
+				ret = false
+			end
+    
             % Make sure filtersPerColor is correct
             filtersPerColor = numFilters / approx_vars.num_image_colors;
             if (cuda_vars.filtersPerThread * cuda_vars.B_Y < filtersPerColor)
@@ -64,7 +74,7 @@ classdef MonochromaticInput < Approximation
             global plan;
             global root_path;
             
-            % Get original W
+            % Get original W, b
             if (plan.layer{2}.on_gpu)
                 W = C_(CopyFromGPU, plan.layer{2}.gpu.vars.W);
                 W = reshape(W, [96, 11, 11, 3]);
@@ -94,10 +104,15 @@ classdef MonochromaticInput < Approximation
                         squeeze(Wmono(1, :, :)) * colors(assignment(1), 3) - ...
                         (squeeze(Wapprox(1, :, :, 1)) + squeeze(Wapprox(1, :, :, 2)) + squeeze(Wapprox(1, :, :, 3)))) <= 1e-5)
         
+            filters_per_color = size(W, 1) / params.num_image_colors;
+            for i=1:params.num_image_colors
+                Wsparse((i-1)*filters_per_color+1:i*filters_per_color, :, :, i) = Wmono((i-1)*filters_per_color+1:i*filters_per_color, :, :);
+            end
+            
             [~, perm] = sort(assignment);
             ret.reconstruction_error = norm(Wapprox(:) - W(:)) / norm(W(:));
-            ret.vars.Wmono = Wmono;%(perm, :, :);
-            ret.vars.Cmono = colors';
+            ret.vars.Wmono = single(Wmono);%(perm, :, :);
+            ret.vars.Cmono = single(colors');
             ret.vars.perm = perm - 1; % Need -1 for indexing in C
             ret.Wapprox = Wapprox;
             ret.layer = 'MonoConv';

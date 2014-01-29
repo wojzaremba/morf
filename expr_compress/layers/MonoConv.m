@@ -31,7 +31,6 @@ classdef MonoConv < LayerApprox
             X = reshape(X, [bs * prev_dim(1) * prev_dim(2), prev_dim(3)]) * v.Cmono;
             X = reshape(X, [bs, prev_dim(1), prev_dim(2), obj.num_image_colors]);
             
-            
             filters_per_color = obj.dims(3) / obj.num_image_colors;
             for c = 1 : obj.num_image_colors
                 X_ = zeros(size(X, 1), prev_dim(1) + obj.padding(1) * 2 + obj.patch(1), prev_dim(2) + obj.padding(2) * 2 + obj.patch(1));

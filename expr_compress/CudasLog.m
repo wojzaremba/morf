@@ -3,6 +3,7 @@ classdef CudasLog < handle
         test_error
         orig_time
         cuda_results % Hashmap: maps cuda parameters to cuda results
+        no_compilation
     end
     
     % XXX : get a gpu name.
@@ -11,6 +12,9 @@ classdef CudasLog < handle
         function obj = CudasLog(info)            
             obj.test_error = info.test_error;        
             obj.orig_time = info.orig_time;   
+%             XXX : This is incorrect, we should take care of
+%             no_compilation.
+%             obj.no_compilation = info.no_compilation;
             obj.cuda_results = containers.Map('KeyType', 'char', 'ValueType', 'any');
         end
         
@@ -31,13 +35,13 @@ classdef CudasLog < handle
         
         function Printf(obj)
             fprintf('\ttest_error = %d \n', obj.test_error);
-            fprintf('\torig_time = %d \n', obj.orig_time);
+            fprintf('\torig_time = %f \n', obj.orig_time);
             key_set = keys(obj.cuda_results);
             for i = 1 : length(key_set)
                 key = key_set{i};
                 fprintf('\tCuda vars: %s \n', key);
                 cuda_result = obj.cuda_results(key);
-                fprintf('\t\ttime = %d\n', cuda_result.approx_time);
+                fprintf('\t\ttime = %f\n', cuda_result.approx_time);
             end
         end
         

@@ -66,17 +66,25 @@ classdef Scheduler < handle
                         end
                         if (log.IsProcessed(approx_vars, cuda_vars))
                             continue;
-                        end 
-                        
+                        end
+
+                        [approx_info, present] = log.GetApproxInfo(approx_vars);
+                        if (present) && (approx_info.test_error > obj.max_errors)
+                            continue;
+                        end
                         % If we haven't computed the approximation yet, do
                         % it here
                         if (isempty(Wapprox))
                             [Wapprox, approx_ret] = approx.ApproxGeneric(approx_vars);
-                            [test_error, orig_time] = approx.RunOrigConv(Wapprox);
-                            log.SaveApproxInfo(approx_vars, struct('test_error', test_error, 'orig_time', orig_time, 'on_gpu', approx.on_gpu));                
+                            printf(2, 'Running forward pass for %s\n', struct2str(approx_vars));
+                            if (~present)
+                                [test_error, orig_time] = approx.RunOrigConv(Wapprox);
+                                log.SaveApproxInfo(approx_vars, struct('test_error', test_error, 'orig_time', orig_time, 'on_gpu', approx.on_gpu, 'no_compilation', obj.no_compilation));                
+                            end
                         end
                         test_error = log.GetApproxInfo(approx_vars).test_error;
                         
+						printf(2, 'approx_vars = %s, test_error = %d, obj.max_errors = %d\n', struct2str(approx_vars), test_error, obj.max_errors);
                         if (test_error > obj.max_errors)
                             continue;
                         end
@@ -86,9 +94,9 @@ classdef Scheduler < handle
                         
                         % Run the cuda code
                         printf(2, 'Running modified conv with approx_params = %s, cuda_params = %s\n', struct2str(approx_vars), struct2str(cuda_vars));
-                        [test_error_cuda, approx_time] = approx.RunModifConv(approx_ret);
-                        assert(test_error_cuda == test_error);
+                        approx_time = approx.RunModifConv(approx_ret);
                         cuda_results = struct('approx_time', approx_time);
+						printf(0, 'approx_time = %f\n', approx_time);
                         % Log the results specific to these approx_vars and
                         % cuda_vars
                         log.AddCudaExecutionResults(approx_vars, cuda_vars, cuda_results);                        
@@ -100,8 +108,12 @@ classdef Scheduler < handle
         
         % func_name is a a string, args and cuda_vars are structs
         function Compile(obj, func_name, args, cuda_vars)
+            if (strcmp(func_name, 'no_approximation'))
+                printf(0, 'Not compiling, because it is Conv\n');
+                return;
+            end
             if (obj.no_compilation)
-                printf(0, 'We are not compiling anything !!!');
+                printf(0, 'We are not compiling anything !!!\n');
                 return;
             end
             global root_path;

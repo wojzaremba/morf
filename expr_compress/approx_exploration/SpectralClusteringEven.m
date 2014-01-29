@@ -25,7 +25,7 @@ LapKU = DKU - CKSym;
 f = size(vKU,2);
 kerKU = vKU(:,f-n+1:f);
 svalKU = diag(sKU);
-group1 = kmeans(kerKU,n,'start','sample','maxiter',MAXiter,'replicates',REPlic,'EmptyAction','singleton');
+[group1,~] = litekmeans(kerKU', n);
 
 % Method 2: Random Walk Method
 DKN=( diag( sum(CKSym) ) )^(-1);
@@ -34,7 +34,7 @@ LapKN = speye(N) - DKN * CKSym;
 f = size(vKN,2);
 kerKN = vKN(:,f-n+1:f);
 svalKN = diag(sKN);
-group2 = kmeans(kerKN,n,'start','sample','maxiter',MAXiter,'replicates',REPlic,'EmptyAction','singleton');
+[group2,~] = litekmeans(kerKN', n);
 
 % Method 3: Normalized Symmetric
 DKS = ( diag( sum(CKSym) ) )^(-1/2);
@@ -46,7 +46,7 @@ for i = 1:N
     kerKS(i,:) = kerKS(i,:) ./ norm(kerKS(i,:));
 end
 svalKS = diag(sKS);
-group3 = kmeans(kerKS,n,'start','sample','maxiter',MAXiter,'replicates',REPlic,'EmptyAction','singleton');
+[group3,~] = litekmeans(kerKS', n);
 
 %
 Grps = [group1,group2,group3];

@@ -6,9 +6,9 @@ load_imagenet_model();
 
 W = plan.layer{5}.cpu.vars.W;
 
-args.iclust = 12;
-args.oclust = 32;
-ranks = [1, 2, 4, 8, 16, 32, 64, 128]; %[1, 2, 3, 4, 5, 6, 7, 8];
+args.iclust = 32;
+args.oclust = 8;
+ranks = [4, 8, 12, 16, 20, 24, 28, 32, 64]; %[1, 2, 3, 4, 5, 6, 7, 8];
 
 num_weights = [];
 recon_error = [];
@@ -33,3 +33,6 @@ for i = 1:length(ranks);
     test_error(i) = error;
     plan.layer{5}.cpu.vars.W = W;
 end
+
+
+orig_num_weights = 96 * 256 * 5 * 5;

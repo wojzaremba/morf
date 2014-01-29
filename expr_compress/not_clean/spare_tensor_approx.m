@@ -28,16 +28,19 @@ plan.layer{5}.cpu.vars.W = W;
 % 
 % W = double(W);
 % 
-% inter = size(W, 1);
-% A = eye(size(W, 1), inter);
+inter = size(W, 1);
+A = eye(size(W, 1), inter);
 % 
 % 
 % 
 % 
-% cvx_begin   
-%     variable WWW(inter, size(W, 2), size(W, 3), size(W, 4))
-%     minimize( norm( A * WWW(:, :) - W(:, :), 2 ) + norm(WWW(:), 2) )
-% cvx_end
+WS = sparse(W(:, :));
+cvx_begin   
+    variable WWW(inter, size(W, 2), size(W, 3), size(W, 4))
+    minimize( norm( A * WWW(:, :) - WS, 2 ))
+cvx_end
+%  norm(WWW(:), 2) )
+%  +
 % 
 % 
 % cvx_begin   

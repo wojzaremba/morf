@@ -14,43 +14,15 @@ classdef NoApproximation < Approximation
         
         function [Wapprox, ret] = Approx(obj, params)            
             global plan;
-            if (plan.layer{2}.on_gpu) 
-                Wapprox = C_(CopyFromGPU, plan.layer{2}.gpu.vars.W);
-            else
-                Wapprox = plan.layer{2}.cpu.vars.W; 
-            end
-            ret.Wapprox = Wapprox;
             ret.layer_nr = 2;
-            ret.vars.W = Wapprox;
+            ret.layer = 'Conv';
+            ret.json = struct();
+            ret.vars = struct(); 
+            Wapprox = plan.layer{2}.cpu.vars.W;
+            ret.on_gpu = Val(params, 'on_gpu', obj.on_gpu);
         end
-        
-        function [test_error, time] = RunModifConv(obj, args)        
-            global plan
-            layer_orig = plan.layer{args.layer_nr};
-            json = layer_orig.json;
-            json.on_gpu = Val(args, 'on_gpu', 0);
-            layers = {};
-            layers = plan.layer;
-            plan.layer = {};
-            for i = 1 : length(layers)
-                if (i ~= args.layer_nr)
-                    plan.layer{i} = layers{i};
-                else
-                    plan.layer{args.layer_nr} = eval(sprintf('Conv(json)'));                                            
-                end
-            end            
-            plan.layer{args.layer_nr - 1}.next = {plan.layer{args.layer_nr}};            
-            plan.layer{args.layer_nr}.next = {plan.layer{args.layer_nr + 1}};
-            obj.SetLayerVars(args);     
-            plan.input.GetImage(0);
-            ForwardPass(plan.input);
-            test_error = plan.classifier.GetScore(5);            
-            time = plan.time.fp(2);
-            plan.layer = layers;
-            plan.layer{args.layer_nr - 1}.next = {plan.layer{args.layer_nr}};            
-            plan.layer{args.layer_nr}.next = {plan.layer{args.layer_nr + 1}};
-            C_(CleanGPU);
-        end
+
     end
     
 end
+

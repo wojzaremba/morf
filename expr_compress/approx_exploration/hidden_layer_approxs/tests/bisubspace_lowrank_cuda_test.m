@@ -4,7 +4,7 @@ clear all;
 global root_path
 init();
 
-if 0 % Just do this once.
+if 1 % Just do this once.
     % replace #mock with, func_name 
     fid_read = fopen(strcat(root_path, '/expr_compress/cuda/src/Capprox_template.cu'), 'r');
     fid_write = fopen(strcat(root_path, '/expr_compress/cuda/src/Capprox_gen.cu'), 'wt');
@@ -24,28 +24,41 @@ end
 do_compile = 1;
 
 gids.X = 1;
-
-gids.W = 3;
-
-gids.out = 5;
-
+gids.W = 2;
+gids.out = 3;
+gids.F = 4;
+gids.C = 5;
+gids.XY = 6;
+gids.inPerm = 7;
+gids.outPerm = 8;
 
 
 N = 55;
+M = 51;
 numImages = 128;
 stride = 1;
 padding = 0;
 K = 5;
-numOut = 256;
-numIn = 96;
+Nout = 256;
+Nin = 96;
+numClustIn = 32;
+numClustOut = 4;
+rank = 8;
+sizeClustIn = Nin / numClustIn;
+sizeClustOut = Nout / numClustOut;
 
 if do_compile
     % set cuda kernel vars
-    cuda_vars.colorCache = 2;
-    cuda_vars.filtersPerThread = 4; % only relevant if newNumColors <= 4
-    cuda_vars.B_Y = 4;
+	cuda_vars.rank = rank;
+	cuda_vars.numClustIn = numClustIn;
+	cuda_vars.numClustOut = numClustOut;
+	cuda_vars.sizeClustIn = sizeClustIn;
+	cuda_vars.sizeClustOut = sizeClustOut;
+	cuda_vars.clustersPerBlock = 1;
+    cuda_vars.colorCache = 3;
+    cuda_vars.B_Y = 8;
     cuda_vars.B_X = 32;
-    cuda_vars.imgsPerThread = 4; %numImages % 128 == 0 ? 4 : numImages % 64 == 0 ? 2 : 1;
+    cuda_vars.imgsPerThread = 4; %numImages % 128 == 0 ? 4 : numImages % 6/4 == 0 ? 2 : 1;
     cuda_vars.scale = 0;
     cuda_vars.checkImgBounds = mod(numImages, cuda_vars.B_X*cuda_vars.imgsPerThread) ~= 0;
 
@@ -76,26 +89,50 @@ end
 % Check correctness
 X = ones(numImages, N, N, Nin);
 W = randn(Nout, K, K, Nin);
-out_ = single(zeros(numImages, 51, 51, Nout));
-
-num_runs = 0;
-
+F = randn(numClustOut, sizeClustOut, rank, numClustIn);
+C = randn(numClustOut, sizeClustIn, rank, numClustIn);
+XY = randn(numClustOut, K*K, rank, numClustIn);
+out_ = single(zeros(numImages, M, M, Nout));
+inPerm = 0:(Nin - 1);
+outPerm = 0:(Nout - 1);
+num_runs = 10;
 
 % copy to GPU for regular conv
-Capprox_gen(CopyToGPU, gids.W,  single(W_approx));
+C_(CopyToGPU, gids.W,  single(W));
+C_(CopyToGPU, gids.X,  single(X));
+C_(CopyToGPU, gids.out,  out_);
+
+
+lapse1 = [];
+for t=1:num_runs
+	C_(StartTimer);
+	C_(ConvAct, gids.X, gids.W, gids.out, size(X, 2), size(X, 4), size(W, 2), stride, padding);
+	lapse = C_(StopTimer); 
+	lapse1 = [lapse1, lapse];
+end
+out = reshape(C_(CopyFromGPU, gids.out), size(out_));
+C_(CleanGPU);
+
+
+% copy to GPU for approx conv
+Capprox_gen(CopyToGPU, gids.F,  single(F));
+Capprox_gen(CopyToGPU, gids.C,  single(C));
+Capprox_gen(CopyToGPU, gids.XY,  single(XY));
+Capprox_gen(CopyToGPU, gids.inPerm,  single(inPerm));
+Capprox_gen(CopyToGPU, gids.outPerm,  single(outPerm));
 Capprox_gen(CopyToGPU, gids.X,  single(X));
 Capprox_gen(CopyToGPU, gids.out,  out_);
-% 
-% 
-% lapse1 = [];
-% for t=1:num_runs
-%     C_(StartTimer);
-     Capprox_gen(ConvAct, gids.X, gids.W, gids.out, size(X, 2), size(X, 4), size(W_approx, 2), stride, padding);
-%     lapse = C_(StopTimer); 
-%     lapse1 = [lapse1, lapse];
-% end
-% out = reshape(C_(CopyFromGPU, gids.out), size(out_));
- Capprox_gen(CleanGPU);
+
+
+lapse2 = [];
+for t=1:num_runs
+	Capprox_gen(StartTimer);
+	Capprox_gen(approx_pointer, gids.X, gids.F, gids.C, gids.XY, gids.out, gids.inPerm, gids.outPerm, N, Nin, Nout, K, stride, padding);
+	lapse = Capprox_gen(StopTimer); 
+	lapse2 = [lapse2, lapse];
+end
+out_approx = reshape(Capprox_gen(CopyFromGPU, gids.out), size(out_));
+Capprox_gen(CleanGPU);
 % 
 % 
 % 

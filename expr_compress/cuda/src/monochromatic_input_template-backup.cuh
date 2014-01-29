@@ -14,7 +14,7 @@ using namespace std;
 enum FILTER_OUTPUT_ORDER {MODULE_FILTER_IMAGE, FILTER_MODULE_IMAGE};
 
 
-void convFilterActsMono(NVMatrix& images, NVMatrix& filters, NVMatrix& targets, NVMatrix& monoimages, NVMatrix& perm, NVMatrix& colors,
+void convFilterActsMono(NVMatrix& images, NVMatrix& filters, NVMatrix& targets, NVMatrix& perm, NVMatrix& colors,
                    int imgSizeY, int numModulesY, int numModulesX, int paddingStart, int moduleStride,
                    int newNumColors,
                    float scaleTargets, float scaleOutput);
@@ -22,13 +22,13 @@ void convFilterActsMono(NVMatrix& images, NVMatrix& filters, NVMatrix& targets, 
 #endif  /* COMMON_CUH */
 
 void monochromatic_input(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-        assert_((nrhs == 12) && (nlhs == 0));
+        assert_((nrhs == 11) && (nlhs == 0));
         NVMatrix* images = getMatrix(prhs[1]);
         NVMatrix* filters = getMatrix(prhs[2]); 
         NVMatrix* targets = getMatrix(prhs[3]); 
         NVMatrix* perm = getMatrix(prhs[9]);
         NVMatrix* colors = getMatrix(prhs[10]);
-        NVMatrix* monoimages = getMatrix(prhs[11]);       
+        
         const mwSize* images_dims = mxGetDimensions(prhs[1]);
         int imgSizeY = (int)mxGetScalar(prhs[4]);
         int paddingStart = (int)mxGetScalar(prhs[8]);
@@ -44,40 +44,12 @@ void monochromatic_input(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prh
         images->transpose();
         filters->transpose();
         targets->transpose();
-		monoimages->transpose();
-        convFilterActsMono(*images, *filters, *targets, *monoimages, *perm, *colors,
+        convFilterActsMono(*images, *filters, *targets, *perm, *colors,
                        imgSizeY, numModulesY, numModulesX, -paddingStart, moduleStride,
                        newNumColors, 0, 1);
         images->transpose();
         filters->transpose();
         targets->transpose();
-}
-
-/*
- * images:      (origNumColors, imgSizeY, imgSizeX, numImages)
- * colors: 		(newNumColors, origNumColors)
- * monoImages:  (newNumColors, imgSizeY, imgSizeX, numImages) 
- * 
- * Each block works on some number of images and all newImgColors for some spatial location.
- */
-template <int origNumColors>
-__global__ void colorTransform(float* images, float* colors, float* monoimages, const int imgSizeY, const int imgSizeX, const int numImages) {
-
-	const int imgX = blockIdx.x;
-	const int imgY = blockIdx.y;
-	const int imgIdx = threadIdx.x;
-	const int newColorIdx = threadIdx.y;
-	
-	images += imgIdx + imgX * numImages + imgY * imgSizeX * numImages;
-	colors += newColorIdx * origNumColors;
-	monoimages += imgIdx + imgX * numImages + imgY * imgSizeX * numImages + newColorIdx * imgSizeY * imgSizeX * numImages;
-
-	float val = 0;
-	#pragma unroll
-	for (int c = 0; c < origNumColors; c++) {
-		val += images[c * imgSizeY * imgSizeX * numImages] * colors[c];
-	}
-	*monoimages = val;
 }
 
 /*
@@ -88,7 +60,7 @@ __global__ void colorTransform(float* images, float* colors, float* monoimages, 
  * blockIdx.x determines image batch of B_X * imgsPerThread
  * blockIdx.y determines filter batch of module and B_Y * filtersPerThread
  *
- * monoimages:      (newNumColors, imgSizeY, imgSizeX, numImages) with stride given
+ * images:      (origNumColors, imgSizeY, imgSizeX, numImages) with stride given
  * filters:     (filterPixels, numFilters) if conv
  *              (numModules, numColors, filterPixels, numFilters) otherwise
  *
@@ -107,7 +79,7 @@ __global__ void colorTransform(float* images, float* colors, float* monoimages, 
  */
 template <int B_Y, int B_X, int imgsPerThread, int filtersPerThread, int colorsPerBlock, int origNumColors, 
           bool scale, bool checkImgBounds>
-__global__ void filterActsMonoEven_YxX_color(float* monoimages, float* filters, float* targets, float* perm, float* colors,
+__global__ void filterActsMonoEven_YxX_color(float* images, float* filters, float* targets, float* perm, float* colors,
                                    const int numImages, const int numFilters, const int newNumColors,
                                    const int imgSizeY, const int imgSizeX, const int filterSize, const int paddingStart,
                                    const int moduleStride,
@@ -116,7 +88,7 @@ __global__ void filterActsMonoEven_YxX_color(float* monoimages, float* filters, 
                                    const bool conv) {
     __shared__ float shFilters[B_Y][B_Y * filtersPerThread]; // pre-load B_Y pixels from B_Y*filtersPerThread filters
     __shared__ float shImages[B_Y*colorsPerBlock][B_X * imgsPerThread]; // pre-load B_Y pixels from B_X*imgsPerThread images
-    //__shared__ float shColorCoeff[colorsPerBlock][origNumColors]; // store colors coefficients for the colors
+    __shared__ float shColorCoeff[colorsPerBlock][origNumColors]; // store colors coefficients for the colors
 
     const int imgPixels = imgSizeY * imgSizeX;
     const int filterPixels = filterSize * filterSize;
@@ -134,8 +106,10 @@ __global__ void filterActsMonoEven_YxX_color(float* monoimages, float* filters, 
     const int shFilterLoadX = tidx % (B_Y * filtersPerThread);
     const int myImgIdx = blockIdx.y * B_X * imgsPerThread + threadIdx.x;
     
-	monoimages += myImgIdx;
-	filters += (int)perm[globalFilterIdx + shFilterLoadX] + shFilterLoadY * numFilters;
+	images += myImgIdx;
+    if (shFilterLoadY < B_Y) {
+		filters += (int)perm[globalFilterIdx + shFilterLoadX] + shFilterLoadY * numFilters;
+	}
     targets += moduleIdx * numImages + myImgIdx;
 
     float prod[filtersPerThread][imgsPerThread];
@@ -149,14 +123,13 @@ __global__ void filterActsMonoEven_YxX_color(float* monoimages, float* filters, 
 
     /*
     * Fill shColorCoeff with the color coefficients
-    
+    */
     if (tidx < origNumColors * colorsPerBlock) {
             const int shColorLoadY = tidx / origNumColors;
             const int shColorLoadX = tidx % origNumColors;
             shColorCoeff[shColorLoadY][shColorLoadX] = colors[(colorStartIdx + shColorLoadY) * origNumColors + shColorLoadX];
     }
     __syncthreads();
-	*/
     for (int p = 0; p < filterPixels; p += B_Y) {
         /*
          * Load B_Y pixels from B_Y*filtersPerThread filters
@@ -185,7 +158,11 @@ __global__ void filterActsMonoEven_YxX_color(float* monoimages, float* filters, 
                     if (!checkImgBounds || myImgIdx + i * B_X < numImages) {
                         #pragma unroll
                         for (int c = 0; c < colorsPerBlock; c++) {
-                            shImages[threadIdx.y + c * B_Y][threadIdx.x + i * B_X] = monoimages[imgStride * ( (colorStartIdx + c) * imgPixels + y * imgSizeX + x) + i * B_X]; 
+						 	shImages[threadIdx.y + c * B_Y][threadIdx.x + i * B_X] = 0; 
+							#pragma unroll				
+                            for (int j = 0; j < origNumColors; j++) {
+                            	shImages[threadIdx.y + c * B_Y][threadIdx.x + i * B_X] += shColorCoeff[c][j] * images[imgStride * ( j * imgPixels + y * imgSizeX + x) + i * B_X]; 
+                           } 
                         }
                     } else {
                         #pragma unroll
@@ -220,6 +197,28 @@ __global__ void filterActsMonoEven_YxX_color(float* monoimages, float* filters, 
              	}
 			}				
 		}	
+		/*
+		#pragma unroll	
+		for (int f = 0; f < filtersPerThread / colorsPerBlock; f++) {
+            #pragma unroll
+            for (int i = 0; i < B_Y; i++) {
+                #pragma unroll
+                for(int g = 0; g < imgsPerThread; g++) {
+                    prod[f][g] += shImages[i][g * B_X + threadIdx.x] * shFilters[i][threadIdx.y + f * B_Y];
+                }                
+             }
+		}
+		#pragma unroll
+		for (int f = filtersPerThread / colorsPerBlock; f < filtersPerThread; f++) {
+            #pragma unroll
+            for (int i = 0; i < B_Y; i++) {
+                #pragma unroll
+                for(int g = 0; g < imgsPerThread; g++) {
+                    prod[f][g] += shImages[i + B_Y][g * B_X + threadIdx.x] * shFilters[i][threadIdx.y + f * B_Y];
+                }                
+             }
+		}
+		*/
         __syncthreads();
     }
     
@@ -443,7 +442,7 @@ __global__ void filterActsMonoEvenManyCol_YxX_color(float* images, float* filter
  * Other batch sizes will work, but but I made no attempt whatsoever
  * to make them work fast. 
  */
- void _filterActsMono(NVMatrix& images, NVMatrix& filters, NVMatrix& targets, NVMatrix& monoimages, NVMatrix& perm, NVMatrix& colors,
+ void _filterActsMono(NVMatrix& images, NVMatrix& filters, NVMatrix& targets, NVMatrix& perm, NVMatrix& colors,
                    int imgSizeY, int numModulesY, int numModulesX, int paddingStart, int moduleStride,
                    int newNumColors,
                    float scaleTargets, float scaleOutput, bool conv) {    
@@ -478,13 +477,7 @@ __global__ void filterActsMonoEvenManyCol_YxX_color(float* images, float* filter
 
     assert_(filters.isContiguous());
     assert_(targets.isContiguous());
- 
-	dim3 blocks(imgSizeX, imgSizeY);
-	dim3 threads(numImages, newNumColors);  
-
-	cudaFuncSetCacheConfig(colorTransform <#origNumColors>, cudaFuncCachePreferShared); 
-	colorTransform <#origNumColors> <<<blocks, threads>>>(images.getDevData(), colors.getDevData(), monoimages.getDevData(), imgSizeY, imgSizeX, numImages);
- 
+   
     if (newNumColors <= 16) {
         dim3 blocks = dim3((numModules * numFilters) / (#B_Y * #filtersPerThread), DIVUP(numImages, #B_X * #imgsPerThread));
         dim3 threads(#B_X, #B_Y); // B_Y always 4
@@ -496,10 +489,9 @@ __global__ void filterActsMonoEvenManyCol_YxX_color(float* images, float* filter
         }
 
        printf("(G_X, G_Y) = (%d, %d) \n", (numModules * numFilters) / (#B_Y * #filtersPerThread), DIVUP(numImages, #B_X * #imgsPerThread));
-		cudaFuncSetCacheConfig(filterActsMonoEven_YxX_color < #B_Y, #B_X, #imgsPerThread, #filtersPerThread, #colorsPerBlock, #origNumColors,  #scale, #checkImgBounds >, cudaFuncCachePreferShared);
-                            
-        filterActsMonoEven_YxX_color < #B_Y, #B_X, #imgsPerThread, #filtersPerThread, #colorsPerBlock, #origNumColors,  #scale, #checkImgBounds > <<<blocks, threads>>>(monoimages.getDevData(), filters.getDevData(), targets.getDevData(), perm.getDevData(), colors.getDevData(), numImages, numFilters, newNumColors, imgSizeY, imgSizeX, filterSize, paddingStart, moduleStride, numModulesY, numModulesX, imgStride, scaleTargets, scaleOutput, conv);
-
+        filterActsMonoEven_YxX_color < #B_Y, #B_X, #imgsPerThread, #filtersPerThread, #colorsPerBlock, #origNumColors,  #scale, #checkImgBounds > <<<blocks, threads>>>(images.getDevData(), filters.getDevData(), targets.getDevData(), perm.getDevData(), colors.getDevData(),
+            numImages, numFilters, newNumColors, imgSizeY, imgSizeX, filterSize, paddingStart, moduleStride, numModulesY, numModulesX, imgStride, scaleTargets, scaleOutput, conv);
+    
     } else {
         int numKernelModulesX = DIVUP(numModulesX, 2); // kernelModulesX == kernelModulesY
         dim3 blocks = dim3(DIVUP(numImages, #B_X * #imgsPerThread), (numKernelModulesX*numKernelModulesX * numFilters) / #B_Y);
@@ -519,11 +511,11 @@ __global__ void filterActsMonoEvenManyCol_YxX_color(float* images, float* filter
     getLastCudaError("filterActs: kernel execution failed");
 }
 
-void convFilterActsMono(NVMatrix& images, NVMatrix& filters, NVMatrix& targets,  NVMatrix& monoimages, NVMatrix& perm, NVMatrix& colors,
+void convFilterActsMono(NVMatrix& images, NVMatrix& filters, NVMatrix& targets,  NVMatrix& perm, NVMatrix& colors,
                    int imgSizeY, int numModulesY, int numModulesX, int paddingStart, int moduleStride,
                    int newNumColors, 
                    float scaleTargets, float scaleOutput) {
-     _filterActsMono(images, filters, targets, monoimages, perm, colors, imgSizeY, numModulesY, numModulesX, paddingStart, moduleStride, newNumColors, scaleTargets, scaleOutput, true);
+     _filterActsMono(images, filters, targets, perm, colors, imgSizeY, numModulesY, numModulesX, paddingStart, moduleStride, newNumColors, scaleTargets, scaleOutput, true);
 }
 
 
