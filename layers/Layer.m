@@ -128,6 +128,7 @@ classdef Layer < handle
         end
         
         function RandomWeights(obj, name, dim)
+            global plan
             try
                 funname = eval(sprintf('obj.init.%s.init_fun', name));
                 mult = eval(sprintf('obj.init.%s.mult', name));
@@ -143,7 +144,7 @@ classdef Layer < handle
                     bias = 0;
                 end
             end
-            eval(sprintf('obj.cpu.vars.%s = obj.%s(dim, mult, bias);', name, funname));
+            eval(sprintf('obj.cpu.vars.%s = %s(obj.%s(dim, mult, bias));', name, plan.global_type, funname));
         end
         
         function ret = GAUSSIAN(obj, dim, mult, bias)

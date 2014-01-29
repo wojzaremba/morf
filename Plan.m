@@ -21,10 +21,11 @@ classdef Plan < handle
         only_fp
         incr_tests 
         incr_trains
+        global_type
     end
     
     methods
-        function obj = Plan(param1, weights, default_on_gpu)
+        function obj = Plan(param1, weights, default_on_gpu, global_type)
             if (ischar(param1))
                 jsons = ParseJSON(param1);
             else
@@ -35,6 +36,12 @@ classdef Plan < handle
             else
                 obj.default_on_gpu = 0;
             end
+            if (exist('global_type', 'var'))
+                obj.global_type = global_type;
+            else
+                obj.global_type = 'double';
+            end
+            
             obj.jsons = jsons;
             obj.gid = 0;  
             obj.only_fp = 0;
