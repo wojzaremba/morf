@@ -31,6 +31,7 @@ gids.C = 5;
 gids.XY = 6;
 gids.inPerm = 7;
 gids.outPerm = 8;
+gids.out_partial = 9;
 
 
 N = 55;
@@ -56,7 +57,7 @@ if do_compile
 	cuda_vars.sizeClustOut = sizeClustOut;
 	cuda_vars.clustersPerBlock = 1;
     cuda_vars.colorCache = 3;
-    cuda_vars.B_Y = 8;
+    cuda_vars.B_Y = rank; 
     cuda_vars.B_X = 32;
     cuda_vars.imgsPerThread = 4; %numImages % 128 == 0 ? 4 : numImages % 6/4 == 0 ? 2 : 1;
     cuda_vars.scale = 0;
@@ -89,9 +90,10 @@ end
 % Check correctness
 X = ones(numImages, N, N, Nin);
 W = randn(Nout, K, K, Nin);
-F = randn(numClustOut, sizeClustOut, rank, numClustIn);
-C = randn(numClustOut, sizeClustIn, rank, numClustIn);
-XY = randn(numClustOut, K*K, rank, numClustIn);
+F = randn(sizeClustOut, rank, numClustIn, numClustOut);
+C = randn(sizeClustIn, rank, numClustIn, numClustOut);
+XY = randn(K*K, rank, numClustIn, numClustOut);
+out_partial = single(zeros(numImages, M, M, rank * numClustIn * numClustOut));
 out_ = single(zeros(numImages, M, M, Nout));
 inPerm = 0:(Nin - 1);
 outPerm = 0:(Nout - 1);
@@ -122,7 +124,7 @@ Capprox_gen(CopyToGPU, gids.inPerm,  single(inPerm));
 Capprox_gen(CopyToGPU, gids.outPerm,  single(outPerm));
 Capprox_gen(CopyToGPU, gids.X,  single(X));
 Capprox_gen(CopyToGPU, gids.out,  out_);
-
+%Capprox_gen(CopyToGPU, gids.out_partial,  out_partial);
 
 lapse2 = [];
 for t=1:num_runs

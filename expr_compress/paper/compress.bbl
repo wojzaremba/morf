@@ -1,4 +1,4 @@
-\begin{thebibliography}{7}
+\begin{thebibliography}{8}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -11,6 +11,14 @@ Denil, Misha, Shakibi, Babak, Dinh, Laurent, Ranzato, Marc'Aurelio, and
   de~Freitas, Nando.
 \newblock Predicting parameters in deep learning.
 \newblock \emph{arXiv preprint arXiv:1306.0543}, 2013.
+
+\bibitem[Hinton et~al.(2012)Hinton, Srivastava, Krizhevsky, Sutskever, and
+  Salakhutdinov]{hinton2012improving}
+Hinton, Geoffrey~E, Srivastava, Nitish, Krizhevsky, Alex, Sutskever, Ilya, and
+  Salakhutdinov, Ruslan~R.
+\newblock Improving neural networks by preventing co-adaptation of feature
+  detectors.
+\newblock \emph{arXiv preprint arXiv:1207.0580}, 2012.
 
 \bibitem[Le et~al.(2010)Le, Ngiam, Chen, Chia, Koh, and
   Ng]{LeNgiChenChiaKohNg10}

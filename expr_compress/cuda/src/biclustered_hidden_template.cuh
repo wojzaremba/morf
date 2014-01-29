@@ -92,99 +92,58 @@ __global__ void filterActs_YxX(float* images, float* F, float* C, float* XY, flo
                                        const int imgSizeY, const int imgSizeX, const int filterSize, const int paddingStart,
                                        const int moduleStride,
                                        const int numModulesY, const int numModulesX, const int imgStride, const int numImgColors) {
-    //__shared__ float shFilters[B_Y*colorCache][B_Y * filtersPerThread]; // pre-load B_Y pixels from B_Y*filtersPerThread filters
-	//__shared__ float shF[sizeClustOut * clustersPerBlock][rank];
-	__shared__ float shC[sizeClustIn * clustersPerBlock][rank];
-	__shared__ float shXY[B_Y * clustersPerBlock][rank];
-    __shared__ float shImages[B_Y * clustersPerBlock * sizeClustIn][B_X * imgsPerThread]; // pre-load B_Y pixels from B_X*imgsPerThread images
-	//__shared__ float shOut[rank * clustersPerBlock][B_X * imgsPerThread];	
+	__shared__ float shC[sizeClustIn][rank];
+	__shared__ float shXY[B_Y][rank];
+    __shared__ float shImages[B_Y * sizeClustIn][B_X * imgsPerThread]; // pre-load B_Y pixels from B_X*imgsPerThread images
     const int imgPixels = imgSizeY * imgSizeX;
     const int filterPixels = filterSize * filterSize;
-	const int filtersPerBlock = clustersPerBlock * sizeClustOut;
-    const int blocksPerModule = numFilters / filtersPerBlock;
+    const int blocksPerModule = numFilters / sizeClustOut;
     const int moduleIdx = blockIdx.x / blocksPerModule;
-    const int blockFilterIdx = clustersPerBlock * sizeClustOut * (blockIdx.x % blocksPerModule);
+    const int blockFilterIdx = sizeClustOut * (blockIdx.x % blocksPerModule);
     const int blockGroupIdx = blockFilterIdx / numFilters;
-	const int filtersPerThread = filtersPerBlock / B_Y;
 	const int outClustIdx = blockFilterIdx / numClustOut;
     const int numModules = numModulesX * numModulesY;
     const int blockColorIdx = numImgColors * blockGroupIdx;
 
-    const int tidx = threadIdx.y * B_X + threadIdx.x;
-
     const int imgLoadModPosY = paddingStart + (moduleIdx / numModulesX) * moduleStride;
     const int imgLoadModPosX = paddingStart + (moduleIdx % numModulesX) * moduleStride;
 
-    const int shFilterLoadY = tidx / rank;
-    const int shFilterLoadX = tidx % rank; 
     const int myImgIdx = blockIdx.y * B_X * imgsPerThread + threadIdx.x;
 
-    images += blockColorIdx * imgPixels * imgStride + myImgIdx;
+    images += myImgIdx; //blockColorIdx * imgPixels * imgStride + myImgIdx;
 
-    F += outClustIdx * numClustIn * rank * sizeClustOut // numClustOut dimension
-      + shFilterLoadX * sizeClustOut; //rank dimension 
+	F += outClustIdx * numClustIn * rank * sizeClustOut; //numClustOut dimension
+	  // + threadIdx.y * sizeClustOut;
 
 	C += outClustIdx * numClustIn * rank * sizeClustIn //numClustOut dimension
-	  + shFilterLoadX * sizeClustIn; //rank dimension
+	  + threadIdx.x * sizeClustIn; //rank dimension
 
 	XY += outClustIdx * numClustIn * rank * filterPixels //numClustOut dimension
-	   + shFilterLoadX * filterPixels;
+	   + threadIdx.x * filterPixels;
 
     targets += moduleIdx * numImages
-            + (blockFilterIdx + threadIdx.y) * numImages * numModules
+            + blockFilterIdx * numImages * numModules
             + myImgIdx;
 
 
-    float prod[filtersPerThread][imgsPerThread];
-    #pragma unroll
-    for(int f = 0; f < filtersPerThread; f++) {
-        #pragma unroll
-        for(int g = 0; g < imgsPerThread; g++) {
-           prod[f][g] = 0;
-        }
-    }
-//__shared__ float shOut[rank * clustersPerBlock][B_X * imgsPerThread];	
-/*
-	const int shOutLoadY = tidx / (B_X * imgsPerThread);
-	const int shOutLoadX = tidx % (B_X * imgsPerThread);
-	for (int i = 0; i < rank * clustersPerBlock; i++) {
-		if (shOutLoadY + i <  rank * clustersPerBlock) {		
-			shOut[shOutLoadY + i][shOutLoadX] = 0;
+    float prod[imgsPerThread];
+   	for (int ic = 0; ic < 1; ic ++) { // ic stands for input cluster
+		
+		#pragma unroll
+		for(int g = 0; g < imgsPerThread; g++) {
+		   prod[g] = 0;
+		}
+		
+		// Increment F
+		F += ic * rank * sizeClustOut;
+	
+		// Fill shC
+		if (threadIdx.y < sizeClustIn && threadIdx.y < rank) {
+			shC[threadIdx.y][threadIdx.x] = C[threadIdx.y];
 		}	
-	}  	
-*/
-	#pragma unroll	
-   	for (int ic = 0; ic < numClustIn; ic ++) { // ic stands for input cluster
-		/*
-		* Fill shF, shC and shXY.
-		*/ 
-	/*
-		#pragma unroll
-		for (int f = 0; f < filtersPerBlock; f += B_X * B_Y / rank) {
-			if (shFilterLoadY + f < sizeClustOut * clustersPerBlock) {
-				shF[shFilterLoadY + f][shFilterLoadX] = F[((shFilterLoadY + f) / sizeClustOut) + ((shFilterLoadY + f) % sizeClustOut)];
-			}	
-		}
-	*/	
-		F += ic * rank * sizeClustOut;	
-		#pragma unroll
-		for (int f = 0; f < sizeClustIn * clustersPerBlock; f += B_X * B_Y / rank) {
-			if (shFilterLoadY + f < sizeClustIn * clustersPerBlock) {
-				shC[shFilterLoadY + f][shFilterLoadX] = C[((shFilterLoadY + f) / sizeClustOut) + ((shFilterLoadY + f) % sizeClustOut)];
-			}	
-		}
 
    	 	for (int p = 0; p < filterPixels; p += B_Y) {
         	/*
-         	 * Load B_Y * clustersPerBlock pixels from rank filters
-        	 */
-			#pragma unroll
-			for (int f = 0; f < B_Y * clustersPerBlock; f += B_X * B_Y / rank) {
-				if (shFilterLoadY + f < B_Y * clustersPerBlock) {
-					shXY[shFilterLoadY + f][shFilterLoadX] = XY[((shFilterLoadY + f) / sizeClustOut) + ((shFilterLoadY + f) % sizeClustOut)];
-				}	
-			}
-			/*
 			 * Load B_Y pixels from B_X*imgsPerThread images
 			 */
 			const int pixIdx = p + threadIdx.y;
@@ -197,12 +156,12 @@ __global__ void filterActs_YxX(float* images, float* F, float* C, float* XY, flo
 					for (int i = 0; i < imgsPerThread; i++) {
 						if (!checkImgBounds || myImgIdx + i * B_X < numImages) {
 							#pragma unroll
-							for (int c = 0; c < clustersPerBlock * sizeClustIn; c++) {
+							for (int c = 0; c < sizeClustIn; c++) {
 								shImages[threadIdx.y + c * B_Y][threadIdx.x + i * B_X] = m[c * imgStride * imgPixels + i * B_X];
 							}
 						} else {
 							#pragma unroll
-							for (int c = 0; c < clustersPerBlock * sizeClustIn; c++) {
+							for (int c = 0; c < sizeClustIn; c++) {
 								shImages[threadIdx.y + c * B_Y][threadIdx.x + i * B_X] = 0;
 							}
 						}
@@ -211,58 +170,45 @@ __global__ void filterActs_YxX(float* images, float* F, float* C, float* XY, flo
 					#pragma unroll
 					for (int i = 0; i < imgsPerThread; i++) {
 						#pragma unroll
-						for (int c = 0; c < clustersPerBlock * sizeClustIn; c++) {
+						for (int c = 0; c < sizeClustIn; c++) {
 							shImages[threadIdx.y + c * B_Y][threadIdx.x + i * B_X] = 0;
 						}
 					}
 				}
 			}
 			__syncthreads();
-			//#pragma unroll
-			for (int r = 0; r < rank; r++) {	
-				for (int i = 0; i < imgsPerThread; i++) {
-            	// First linearly combine input maps. Store them in shImages, but be careful!
-					for (int c = 0; c < clustersPerBlock; c++) {
-						float cimg = 0;
-						#pragma unroll
-						for (int cc = 0; cc < sizeClustIn; cc++) {
-							cimg += shImages[threadIdx.y + (cc + c * sizeClustIn) * B_Y][threadIdx.x + i * B_X] * shC[cc + c * sizeClustIn][r]; 
-						}
-						shImages[threadIdx.y + c * clustersPerBlock][threadIdx.x + i * B_X] = cimg * shXY[threadIdx.y + c * B_Y][r];
+			/*	
+			 * Load B_Y * clustersPerBlock pixels from rankCache filters
+			 */
+			if (threadIdx.y < B_Y && threadIdx.x < rank) {
+				shXY[threadIdx.y][threadIdx.x] = XY[threadIdx.y];
+			}
+			// Linearly combine input maps, multiply with XY  and store back in shImages
+			for (int i = 0; i < imgsPerThread; i++) {
+				#pragma unroll
+				for (int p = 0; p < B_Y; p++) {
+					float cimg = 0;	
+					#pragma unroll
+					for (int c = 0; c < sizeClustIn; c++) {
+						cimg += shImages[p + c * B_Y][threadIdx.x + i * B_X] * shC[c][threadIdx.y];
 					}
-					if (threadIdx.y < clustersPerBlock) {
-						for (int p = 0; p < B_Y; p++) {	
-							//shImages[threadIdx.y + r * clustersPerBlock][threadIdx.x + i * B_X] += shImages[p + threadIdx.y * clustersPerBlock][threadIdx.x + i * B_X]; 
-						}	
-					}
-					/*
-					for (int f = 0; f < filtersPerThread; f++) {
-						prod[f][i] += shImages[threadIdx.y ][threadIdx.x + i * B_X] * shF[threadIdx.y + f * B_Y][r];
-					}
-					*/	
-				}	
+					prod[i] += cimg * shXY[p][threadIdx.y];
+				}
 			}
 			__syncthreads();
 		}
-		__syncthreads();
-		for (int i = 0; i < imgsPerThread; i++) {
-			for (int f = 0; f < filtersPerThread; f++) {
-				for (int r = 0; r < rank; r++) {
-					prod[f][i] += F[threadIdx.y + f * B_Y + r * sizeClustOut];// * shOut[0][threadIdx.x + i * B_X];// * shF[threadIdx.y + f * B_Y][r];
+		for (int f = 0; f < sizeClustOut; f++) {
+			int filterIdx = (threadIdx.y + f) % sizeClustOut;	
+			float Fcoeff = F[filterIdx];
+			#pragma unroll
+			for (int i = 0; i < imgsPerThread; i++) {
+				if (!checkImgBounds || myImgIdx + i * B_X < numImages) {
+					targets[i * B_X + filterIdx * numImages * numModules] += sizeClustOut;//filterIdx;// Fcoeff; //prod[i] * Fcoeff;
 				}
-			}	
+			}
+			__syncthreads();
 		}
 	}	
-
-    #pragma unroll
-    for (int g = 0; g < imgsPerThread; g++) {
-    	if (!checkImgBounds || myImgIdx + g * B_X < numImages) {
-    		#pragma unroll
-    		for (int f = 0; f < filtersPerThread; f++) {
-    			targets[g * B_X + f * B_Y * numImages * numModules] = prod[f][g];
-    		}
-    	}
-    }
 }
 
 
@@ -293,17 +239,17 @@ __global__ void filterActs_YxX(float* images, float* F, float* C, float* XY, flo
 
     int imgStride = images.getStride(); // images does not need to be a contiguous matrix
 	
-    int filterPixels = XY.getNumRows() / (#numClustIn * #rank); 
+    int filterPixels = XY.getNumCols();
     int filterSize = int(sqrt(filterPixels));
     assert_(filterSize * filterSize == filterPixels);
 
-    assert_(F.getNumRows() == #numClustIn * #rank * #sizeClustOut);
-    assert_(C.getNumRows() == #numClustIn * #rank * #sizeClustIn);
-    assert_(XY.getNumRows() == #numClustIn * #rank * filterPixels);
+    assert_(F.getNumRows() == #numClustOut *  #numClustIn * #rank);
+    assert_(C.getNumRows() == #numClustOut *  #numClustIn * #rank);
+    assert_(XY.getNumRows() == #numClustOut *  #numClustIn * #rank);
 
-	assert_(F.getNumCols() == #numClustOut);
-	assert_(C.getNumCols() == #numClustOut);
-	assert_(XY.getNumCols() == #numClustOut);
+	assert_(F.getNumCols() == #sizeClustOut);
+	assert_(C.getNumCols() == #sizeClustIn);
+	assert_(XY.getNumCols() == filterPixels);
 
 	assert_(#numClustIn * #sizeClustIn == numImgColors);
 	assert_(#numClustOut * #sizeClustOut == numFilters);
