@@ -46,8 +46,12 @@ classdef Layer < handle
             obj.bp_dx_on_first = Val(json, 'bp_dx_on_first', 0);
             obj.Fun = eval(sprintf('@%s;', fname));
             obj.dFun = eval(sprintf('@d%s;', fname));
-            obj.Fun_ = eval(sprintf('Act%s', fname));
-            obj.dFun_ = eval(sprintf('dAct%s', fname));                        
+            try
+                obj.Fun_ = eval(sprintf('Act%s', fname));
+                obj.dFun_ = eval(sprintf('dAct%s', fname));                        
+            catch
+                fprintf('Act%s or dAct%s not implemented on GPU\n', fname, fname);
+            end
             obj.cpu = struct('vars', struct(), 'dvars', struct(), 'accum', struct());
             obj.gpu = struct('vars', struct(), 'dvars', struct(), 'accum', struct());
             obj.on_gpu = Val(json, 'on_gpu', plan.default_on_gpu);
@@ -124,6 +128,7 @@ classdef Layer < handle
         end
         
         function RandomWeights(obj, name, dim)
+            global plan
             try
                 funname = eval(sprintf('obj.init.%s.init_fun', name));
                 mult = eval(sprintf('obj.init.%s.mult', name));
@@ -139,7 +144,7 @@ classdef Layer < handle
                     bias = 0;
                 end
             end
-            eval(sprintf('obj.cpu.vars.%s = obj.%s(dim, mult, bias);', name, funname));
+            eval(sprintf('obj.cpu.vars.%s = %s(obj.%s(dim, mult, bias));', name, plan.global_type, funname));
         end
         
         function ret = GAUSSIAN(obj, dim, mult, bias)
@@ -162,6 +167,22 @@ classdef Layer < handle
         function ret = dF(obj, X)
             ret = obj.dFun(obj, X);
         end
+
+        function ret = X3(obj, X)
+            ret = X .^ 3;
+        end
+        
+        function ret = dX3(obj, X)
+            ret = 3 * X .^ 2;
+        end                
+        
+        function ret = X5(obj, X)
+            ret = X .^ 5;
+        end
+        
+        function ret = dX5(obj, X)
+            ret = 5 * X .^ 4;
+        end        
         
         function ret = LINEAR(obj, X)
             ret = X;

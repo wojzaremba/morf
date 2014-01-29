@@ -1,4 +1,13 @@
 [
+    {
+        "type": "FC",
+        "fully_connected": true,
+        "rows": 2,
+        "cols": 1,
+        "depth": 2,
+        "function": "X3"
+    },
+
 
     {
         "type": "Conv",

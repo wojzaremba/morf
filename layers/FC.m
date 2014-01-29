@@ -46,8 +46,17 @@ classdef FC < Layer
             W = obj.cpu.vars.W;
             act = obj.cpu.vars.forward_act;
             act = obj.dF(act);
-            dX = act .* reshape(obj.cpu.dvars.out, size(act));
+            dX = act .* reshape(obj.cpu.dvars.out, size(act));      
             obj.cpu.dvars.W = X(:, :)' * dX;
+% 
+%             [~, S, V] = svd(X(:, :), 0);
+%             S = diag(S);
+%             S(S < 1e-3) = 0;             
+%             S(S > 1e-3) = 1 ./ S(S > 1e-3);  
+%             V = V(:, 1 : length(S));
+%             S = diag(S);
+%             obj.cpu.dvars.W = V * S * V' * X(:, :)' * obj.dF(obj.cpu.dvars.out);
+            
             obj.cpu.dvars.B = sum(dX, 1);
             obj.cpu.dvars.X = dX * W';
         end
