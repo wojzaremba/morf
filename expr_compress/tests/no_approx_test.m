@@ -19,3 +19,5 @@ S.Add(approx);
 S.approx_logs{1}.ClearLog();
 S.Run();
 S.Printf();
+
+% XXX: Put here assertions.

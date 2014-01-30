@@ -1,4 +1,4 @@
-function [Wapprox, F, C, X, Y, assignment] = bisubspace_lowrank_approx(W, args)
+function [Wapprox, F, C, XY, perm_in, perm_out, num_weights] = bisubspace_lowrank_approx(W, args)
 % This approximation performs bi-clustering on input and output feature
 % coordinates. After clustering, each kernel is then approximated by a sum
 % of k rank one tensors. 
@@ -8,31 +8,46 @@ function [Wapprox, F, C, X, Y, assignment] = bisubspace_lowrank_approx(W, args)
 % args.oclust : Number of groups in output partition
 % args.k : Rank of tensor approximation (sum of k rank one tensors)
 
-    % Find partition of input and output coordinates.
-    WW = W(:,:);
-    idx_output = litekmeans(WW', args.oclust);
-    WW = permute(W, [4 2 3 1]);
-    WW = WW(:, :);
-    idx_input = litekmeans(WW', args.iclust);
+    iclust_sz = size(W, 4) / args.iclust;
+    oclust_sz = size(W, 1) / args.oclust;
+    num_weights = (iclust_sz + oclust_sz + size(W, 2) * size(W, 2)) * args.iclust * args.oclust * args.k;
 
-%     lambda=0.001;
-%     WW=W(:, :);
-%     CMat = SparseCoefRecovery(WW', 0, 'Lasso', lambda);
-%     CKSym = BuildAdjacency(CMat, 0);
-%     [Grps] = SpectralClustering(CKSym, args.oclust);
-%     idx_output= Grps(:, 2); 
-%     
-%     WW = permute(W, [4 2 3 1]);
-%     WW = WW(:, :);
-%     CMat = SparseCoefRecovery(WW', 0, 'Lasso', lambda);
-%     CKSym = BuildAdjacency(CMat, 0);
-%     [Grps] = SpectralClustering(CKSym, args.iclust);
-%     idx_input= Grps(:, 2); 
+    % Find partition of input and output coordinates.
+    if 1
+        MAXiter = 1000; % Maximum iteration for KMeans Algorithm
+        REPlic = 100;
+        WW = W(:,:);
+        idx_output = litekmeans(WW', args.oclust);
+        WW = permute(W, [4 2 3 1]);
+        WW = WW(:, :);
+        idx_input = litekmeans(WW', args.iclust);
+        %[idx_input, ~] = kmeans(WW, args.iclust, 'start', 'sample', 'maxiter', MAXiter, 'replicates', REPlic, 'EmptyAction', 'singleton');
+    else 
+        lambda=0.001;
+        WW=W(:, :);
+        CMat = SparseCoefRecovery(WW', 0, 'Lasso', lambda);
+        CKSym = BuildAdjacency(CMat, 0);
+        [Grps] = SpectralClustering(CKSym, args.oclust);
+        idx_output= Grps(:, 2); 
+    
+        WW = permute(W, [4 2 3 1]);
+        WW = WW(:, :);
+        CMat = SparseCoefRecovery(WW', 0, 'Lasso', lambda);
+        CKSym = BuildAdjacency(CMat, 0);
+        [Grps] = SpectralClustering(CKSym, args.iclust);
+        idx_input= Grps(:, 2); 
+    end
    
+    [~, perm_in] = sort(idx_input);
+    [~, perm_out] = sort(idx_output);
+    
     rast=1;
         
     % Now compress each cluster.
     Wapprox = zeros(size(W));
+    F = zeros([args.oclust, oclust_sz, args.k, args.iclust]);
+    C = zeros([args.oclust, iclust_sz, args.k, args.iclust]);
+    XY = zeros([args.oclust, size(W, 2)^2,args.k, args.iclust]);
     for i = 1 : args.oclust
         for j = 1 : args.iclust
             Io = find(idx_output == i);
@@ -40,13 +55,17 @@ function [Wapprox, F, C, X, Y, assignment] = bisubspace_lowrank_approx(W, args)
             chunk = W(Io, :, :, Ii);
             
             %Compute a low-rank approximation of the kernel.
-            [F{rast}, C{rast}, X{rast}, Y{rast}, cappr] = rankoneconv(chunk, args.k);
+            [f, x, y, c, cappr] = rankoneconv(chunk, args.k);
+            F(i, :, :, j) = f;
+            C(i, :, :, j) = c;
+            xy = zeros(size(W, 2) * size(W, 3), args.k);
+            for ii = 1 : args.k
+               xy(:, ii) = reshape(x(:, ii) * y(:, ii)', size(W, 2) * size(W, 3), 1); % Not right
+            end
+            XY(i, :, :, j) = xy;
             Wapprox(Io, :, :, Ii)=cappr;
-            assignment{rast}.Io = Io;
-            assignment{rast}.Ii = Ii;
             rast = rast + 1;
         end
     end
-
 end
 

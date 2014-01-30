@@ -5,7 +5,7 @@
         "rows": 2,
         "cols": 1,
         "depth": 2,
-        "function": "X3"
+        "function": "RELU"
     },
 
 

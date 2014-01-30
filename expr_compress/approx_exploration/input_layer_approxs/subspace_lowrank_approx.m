@@ -7,7 +7,7 @@ function [Wapprox, F, C, X, Y] = subspace_lowrank_approx(W, args)
 % of the convolution.
 %
 % W : dimensions (Fout, X, Y, Fin)
-% args.num_colors : number of clusters (or "colors") to use
+% args.num_clusters : number of clusters (or "colors") to use
 % args.terms_per_element : for each cluster of size m, we will use f*m rank
 %                          one tensors to approximate the (m, X, Y, Fin)
 %                          dimensional tensor associated with the cluster
@@ -19,12 +19,12 @@ function [Wapprox, F, C, X, Y] = subspace_lowrank_approx(W, args)
     WW=W(:, :);
     CMat = SparseCoefRecovery(WW', 0, 'Lasso', lambda);
     CKSym = BuildAdjacency(CMat, 0);
-    [Grps] = SpectralClustering(CKSym, args.num_colors);
+    [Grps] = SpectralClusteringEven(CKSym, args.num_clusters);
     order= Grps(:, 2); % Take results from second spectral clustering method.
 
     % Compress each cluster.
     Wapprox = zeros(size(W));
-    for l = 1 : args.num_colors
+    for l = 1 : args.num_clusters
         I = find(order == l);
         if ~isempty(I)
             chunk=W(I, :, :, :);

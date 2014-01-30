@@ -25,6 +25,5 @@ mex: nvcc
 	$(MEX) C_.cpp
 
 clean:
-	rm -rf *.mex*
 	rm -rf *.o*
 	rm -rf *.cpp*

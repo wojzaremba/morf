@@ -62,13 +62,16 @@ classdef ApproxLog < handle
             obj.Save();
         end
         
-        function ret = GetApproxInfo(obj, approx_vars)
-            str = struct2str(approx_vars);
+        function [ret, present] = GetApproxInfo(obj, approx_vars)
+            str = struct2str(approx_vars);           
             if (~obj.cudas_logs.isKey(str))
-                fprintf('There should be value stored\n');
-                assert(0);
-            end
-            ret = obj.cudas_logs(str);
+                fprintf('Reading from the empty approx log\n');
+                present = false;
+                ret = [];                
+            else
+                present = true;
+                ret = obj.cudas_logs(str);
+            end            
         end
         
         function AddCudaExecutionResults(obj, approx_vars, cuda_vars, cuda_results)

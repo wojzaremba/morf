@@ -2,51 +2,11 @@ classdef LayerApprox < Layer
     properties
     end
     
-    methods
-        
+    methods        
         function obj = LayerApprox(json)
             obj@Layer(json);
         end     
 
-        function Update(layer)
-            global plan;
-            lr = plan.lr;
-            if (lr == 0)
-                return;
-            end
-            momentum = plan.momentum;
-            if (~layer.on_gpu)
-                f = fields(layer.cpu.dvars);
-                for i = 1:length(f)
-                    if (strcmp(f{i}, 'X')) || (strcmp(f{i}, 'out'))
-                        continue;
-                    end
-                    name = f{i};                 
-                    eval(sprintf('layer.cpu.accum.%s = (1 - momentum) * layer.cpu.dvars.%s / plan.input.batch_size + momentum * layer.cpu.accum.%s;', name, name, name));
-                    eval(sprintf('layer.cpu.vars.%s = layer.cpu.vars.%s - lr * layer.cpu.accum.%s;', name, name, name));
-                end
-            else                
-                f = fields(layer.gpu.dvars);
-                for i = 1:length(f)
-                    if (strcmp(f{i}, 'X')) || (strcmp(f{i}, 'out'))
-                        continue;
-                    end
-                    name = f{i};
-                    vars_gid = eval(sprintf('layer.gpu.vars.%s', name));
-                    dvars_gid = eval(sprintf('layer.gpu.dvars.%s', name));
-                    accum_gid = eval(sprintf('layer.gpu.accum.%s', name));
-                    
-                    Capprox_gen(Scale, accum_gid, single(momentum), accum_gid);
-                    Capprox_gen(Scale, dvars_gid, single((1 - momentum) * 1 / plan.input.batch_size), dvars_gid);
-                    Capprox_gen(Add, accum_gid, dvars_gid, accum_gid);
-                    Capprox_gen(Scale, dvars_gid, single(1 / (1 - momentum) * plan.input.batch_size), dvars_gid); % XXXXXXX : Create a single GPU function for this update.
-                    Capprox_gen(Scale, accum_gid, single(lr), accum_gid); % XXX : Fix it (lose of numerical precision.
-                    Capprox_gen(Subtract, vars_gid, accum_gid, vars_gid);
-                    Capprox_gen(Scale, accum_gid, single(1 / lr), accum_gid); % XXX : Fix it (lose of numerical precision.
-                end                
-            end
-        end
-        
         function AddParamsOnlyGPU(obj, name, dims, includeDer)
             global plan
             if (obj.on_gpu == 1)
