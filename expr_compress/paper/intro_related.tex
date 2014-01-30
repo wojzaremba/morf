@@ -1,0 +1,113 @@
+
+\begin{abstract}
+
+\end{abstract}
+
+\section{Introduction}
+
+Large neural networks have recently demonstrated impressive
+performance on a range of speech and vision tasks. However the size of
+these models can make their deployment at test time problematic. For
+example, mobile computing platforms are limited in their CPU speed,
+memory and battery life. At the other end of the spectrum,
+Internet-scale deployment of these models requires thousands of
+servers to process the 100's of millions of images per day. The
+electrical and cooling costs of these servers required is significant.
+
+Training large neural networks (NN) can take weeks, or even
+months. This hinders research and consequently there have been
+extensive efforts devoted to speeding up training procedure.  However,
+there are relatively few efforts are improving the {\em test-time}
+performance of the models. 
+
+In this paper we focus on speeding up the
+evaluation of {\em trained} networks, without compromising
+performance. We consider convolutional neural networks used for
+computer vision tasks, since they are large and widely used in
+commercial applications. Within these models, most of the time ($\sim90\%$) is spent in the
+convolution operations in the lower layers of the model. The remaining
+operations: pooling, contrast normalization and the upper
+fully-connected layers collectively take up the remaning $10\%$.
+
+We present two novel methods for speeding up the convolution
+operations. One involves projecting the input image into a set of 1-D
+color sub-spaces. This allows the filters in the first of layer of the
+model to be monochromatic (i.e. reducing the color channels from three
+to one), thereby saving a factor of 3 in computation. The second
+approach, applied to subsequent convolution layers, involves
+clustering the filters into a set of low-dimensional linear
+sub-spaces, each of which is represented by a set of tensor
+outer-products. Collectively, our techniques speed up execution by
+factor of $2-4$ while keeping prediction accuracy within $1\%$ of the
+original model. These gains allow the use of larger, higher
+performance models than would otherwise be practical.
+
+
+% resource-wise from perspective of companies executing neural networks on internet-scale
+% data (e.g. annotating images), this is not the main cost. Major cost is in the
+% final stage, where network is evaluated on the target data, which is present in quantities of billions.
+% We focus here on speeding up evaluation of \emph{trained} NN, which directly
+% maps to the cost of executing NN on internet-scale data.
+
+% % XXX: Maybe we will speak also about real time application.
+
+
+% We focus in this work on convolutional neural networks used for computer vision tasks. Most of
+% computation time during evaluation is spend on convolutional layers i.e. $\sim90\% - 95\%$, while it takes only
+% the small fraction of time $\sim 5\%-10\%$ to evaluate rest of layers (pooling, local contrast normalization,
+% fully connected). It is worth to note, that most of learnable parameters are kept in fully connected layers $\sim 90\% - 95\%$
+% , and convolutional layers constitutes of very small fraction of parameters $\sim 5\% - 10\%$.
+
+
+% We achieve forward pass speed up by constructing approximations to the convolutional layer kernel. Convolutional kernel
+% is a $4$-dimensional tensor, with two spacial dimensions, and two feature maps-to-feature maps dimensions. Kernel of trained
+% network has a lot of redundancies in parameters, which we exploit to speed up forward pass, while mildly training off
+% prediction accuracy (approximated kernels give prediction within $\sim 1\%$ of the original prediction).
+
+
+\section{Related Work}
+%There have been extensive research devoted speeding up forward pass of neural network. 
+%There are few different pathways, how the speed up can be achieved. 
+
+
+Vanhoucke et. al. \cite{vanhoucke2011improving} explored the
+properties of CPUs to speed up execution.  They present many solutions
+specific to Intel and AMD CPUs, however some of their techniques are
+general enough to be used for any type of processor.  They describe
+how to align memory, and use SIMD operations (vectorized operations on
+CPU) to boost the efficiency of matrix multiplication.  Additionally, they
+propose the linear quantization of the network weights and input. This
+involves representing weights as 8-bit integers (range
+$[-128, 127]$), rather than 32-bit floats. This approximation is
+similar in spirit to our approach, but differs in that it is applied
+to each weight element independently. By contrast, our approximation approach models
+the structure within each filter. Potentially, the two approaches
+could be used in conjunction. 
+
+% combinIt can also potentially be to 
+% approximates the ion, it does so based on the structure of the weights.  each which
+% replaces kernel $W$ with few other operations, which give result
+% approximately equal to convolution with $W$. Moreover, linear
+% quantization can be used in conjunction with methods presented in this
+% paper.
+
+
+
+The most expensive operations in convolutional networks are the
+convolutions in the first few layers. The complexity of this operation
+is linear in the area of the receptive field of the filters, which is
+relatively large for these layers.  However, Mathieu
+et. al. \cite{mathieu2013fast} has shown that convolution can be
+efficiently computed in Fourier domain, where it becomes element-wise
+multiplication (and there is no cost associated with size of receptive
+field). They report a forward-pass speed up of around $10x$ (depending on
+the kernel size, number of features etc.).  Importantly, this method can
+be used jointly with most of techniques presented in this paper.
+
+The use of low-rank approximations in our approach is inspired by work
+of Denil et. al \cite{denil2013predicting} who demonstrate the redundancies in neural
+network parameters. They show that the weights within a layer can be
+accurately predicted from a small (e.g. $\sim 5\%$) subset of them. This
+indicates that neural networks are heavily over-parametrized.  All the
+methods presented here focus on exploiting the linear structure of this
+over-parametrization.
