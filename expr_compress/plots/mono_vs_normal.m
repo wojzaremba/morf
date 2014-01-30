@@ -1,16 +1,11 @@
-% 1. Rearrange memory.
-% 2. Count number of memory accesses.
-% 3. Make sure that I am accessing consequtive pieces of memory all the
-% time.
-
-
+clc;
 global root_path plan;
 json_old = ParseJSON('plans/imagenet_matthew.txt');
 json = {};
 json{1} = json_old{1};
 json{2} = json_old{2};
         
-json{1}.batch_size = 1;
+json{1}.batch_size = 4;
 % Plan(json, '~/imagenet_data/imagenet_matthew', 0, 'single');
 Plan(json, [], 0, 'single');
 plan.training = 0;
@@ -18,9 +13,16 @@ plan.input.step = 1;
 plan.input.GetImage(0);
 
 plan.layer{2}.cpu.vars.X = plan.layer{1}.cpu.vars.out;
+
+
 tic;
 plan.layer{2}.FPcpp();
-fprintf('common conv takes = %f\n', toc);
+fprintf('common conv cpp takes = %f\n', toc);
+
+tic;
+plan.layer{2}.FP();
+fprintf('common conv matlab takes = %f\n', toc);
+
 outFPcommon = plan.layer{2}.cpu.vars.out;
 
 

@@ -11,6 +11,7 @@ classdef MonoConv < LayerApprox
         end                      
        
         function FP_(obj)
+            assert(0); % Broken, because Wmono changed shape.
             global plan
             bs = plan.input.batch_size;
             v = obj.gpu.vars;
@@ -48,7 +49,8 @@ classdef MonoConv < LayerApprox
                     end
                 end
                 filt_idx = v.perm((c - 1) * filters_per_color + 1: c* filters_per_color) + 1;
-                v.out(:, :, :, filt_idx) = reshape(stacked * v.Wmono(filt_idx, :)', [bs, obj.dims(1:2), filters_per_color]);
+                Wmonoslice = permute(v.Wmono(:, :, filt_idx), [3, 1, 2]);
+                v.out(:, :, :, filt_idx) = reshape(stacked * Wmonoslice(:, :)', [bs, obj.dims(1:2), filters_per_color]);
 %                 fprintf('c = %d\n', c)
 %                 stacked(:)
 %                 v.Wmono(filt_idx, :)'
@@ -73,7 +75,7 @@ classdef MonoConv < LayerApprox
             prev_dim = obj.prev_dim();
             obj.AddParam('Xmono', [plan.input.batch_size, prev_dim(1), prev_dim(2), obj.num_image_colors], false);             
             obj.AddParam('Cmono', [prev_dim(3), obj.num_image_colors], false);            
-            obj.AddParam('Wmono', [obj.depth, obj.patch(1), obj.patch(2)], false);     
+            obj.AddParam('Wmono', [obj.patch(1), obj.patch(2), obj.depth], false);     
             obj.AddParam('B', [obj.depth, 1], false);              
             obj.AddParam('perm', [obj.depth, 1], false); 
         end

@@ -10,11 +10,13 @@ endif
 
 ################################################################################
 
-all: clean mex
-
-mex: 
+all: clean
 	$(MEX) ConvCpp.cpp
 	$(MEX) MonoConvCpp.cpp
+
+debug: clean
+	$(MEX) ConvCpp.cpp -DDEBUG=1
+	$(MEX) MonoConvCpp.cpp -DDEBUG=1
 
 clean:
 	rm -rf *.mex*
