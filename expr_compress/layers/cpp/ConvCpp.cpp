@@ -60,6 +60,10 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		  }
 		}
 		out[out_idx] += bias[d];
+		// ReLU.
+		if (out[out_idx] < 0) {
+		  out[out_idx] = 0;
+		}
 	      }
 	    }
 	  }
