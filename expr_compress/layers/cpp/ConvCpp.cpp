@@ -36,23 +36,23 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 //mexPrintf("in_depth = %d\n", in_depth);
 //mexPrintf("patch = %d, padding = %d, stride = %d\n", patch, padding, stride);
 //mexPrintf("bs = %d, out_rows = %d, out_cols = %d, out_depth = %d\n", bs, out_rows, out_cols, out_depth);	
-	for (int b = 0; b < bs; ++b) {
-	  for (int x = 0; x < out_rows; ++x) {
-	    for (int y = 0; y < out_cols; ++y) {
-	      for (int d = 0; d < out_depth; ++d) {
+	for (int d = 0; d < out_depth; ++d) {
+	  for (int y = 0; y < out_cols; ++y) {
+	    for (int x = 0; x < out_rows; ++x) {
+	      for (int b = 0; b < bs; ++b) {
 //mexPrintf("b = %d, x = %d, y = %d, d = %d\n", b, x, y, d);
 		int out_idx = b + bs * (x + out_rows * (y + d * out_cols));
 		out[out_idx] = 0.;
 		for (int in_d = 0; in_d < in_depth; ++in_d) {
-		  for (int px = 0; px < patch; ++px) {
-		    for (int py = 0; py < patch; ++py) {
+		  for (int py = 0; py < patch; ++py) {
+		    int y_idx = y * stride + py;
+		    for (int px = 0; px < patch; ++px) {
 //mexPrintf("\tid_d = %d, px = %d, py = %d\n", in_d, px, py);
-		      int w_idx = d + out_depth * (px + patch * (py + in_d * patch));
 		      int x_idx = x * stride + px;
-		      int y_idx = y * stride + py;
 		      if ((x_idx >= in_rows) || (y_idx >= in_cols)) {
 			continue;
 		      }
+		      int w_idx = d + out_depth * (px + patch * (py + in_d * patch));
 		      int i_idx = b + bs * (x_idx + in_rows * (y_idx + in_d * in_cols));
 //mexPrintf("\tw = %f, i = %f\n", w[w_idx], i[i_idx]);
                       out[out_idx] += w[w_idx] * i[i_idx];
@@ -68,6 +68,5 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	    }
 	  }
 	}
-//	mexPrintf("out[0] = %f\n", out[0]);
 }
 

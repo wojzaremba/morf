@@ -61,29 +61,30 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	    }
 	  }
 	}
+
 	assert(out_depth % inner_depth == 0);
 	int num_image_colors = out_depth / inner_depth;
 //mexPrintf("in_depth = %d\n", in_depth);
 //mexPrintf("patch = %d, padding = %d, stride = %d\n", patch, padding, stride);
 //mexPrintf("bs = %d, out_rows = %d, out_cols = %d, out_depth = %d\n", bs, out_rows, out_cols, out_depth);	
-	for (int b = 0; b < bs; ++b) {
-	  for (int x = 0; x < out_rows; ++x) {
+        for (int d = 0; d < out_depth; ++d) {
+          int in_d = (int)perm[d];
 	    for (int y = 0; y < out_cols; ++y) {
-	      for (int d = 0; d < out_depth; ++d) {
+	      for (int x = 0; x < out_rows; ++x) {
+	        for (int b = 0; b < bs; ++b) {
 //mexPrintf("b = %d, x = %d, y = %d, d = %d\n", b, x, y, d);
-		int in_d = (int)perm[d];
 		int out_idx = b + bs * (x + out_rows * (y + in_d * out_cols));
 		out[out_idx] = 0.;
 //mexPrintf("perm[%d] = %f\n", d, perm[d]);
-		for (int px = 0; px < patch; ++px) {
-		  for (int py = 0; py < patch; ++py) {
+		for (int py = 0; py < patch; ++py) {
+		  int y_idx = y * stride + py;
+		  for (int px = 0; px < patch; ++px) {
 //mexPrintf("\tid_d = %d, px = %d, py = %d\n", in_d, px, py);
-		    int w_idx = in_d + out_depth * (px + patch * py);
 		    int x_idx = x * stride + px;
-		    int y_idx = y * stride + py;
 		    if ((x_idx >= in_rows) || (y_idx >= in_cols)) {
 		      continue;
 		    }
+		    int w_idx = in_d + out_depth * (px + patch * py);
 		    int i_mono_idx = b + bs * (x_idx + in_rows * (y_idx + floor(d / num_image_colors) * in_cols));
 //mexPrintf("\tx_idx = %d, y_idx = %d, in_d = %d\n", x_idx, y_idx, in_d);
 //mexPrintf("\tw = %f, i = %f\n", w[w_idx], i[i_idx]);
@@ -100,6 +101,5 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	    }
 	  }
 	}
-//	mexPrintf("out[0] = %f\n", out[0]);
 }
 
