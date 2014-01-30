@@ -7,8 +7,7 @@
 #include "../../../external/eigen/Eigen/Dense"
 #include "templates.h"
 
-// ConvCpp(X, W, B, out, stride, pading);
-void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
+void conv(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	lookups = 0;
 	float *i = (float*) mxGetData(prhs[0]);
 	float *w = (float*) mxGetData(prhs[1]);
@@ -66,21 +65,26 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	  }
 	}
 
-        for (int d = 0; d < out_depth; ++d) {
-  	  float bias_val = AT(bias, d);
-	  for (int y = 0; y < out_cols; ++y) {
-	    for (int x = 0; x < out_rows; ++x) {
-	      for (int b = 0; b < bs; ++b) {
-	        int out_idx = b + bs * (x + out_rows * (y + d * out_cols));
-	        AT(out, out_idx) += bias_val;
-                // ReLU.
-                if (AT(out, out_idx) < 0) {
-                  AT(out, out_idx) = 0;
-                }
-              }
-            }
-          }
-        }
-        print("lookups = %d\n", lookups);
+	Eigen::Map<Eigen::VectorXf>bias_vec(bias, out_depth);
+	Eigen::Map<Eigen::MatrixXf>out_mat(out, bs * out_rows * out_cols, out_depth);
+	out_mat.rowwise() += bias_vec.transpose();
+	out_mat.array() = (out_mat.array() + out_mat.array().abs()) / 2.f; // ReLU.
+	print("lookups = %d\n", lookups);
+}
+
+void conv_bs1(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
+	conv(nlhs, plhs, nrhs, prhs);
+}
+
+
+// ConvCpp(X, W, B, out, stride, pading);
+void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
+	const mwSize* i_size = mxGetDimensions(prhs[0]);
+	int bs = i_size[0];
+	if (bs == 1) { 
+		conv_bs1(nlhs, plhs, nrhs, prhs);
+	} else {
+		conv(nlhs, plhs, nrhs, prhs);
+	}
 }
 
