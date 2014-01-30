@@ -49,24 +49,33 @@ classdef MonoConv < LayerApprox
                 end
                 filt_idx = v.perm((c - 1) * filters_per_color + 1: c* filters_per_color) + 1;
                 v.out(:, :, :, filt_idx) = reshape(stacked * v.Wmono(filt_idx, :)', [bs, obj.dims(1:2), filters_per_color]);
+%                 fprintf('c = %d\n', c)
+%                 stacked(:)
+%                 v.Wmono(filt_idx, :)'
+%                 fprintf('\n\n\n');
             end
             v.out = bsxfun(@plus, v.out, reshape(v.B, [1, 1, 1, length(v.B)]));
             obj.cpu.vars.forward_act = v.out;              
             obj.cpu.vars.out = obj.F(v.out);
         end     
         
+        function FPcpp(obj)
+            v = obj.cpu.vars; 
+            MonoConvCpp(v.X, v.Xmono, v.Cmono, v.Wmono, v.B, v.perm, v.out, obj.stride(1), obj.padding(1));
+        end        
+        
         function BP(obj)
             assert(0);
         end
         
-        % XXX: allocate forward_act var and other missing.
         function InitWeights(obj)          
             global plan
             prev_dim = obj.prev_dim();
-            obj.AddParam('B', [obj.depth, 1], false);  
-            obj.AddParam('Cmono', [obj.num_image_colors, prev_dim(3)], false);            
+            obj.AddParam('Xmono', [plan.input.batch_size, prev_dim(1), prev_dim(2), obj.num_image_colors], false);             
+            obj.AddParam('Cmono', [prev_dim(3), obj.num_image_colors], false);            
             obj.AddParam('Wmono', [obj.depth, obj.patch(1), obj.patch(2)], false);     
-            obj.AddParam('perm', [obj.depth], false); 
+            obj.AddParam('B', [obj.depth, 1], false);              
+            obj.AddParam('perm', [obj.depth, 1], false); 
         end
     end
 end
