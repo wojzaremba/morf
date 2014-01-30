@@ -13,6 +13,7 @@ plan.layer{2}.FP();
 outFP = plan.layer{2}.cpu.vars.out;
 plan.layer{2}.cpu.vars.out(:) = 0;
 
+assert(0);
 plan.layer{2}.FPcpp();
 outFPcpp = plan.layer{2}.cpu.vars.out;
 
