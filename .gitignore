@@ -37,3 +37,4 @@ trained/*imagenet*
 *.log
 trained/epoch0000_phase1.mat
 trained/model_00000008.mat
+expr_compress/expr_compress/logs
