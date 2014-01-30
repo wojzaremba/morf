@@ -9,6 +9,7 @@ load_imagenet_model(); % By default, loads Matt's model.
 args.iclust = 32;
 args.oclust = 16;
 args.k = 8;
+args.cluster_type = 'subspace';
 W = plan.layer{5}.cpu.vars.W;
   
 [Wapprox, ~, ~, ~, ~, ~, ~] = bisubspace_lowrank_approx(double(W), args);

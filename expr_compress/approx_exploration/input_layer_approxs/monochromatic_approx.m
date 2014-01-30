@@ -1,4 +1,4 @@
-function [Wapprox, Wmono, colors, perm] = monochromatic_approx(W, args)
+function [Wapprox, Wmono, colors, perm, num_weights] = monochromatic_approx(W, args)
 % This approximation clusters the first left singular vectors of each of
 % the convolution kernels associated with each output feature. Filters in 
 % the same cluster share the same inner color component. The reconstructed 
@@ -10,6 +10,7 @@ function [Wapprox, Wmono, colors, perm] = monochromatic_approx(W, args)
 % args.even : 1 if clusters should be constrained to be equal sizes, 0 
 %             otherwise
 % args.num_colors : number of clusters (or "colors") to use
+
 
     W = permute(W, [1, 4, 2, 3]);
     % Simple re-parametrization of first layer with monochromatic filters
@@ -48,5 +49,7 @@ function [Wapprox, Wmono, colors, perm] = monochromatic_approx(W, args)
     
     [~, perm] = sort(assignment);
     colors = colors';
+    
+    num_weights = prod(size(colors)) + prod(size(Wmono));
 end
 

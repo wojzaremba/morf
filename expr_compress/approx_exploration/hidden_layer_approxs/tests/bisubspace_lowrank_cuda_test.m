@@ -42,9 +42,9 @@ padding = 0;
 K = 5;
 Nout = 256;
 Nin = 96;
-numClustIn = 32;
-numClustOut = 4;
-rank = 8;
+numClustIn = 48;
+numClustOut = 8;
+rank = 4;
 sizeClustIn = Nin / numClustIn;
 sizeClustOut = Nout / numClustOut;
 
@@ -90,13 +90,19 @@ end
 % Check correctness
 X = ones(numImages, N, N, Nin);
 W = randn(Nout, K, K, Nin);
+
+args.iclust = numClustIn;
+args.oclust = numClustOut;
+args.k = rank;
+args.cluster_type = 'kmeans';
+%[W, F, C, XY, inPerm, outPerm, num_weights] = bisubspace_lowrank_approx(W, args);
+fprintf('\n\nFinished computing weights\n\n');
 F = randn(sizeClustOut, rank, numClustIn, numClustOut);
 C = randn(sizeClustIn, rank, numClustIn, numClustOut);
 XY = randn(K*K, rank, numClustIn, numClustOut);
-out_partial = single(zeros(numImages, M, M, rank * numClustIn * numClustOut));
 out_ = single(zeros(numImages, M, M, Nout));
-inPerm = 0:(Nin - 1);
-outPerm = 0:(Nout - 1);
+inPerm = 1:96; 
+outPerm = 1:256;
 num_runs = 10;
 
 % copy to GPU for regular conv
@@ -115,13 +121,12 @@ end
 out = reshape(C_(CopyFromGPU, gids.out), size(out_));
 C_(CleanGPU);
 
-
 % copy to GPU for approx conv
 Capprox_gen(CopyToGPU, gids.F,  single(F));
 Capprox_gen(CopyToGPU, gids.C,  single(C));
 Capprox_gen(CopyToGPU, gids.XY,  single(XY));
-Capprox_gen(CopyToGPU, gids.inPerm,  single(inPerm));
-Capprox_gen(CopyToGPU, gids.outPerm,  single(outPerm));
+Capprox_gen(CopyToGPU, gids.inPerm,  single(inPerm - 1));
+Capprox_gen(CopyToGPU, gids.outPerm,  single(outPerm - 1));
 Capprox_gen(CopyToGPU, gids.X,  single(X));
 Capprox_gen(CopyToGPU, gids.out,  out_);
 %Capprox_gen(CopyToGPU, gids.out_partial,  out_partial);
