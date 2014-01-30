@@ -1,6 +1,7 @@
 
 \begin{abstract}
-
+We present techniques for speeding up the test-time evaluation of large convolutional networks, designed for object recognition tasks. These models deliver impressive accuracy but each image evaluation requires millions of floating point operations, making their deployment on smartphones and Internet-scale clusters problematic. The computation is dominated by the convolution operations in the lower layers of the model. We exploit the linear structure present within the 
+convolutional filters to derive approximatations that significantly reduce the required computation. Using large state-of-the-art models, we demonstrate speedups by a factor of $2-4$x, while keeping the accuracy within $1\%$ of the original model. 
 \end{abstract}
 
 \section{Introduction}
@@ -70,7 +71,7 @@ performance models than would otherwise be practical.
 %There are few different pathways, how the speed up can be achieved. 
 
 
-Vanhoucke et. al. \cite{vanhoucke2011improving} explored the
+\cite{vanhoucke2011improving} explored the
 properties of CPUs to speed up execution.  They present many solutions
 specific to Intel and AMD CPUs, however some of their techniques are
 general enough to be used for any type of processor.  They describe
@@ -78,7 +79,7 @@ how to align memory, and use SIMD operations (vectorized operations on
 CPU) to boost the efficiency of matrix multiplication.  Additionally, they
 propose the linear quantization of the network weights and input. This
 involves representing weights as 8-bit integers (range
-$[-128, 127]$), rather than 32-bit floats. This approximation is
+$[-1287 128]$), rather than 32-bit floats. This approximation is
 similar in spirit to our approach, but differs in that it is applied
 to each weight element independently. By contrast, our approximation approach models
 the structure within each filter. Potentially, the two approaches
@@ -96,8 +97,7 @@ could be used in conjunction.
 The most expensive operations in convolutional networks are the
 convolutions in the first few layers. The complexity of this operation
 is linear in the area of the receptive field of the filters, which is
-relatively large for these layers.  However, Mathieu
-et. al. \cite{mathieu2013fast} has shown that convolution can be
+relatively large for these layers.  However, \cite{mathieu2013fast} have shown that convolution can be
 efficiently computed in Fourier domain, where it becomes element-wise
 multiplication (and there is no cost associated with size of receptive
 field). They report a forward-pass speed up of around $10x$ (depending on
@@ -105,7 +105,7 @@ the kernel size, number of features etc.).  Importantly, this method can
 be used jointly with most of techniques presented in this paper.
 
 The use of low-rank approximations in our approach is inspired by work
-of Denil et. al \cite{denil2013predicting} who demonstrate the redundancies in neural
+of \cite{denil2013predicting} who demonstrate the redundancies in neural
 network parameters. They show that the weights within a layer can be
 accurately predicted from a small (e.g. $\sim 5\%$) subset of them. This
 indicates that neural networks are heavily over-parametrized.  All the
