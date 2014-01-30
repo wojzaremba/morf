@@ -4,6 +4,7 @@
 #include "mex.h"
 #include <assert.h>
 #include <math.h>
+#include "../../../external/eigen/Eigen/Dense"
 #include "templates.h"
 
 // ConvCpp(X, W, B, out, stride, pading);
@@ -25,38 +26,39 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	int in_depth = i_size[3];
 	int out_depth = w_size[0];
 	int patch = w_size[1];
-	assert(patch == w_size[2]);
-	assert(in_depth == w_size[3]);
-	assert(out_depth == bias_size[0]);
-	assert(out_size[0] == bs);
-	assert(out_size[3] == out_depth);
+	assert_(patch == w_size[2]);
+	assert_(in_depth == w_size[3]);
+	assert_(out_depth == bias_size[0]);
+	assert_(out_size[0] == bs);
+	assert_(out_size[3] == out_depth);
 	int out_rows = ceil((float)(in_rows - patch + 2 * padding) / stride) + 1;
 	int out_cols = ceil((float)(in_cols - patch + 2 * padding) / stride) + 1;
-	assert(out_size[1] == out_rows);
-	assert(out_size[2] == out_cols);
+	assert_(out_size[1] == out_rows);
+	assert_(out_size[2] == out_cols);
 		
 	memset(out, 0, sizeof(float) * bs * out_rows * out_cols * out_depth);
 	for (int y = 0; y < out_cols; ++y) {
 	  for (int x = 0; x < out_rows; ++x) {
 	    for (int py = 0; py < patch; ++py) {
               int y_idx = y * stride + py;
+	      if (y_idx >= in_cols) {
+	        break;
+	      }
               for (int px = 0; px < patch; ++px) {
 		int x_idx = x * stride + px;
-		if ((x_idx >= in_rows) || (y_idx >= in_cols)) {
-	          continue;
+		if (x_idx >= in_rows) {
+	          break;
 		}
 	        for (int in_d = 0; in_d < in_depth; ++in_d) {
 		  int w_offset = out_depth * (px + patch * (py + in_d * patch));
+		  int i_offset = bs * (x_idx + in_rows * (y_idx + in_d * in_cols));
+		  Eigen::Map<Eigen::VectorXf>i_vec(i + i_offset, bs); 
+		  int out_offset = bs * (x + out_rows * y);
+		  Eigen::Map<Eigen::VectorXf>w_vec(w + w_offset, out_depth);
 	          for (int d = 0; d < out_depth; ++d) {
-		    int w_idx = d + w_offset;
-		    float w_val = AT(w, w_idx);
-		    int out_offset = bs * (x + out_rows * (y + d * out_cols));
-		    int i_offset = bs * (x_idx + in_rows * (y_idx + in_d * in_cols));
-	      	    for (int b = 0; b < bs; ++b) {
-	              int out_idx = b + out_offset;
-		      int i_idx = b + i_offset;
-                      AT(out, out_idx) += w_val * AT(i, i_idx);
-		    }
+		    Eigen::Map<Eigen::VectorXf>out_vec(out + out_offset, bs); 
+		    out_vec += w_vec(d) * i_vec;
+		    out_offset += bs * out_rows * out_cols;
 		  }
 		}
 	      }

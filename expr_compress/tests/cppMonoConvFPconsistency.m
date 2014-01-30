@@ -1,6 +1,6 @@
 global plan
 json = {};
-json{1} = struct('batch_size', 3, 'rows', 8, 'cols', 10, 'depth', 2, 'type', 'TestInput');
+json{1} = struct('batch_size', 12, 'rows', 8, 'cols', 10, 'depth', 2, 'type', 'TestInput');
 json{2} = struct('local_2d_patch', struct('patch_rows', 4, 'patch_cols', 4), 'function', 'RELU', 'depth', 8, 'num_image_colors', 4, 'type', 'MonoConv');
 Plan(json, [], 0, 'single');
 seed = RandStream('mt19937ar','Seed',0);
@@ -10,6 +10,7 @@ plan.layer{2}.cpu.vars.X = single(plan.layer{1}.cpu.vars.out);
 plan.layer{2}.cpu.vars.Cmono = single(randn(size(plan.layer{2}.cpu.vars.Cmono)));
 plan.layer{2}.cpu.vars.Wmono = single(randn(size(plan.layer{2}.cpu.vars.Wmono)));
 plan.layer{2}.cpu.vars.perm = single(randperm(seed, json{2}.depth)' - 1);
+plan.layer{2}.cpu.vars.B = single(randn(size(plan.layer{2}.cpu.vars.B)));
 plan.layer{2}.FP();
 outFP = plan.layer{2}.cpu.vars.out;
 plan.layer{2}.cpu.vars.out(:) = 0;

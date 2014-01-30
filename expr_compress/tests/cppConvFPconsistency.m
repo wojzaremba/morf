@@ -1,6 +1,6 @@
 global plan
 json = {};
-json{1} = struct('batch_size', 3, 'rows', 8, 'cols', 10, 'depth', 4, 'type', 'TestInput');
+json{1} = struct('batch_size', 128, 'rows', 8, 'cols', 10, 'depth', 4, 'type', 'TestInput');
 json{2} = struct('local_2d_patch', struct('patch_rows', 4, 'patch_cols', 4), 'function', 'RELU', 'depth', 5, 'type', 'Conv');
 Plan(json, [], 0, 'single');
 

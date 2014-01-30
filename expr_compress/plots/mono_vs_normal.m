@@ -1,11 +1,15 @@
+% 1. Double check if it works.
+% 2. Generate plots / tables.
+% 3. Do some initial good writing.
+
 clc;
-global root_path plan;
+global plan;
 json_old = ParseJSON('plans/imagenet_matthew.txt');
 json = {};
 json{1} = json_old{1};
 json{2} = json_old{2};
         
-json{1}.batch_size = 4;
+json{1}.batch_size = 128;
 % Plan(json, '~/imagenet_data/imagenet_matthew', 0, 'single');
 Plan(json, [], 0, 'single');
 plan.training = 0;
@@ -13,7 +17,6 @@ plan.input.step = 1;
 plan.input.GetImage(0);
 
 plan.layer{2}.cpu.vars.X = plan.layer{1}.cpu.vars.out;
-
 
 tic;
 plan.layer{2}.FPcpp();
@@ -32,6 +35,8 @@ Plan(json, [], 0, 'single');
 plan.training = 0;
 plan.input.step = 1;
 plan.input.GetImage(0);
+
+seed = RandStream('mt19937ar','Seed',0);
 
 plan.layer{2}.cpu.vars.X = single(plan.layer{1}.cpu.vars.out);
 plan.layer{2}.cpu.vars.Cmono = single(randn(size(plan.layer{2}.cpu.vars.Cmono)));
