@@ -49,6 +49,10 @@ classdef MonoConv < LayerApprox
                 end
                 filt_idx = v.perm((c - 1) * filters_per_color + 1: c* filters_per_color) + 1;
                 v.out(:, :, :, filt_idx) = reshape(stacked * v.Wmono(filt_idx, :)', [bs, obj.dims(1:2), filters_per_color]);
+%                 fprintf('c = %d\n', c)
+%                 stacked(:)
+%                 v.Wmono(filt_idx, :)'
+%                 fprintf('\n\n\n');
             end
             v.out = bsxfun(@plus, v.out, reshape(v.B, [1, 1, 1, length(v.B)]));
             obj.cpu.vars.forward_act = v.out;              
