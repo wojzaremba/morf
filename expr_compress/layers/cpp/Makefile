@@ -14,6 +14,7 @@ all: clean mex
 
 mex: 
 	$(MEX) ConvCpp.cpp
+	$(MEX) MonoConvCpp.cpp
 
 clean:
 	rm -rf *.mex*

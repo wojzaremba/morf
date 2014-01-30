@@ -91,5 +91,5 @@ classdef BiclusteredConv < LayerApprox
 end
 
 function json = FillDefault(json)
-json.type = 'MonoConv';
+json.type = 'BiclusteredConv';
 end
