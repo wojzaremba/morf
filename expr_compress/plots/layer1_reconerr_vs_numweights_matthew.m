@@ -4,21 +4,22 @@ clearvars -except root_path plan;
 init();
 load_imagenet_model();
 
-W = plan.layer{5}.cpu.vars.W;
+W = plan.layer{2}.cpu.vars.W;
 
-args.iclust = 32;
-args.oclust = 8;
-ranks = [4, 8, 12, 16, 20, 24, 28, 32, 64]; %[1, 2, 3, 4, 5, 6, 7, 8];
+args.num_colors = 8;
+args.even = 1;
+args.start = 'sample';
+num_colors = [1, 2, 3, 4, 6, 8, 12, 24, 48, 69]; 
 
 num_weights = [];
 recon_error = [];
 test_error = [];
-for i = 1:length(ranks);
-    args.k = ranks(i);
-    [Wapprox, F, C, X, Y, assignment, nw] = bisubspace_lowrank_approx(double(W), args);
+for i = 1:length(num_colors);
+    args.num_colors = num_colors(i);
+    [Wapprox, Wmono, colors, perm, nw] = monochromatic_approx(double(W), args);
     recon_error(i) = norm(W(:) - Wapprox(:));
     num_weights(i) = nw;
-    plan.layer{5}.cpu.vars.W = Wapprox;
+    plan.layer{2}.cpu.vars.W = Wapprox;
        
     % Get error
     error = 0;
@@ -31,7 +32,7 @@ for i = 1:length(ranks);
         fprintf('%d / %d\n', error, b * plan.input.batch_size);
     end
     test_error(i) = error;
-    plan.layer{5}.cpu.vars.W = W;
+    plan.layer{2}.cpu.vars.W = W;
 end
 
 

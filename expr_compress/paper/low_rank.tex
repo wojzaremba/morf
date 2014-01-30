@@ -1,150 +1,120 @@
+\documentclass{article}
+
+\usepackage{graphicx} % more modern
+\usepackage{subfigure} 
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+
+
+% For citations
+\usepackage{natbib}
+
+% For algorithms
+\usepackage{comment}
+\usepackage{framed}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{amsmath}
+%\usepackage{algorithmicx}
+%\usepackage{algpseudocode}
+
+\usepackage{hyperref}
+
+\allowdisplaybreaks
+
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+%\usepackage[accepted]{icml2014}  % XXX : just set temporarly to print out authors corretly.
+\usepackage{icml2014}  
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\begin{document} 
+
+\icmltitle{Exploiting Linear Structure Within Convolutional Networks
+  for Efficient Evaluation}
+
+\icmlauthor{Emily Denton}{denton@cs.nyu.edu}
+\icmlauthor{Wojciech Zaremba}{zaremba@cs.nyu.edu}
+\icmlauthor{Joan Bruna}{bruna@cs.nyu.edu}
+\icmlauthor{Rob Fergus}{fergus@cs.nyu.edu}
+
+\icmlkeywords{machine learning, deep learning, speeding up forward pass, redundancies in neural networks}
+
+\begin{abstract}
+
+\end{abstract}
 
 \section{Low Rank Approximations}
 In this section, we give theoretical background on low rank approximations. First, we discuss simplest setting, which is
-for matrices (two dimensional tensors). Further, we move to approximation of 4-dimensional tensors with 2 convolutional (spacial)
-dimensions.
+for matrices (two dimensional tensors). We then consider the approximation of 4-dimensional tensors of convolution weights.
 
 
 \subsection{Matrix Low Rank Approximation}
-Let's consider input $X \in \mathbb{R}^{n \times m}$, and matrix of weights $W \in \mathbb{R}^{m \times k}$. Matrix multiplication
-, which is the main operation for fully connected layers costs $O(nmk)$. However, potentially $W$ might have a low-rank (many 
-eigenvalues close to zero), and operation $XW$ can be computed much faster. 
+Let $X \in \mathbb{R}^{n \times m}$ denote the input to a fully connected layer of a neural network and let $W \in \mathbb{R}^{m \times k}$ denote the weight matrix for the layer. Matrix multiplication,  the main operation for fully connected layers, costs $O(nmk)$. However, $W$ is likely to have a low-rank structure and thus have several eigenvalues close to zero. These dimensions can be interpreted as noise, and thus can be eliminated without harming the accuracy of the network. We now show how to exploit this low-rank structure and to $XW$ much faster than $O(nmk)$. 
 
 
-Every matrix can be expressed using singular value decomposition:
+Every matrix $W \in \mathbb{R}^{m \times k}$ can be expressed using singular value decomposition:
 \begin{equation*}
-	W = USV^T\text{, where }U \in \mathbb{R}^{m \times m}, S \in \mathbb{R}^{m \times k}, V \in \mathbb{R}^{k \times k}
+	W = USV^{\top}\text{, where }U \in \mathbb{R}^{m \times m}, S \in \mathbb{R}^{m \times k}, V \in \mathbb{R}^{k \times k}
 \end{equation*}
-$S$ is has eigenvalues on the diagonal, and apart from it has zeros. $W$ can be approximated by using $t$ most significant
-eigenvalues from $S$. We can write approximation as
+$S$ is has eigenvalues on the diagonal, and zeros elsewhere. $W$ can be approximated by choosing the $t$ largest 
+eigenvalues from $S$. We can write the approximation as
 \begin{equation*}
-	\hat{W} = \hat{U}\hat{S}\hat{V}^T\text{, where }\hat{U} \in \mathbb{R}^{m \times t}, \hat{S} \in \mathbb{R}^{t \times t}, \hat{V} \in \mathbb{R}^{t \times k}
+	\hat{W} = \tilde{U}\tilde{S}\tilde{V}^{\top}\text{, where }\tilde{U} \in \mathbb{R}^{m \times t}, \tilde{S} \in \mathbb{R}^{t \times t}, \tilde{V} \in \mathbb{R}^{t \times k}
 \end{equation*}
 
-Cost of multiplication $X$ with $\hat{W}$ is $O(nmt + nt^2 + ntk)$, which can be significantly smaller than $O(nmk)$ (for sufficiently small $t$). E.g.
-for $n = 1000, m = 1000, k = 1000$ and $t = 100$, we have that exact computation takes $10^9$ operations, while the approximated one takes
-$2 * 10^8 + 10^7$ operations. This would give $\times 5$ theoretical speed up. However, often major cost is in memory management, 
-and theoretical speed up might be infeasible or very difficult to achieve. 
-
+Now the computation $X\tilde{W}$ can be done in $O(nmt + nt^2 + ntk)$, which, for sufficiently small $t$ can be significantly smaller than $O(nmk)$. 
 
 \subsection{Tensor Low Rank Approximations}
 
-In typical object recognition architectures, the convolutional tensors resulting
-from the training exhibit strong redundancy and regularity across all its 
-dimensions. A particularly simple way to exploit such regularity is to 
-linearly compress the tensors, which amounts to finding low-rank 
-approximations.
+In typical object recognition architectures, the convolutional layer weights at the end of training exhibit strong redundancy and regularity across all dimensions. A particularly simple way to exploit such regularity is to 
+linearly compress the tensors, which amounts to finding low-rank approximations.
 
-Convolution kernels can be described as a $4$-dimensional tensors. Let $W \in \mathbb{R}^{C \times X \times Y \times F}$ 
-be convolutional kernel. 
-$C$ is input number of feature maps (or colors), $X, Y$ are special dimensions
-over which we compute convolution, and $F$ is the target number of feature maps.
-Let $I \in \mathbb{R}^{C \times N \times M}$ denote an input signal.
-A generic convolutional layer is defined as
+Convolution weights can be described as a $4$-dimensional tensor. Let $W \in \mathbb{R}^{C \times X \times Y \times F}$ 
+denote such a weight tensor. $C$ is the number of number of input channels, $X$ and $Y$ are the special dimensions of the kernel, and $F$ is the target number of feature maps.
+Let $I \in \mathbb{R}^{C \times N \times M}$ denote an input signal where $C$ is the number of input maps, and $N$ and $M$ are the spatial dimensions of the maps.
+The computation performed by a generic convolutional layer is defined as
 \begin{align*}
 \label{convlayereq}
 &I \ast W (f,x,y) = \\
-&\sum_{c=1}^C \sum_{x'=-X/2}^{X/2} \sum_{y'=-Y/2}^{Y/2} I(c,x-x',y-y') W(c,x',y',f)
+&\sum_{c=1}^C \sum_{x'=1}^{X} \sum_{y'=1}^{Y} I(c,x+x',y+y') W(c,x',y',f)
 \end{align*}
 
-Low-rank approximation of tensors is very similar to low-rank approximation of matrices.
-However, first we have to choose $2$ dimensions with respect to which we are approximating, and treat
-rest of tensor as it would be a matrix. Moreover, we show how to perform approximation in the way to
-exploit computation on GPU (e.g. enforce memory alignment).
+We would like to approximate $W$ with a low rank tensor that has a particular structure that allows for a more efficient computation of the convolution. The approximations will be more efficient in two senses: both the number of floating point operations required to compute the convolution output and the number of parameters that need to be stored will be dramatically reduced. 
 
+A standard first convolutional layer will receives three color channels, typically in RGB or YUV space, as input whereas later hidden layers typically receive a much larger number of feature maps that have resulted from computations performed in previous layers. As a result, the first layer weights often have a markedly different structure than the weights in later convolutional layers. We have found that different approximation techniques are well suited to the different layers which we now describe. The first approach, which we call the monochromatic filter approximation can be applied to the weights in the first convolutional layer. The second approach, which we call the bi-clustering approximation,  can be applied to later convolutional layers where the number of input and output maps is large. 
 
-\subsubsection{Monochromatic filters}
-For generic convolution there are connections between all output feature maps, and all input feature maps.
-However, one could imagine that this connections in trained network in some basis could become sparse. 
-Sparsity of this connections would allow to save number of multiplications. Concretely, we look for such a 
-linear transformation of input $I \in \mathbb{R}$ 
+\subsection{Monochromatic filters}
+Let $W \in \mathbb{R}^{C \times X \times Y \times F}$ denote the first convolutional layer weights of a trained network. The number of input channels, $C$, is 3 and each channel corresponds to a different color component (either RGB or YUV). We have found that the color components of weights from a trained convolutional neural network have low dimensional structure. In particular, the weights can be well approximated by projecting the color dimension down into a 1D subspace. Figure ?? shows the original first layer convolutional weights of a trained network and the weights after the color dimension has been projected into 1D lines. 
 
-
-
-
-We denote by $W_C \in \mathbb{R}^{C \times XYF}$ reshaped version of kernel $W \in \mathbb{R}^{C \times X \times Y \times F}$
-
-
-\subsection{Linear Compression of Convolutional Filter bank}
-
-Given a $4$-tensor $W$ of dimensions $(C,X,Y,F)$, we search for decompositions 
-that minimize 
-\begin{equation}
-\label{rankoptim}
-\| W - \sum_{k\leq K} \alpha_k \otimes \beta_k \otimes \gamma_k \otimes \delta_k\|_F~,
-\end{equation}
-where $\alpha_k$, $\beta_k$, $\gamma_k$ and $\delta_k$ are 
-rank $1$ vectors of dimensions $C$, $X$, $Y$ and $F$ respectively, and
-$\| X \|_F$ denotes the Frobenius norm. Generalization of the SVD.
-
-The rank $K$ approximation (\ref{rankoptim}) can be obtained using a greedy 
-algorithm, which computes for a given tensor $X$ its best rank-1 approximation:
-\begin{equation}
-\label{pla}
-\min_{\alpha, \beta, \gamma, \delta} \| X - \alpha \otimes \beta \otimes \gamma \otimes \delta \|_F ~.
-\end{equation}
-This problem is solved by iteratively minimizing one of the monoids while keeping 
-the rest fixed. Each of the step consists in solving a least squares problem. (todo expand).
-
-Figures ? and ?? show low-rank approximations of the first two convolutional
-layers of the Imagenet architecture.
-
-
-\subsection{Analysis of Complexity}
-
-A good low-rank approximation allows a computational speed-up. 
-
-Let us assume a fixed stride of $\Delta$ in each spatial dimension. 
-
-% Doesn't fit into column.
-%\begin{table}
-%\label{firsttable}
-%\caption{Complexity measurement 
-%of convolutional layer versus its low-rank approximation}
-%\centering
-%\begin{tabular}{|c| c c |}
-%\hline
-%Method & Full & $K$-rank approximation \\
-%\hline
-%Ops per pixel & $X\,Y\,C\,F\, \Delta^{-2}$ & $K \cdot ( C + X \Delta^{-1} + Y \Delta^{-2} + F \Delta^{-2})$ \\
-%\hline
-%\end{tabular}
-%\end{table}
-
-Table \ref{firsttable} shows the number of multiplications required to perform the 
-convolution. In order to optimize the complexity, it is not always a good idea 
-to decompose the full tensor $W$. Indeed, depending on its dimensions, 
-the approximation cost might be superior than the original.
-We might consider instead low-rank approximations of $W$ 
-which partition the coordinate space in the most efficient manner.
-
-\subsection{Optimizing Cost with Subspace Clustering}
-
-We can decompose the $4$-tensor $W$ in a collection $W_{k,l}$ of $4$-tensors, 
-by considering a partition $G_1,..G_k,..,G_N$ of the first coordinate space $C$ and
-a partition $H_1,...H_l,...H_M$ of the last coordinate space $F$. 
- If we assume a uniform partition with $N$ groups of $C/N$ coordinates and 
- $M$ groups of $F/M$ coordinates respectively, and that each tensor $W_{k,l}$ 
- is approximated with $K$ rank-$1$ tensors, the resulting complexity is 
+The approximation is computed as follows. First, for every output feature, $f$, we consider consider the matrix $W_f \in \mathbb{R}^{C \times XY }$, where the spatial dimensions have been combined, and find the singular value decomposition, 
 \begin{equation*}
- K \cdot N \cdot M \cdot \left( \frac{C}{N} + X \Delta^{-1} + Y \Delta^{-2} + \frac{F}{M} \Delta^{-2}\right)
+	W_f = U_f S_f T_f^{\top}
 \end{equation*}
- How to optimize the groupings on each of the variables? We perform a subspace clustering. 
- 
- 
- Sharing between blocks: 
-\begin{equation}
-\label{rankoptim}
- \widetilde{W} = \sum_{k\leq K} \alpha_{i(k)} \otimes \beta_{j(k)} \otimes \gamma_{h(k)} \otimes \delta_{m(k)}~,
-\end{equation}
-If now each of the separable filters is taken out of a collection smaller than $K$, we can gain 
-in computation. This can be for instance implemented with a K-Means on the tensor decompositions.
+where $U_f \in \mathbb{R}^{C \times C}, S_f \in \mathbb{R}^{C \times XY}, V_f \in \mathbb{R}^{XY \times XY}$
 
 
-Examples:
-Monochromatic filtering
 
-Spatially Separable
+\subsection{Bi-clustering of hidden layer weights}
+\nocite{*}
+\bibliography{bibliography}
+\bibliographystyle{icml2014}
 
-Memory access constraints
+
+\end{document}
+
+
+
+
+
 
