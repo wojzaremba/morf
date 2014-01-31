@@ -23,14 +23,16 @@ function [Wapprox, Wmono, colors, perm, num_weights] = monochromatic_approx(W, a
         approx0(f, :, :, :) = reshape(chunk, 1, size(W, 2), size(W, 3), size(W, 4));
     end
     
-    if args.even
-        [assignment,colors] = litekmeans(C', args.num_colors);
-        colors = colors';
-    else
-        MAXiter = 1000; % Maximum iteration for KMeans Algorithm
-        REPlic = Val(args, 'rep', 100); % Replication for KMeans Algorithm
-        [assignment,colors] = kmeans(C, args.num_colors, 'start', 'sample', 'maxiter', MAXiter, 'replicates', REPlic, 'EmptyAction', 'singleton');
-    end
+    [assignment, colors] = mykmeans(C, args.num_colors, W, S);
+    
+%     if args.even
+%         [assignment,colors] = litekmeans(C', args.num_colors);
+%         colors = colors';
+%     else
+%         MAXiter = 1000; % Maximum iteration for KMeans Algorithm
+%         REPlic = Val(args, 'rep', 100); % Replication for KMeans Algorithm
+%         [assignment,colors] = kmeans(C, args.num_colors, 'start', 'sample', 'maxiter', MAXiter, 'replicates', REPlic, 'EmptyAction', 'singleton');
+%     end
     
     Wapprox = zeros(size(W));
     for f=1:size(W,1)

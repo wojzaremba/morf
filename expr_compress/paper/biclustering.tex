@@ -3,11 +3,6 @@ Let $W \in \mathbb{R}^{C \times X \times Y \times F}$ denote the weights of a se
 
 We cluster the input features by concatenating the spatial and output feature dimensions of $W$ and clustering the resulting $C$ vectors in $\mathbb{R}^{XYF}$. This clustering can be done using k-means or a more sophisticated subspace clustering algorthm. In our experiments we found that often k-means was sufficient. We clustered the output features in an analogous manner and completely independently of the input clustering. 
 
-Any 3D tensor, $M \in \mathbb{R}^{n \times m \times k}$, can be approximated by a decomposition that minimizes 
-\begin{equation*}
-	\|  \|
-\end{equation*} 
-
 
 \subsubsection{Complexity analysis}
 

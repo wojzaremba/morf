@@ -4,7 +4,7 @@ function [assignment, centers] = mykmeans(X, k, W, Wm)
 % W : original weights we want to approximate
 % Wm : 'monochromatic' weights used to reconstruct
     
-    max_iter = 1000;
+    max_iter = 2000;
     
     N = size(X, 1);
     D = size(X, 2);
