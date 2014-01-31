@@ -33,6 +33,27 @@ where $\tilde{I} \in \mathbb{R}^{C' \times N \times M}$. After the color transfo
 where $c' \in [1, ..., C']$ is the cluster feature $f$ is assigned to. If the color transformation is computed once at the outset, then the number of operations performed is significantly reduced.  
 
 \subsubsection{Complexity analysis}
+By using the monochromatic filter approximation to the first layer convolutional weights, the target output can be computed with significantly fewer operations. The number of operations that will be required is a function the number of color components, $C'$, that are used in the approximation. Table \ref{monochromatic_ops} gives the number of operations required in the original and approximated cases as a function of $C'$. 
+
+\begin{table}[h]
+\tiny
+\parbox{\linewidth}{
+\centering
+\begin{tabular}{cc}
+\hline
+Original & Approximated \\
+\hline
+$C X Y F N M \Delta^{-2}$  & $	 C' C^2 N M + X Y F N M \Delta^{-2}$\\
+\hline
+\end{tabular}
+\caption{Number of operations required to compute target output of first convolutional layer with original weights vs. monochromatic approximation.}
+\label{monochromatic_ops}
+}
+\end{table}
+where $\Delta$ is the stride of the filter.
+
+Figure ?? shows the relative reduction in operations for varying values of $C'$.
 
 \subsubsection{Empirical performance}
+There is an obvious tradeoff between increased efficiency and decreased accuracy of the network as we approximate the filters with varying values of $C'$. In our experiments we only used approximations that did not increase the error of the network. However, it is insightful to see how test error varies with the number of color components used. Figure ?? illustrates the tradeoff.
 

@@ -32,7 +32,7 @@ for i = 1:length(num_colors);
     end
     test_error(i) = error;
     plan.layer{2}.cpu.vars.W = W;
-    save('layer1reconerror_vs_numweights_matthew.mat', 'test_error', 'recon_error', 'num_weights', 'num_colors');
+    save('layer1reconerror_vs_numweights_matthew_mykmeans.mat', 'test_error', 'recon_error', 'num_weights', 'num_colors');
 end
 
 
