@@ -14,7 +14,7 @@ Every matrix $W \in \mathbb{R}^{m \times k}$ can be expressed using singular val
 $S$ is has eigenvalues on the diagonal, and zeros elsewhere. $W$ can be approximated by choosing the $t$ largest 
 eigenvalues from $S$. We can write the approximation as
 \begin{equation*}
-	\hat{W} = \tilde{U}\tilde{S}\tilde{V}^{\top}\text{, where }\tilde{U} \in \mathbb{R}^{m \times t}, \tilde{S} \in \mathbb{R}^{t \times t}, \tilde{V} \in \mathbb{R}^{t \times k}
+	\tilde{W} = \tilde{U}\tilde{S}\tilde{V}^{\top}\text{, where }\tilde{U} \in \mathbb{R}^{m \times t}, \tilde{S} \in \mathbb{R}^{t \times t}, \tilde{V} \in \mathbb{R}^{t \times k}
 \end{equation*}
 
 Now the computation $X\tilde{W}$ can be done in $O(nmt + nt^2 + ntk)$, which, for sufficiently small $t$ can be significantly smaller than $O(nmk)$. 
@@ -27,16 +27,16 @@ linearly compress the tensors, which amounts to finding low-rank approximations.
 Convolution weights can be described as a $4$-dimensional tensor. Let $W \in \mathbb{R}^{C \times X \times Y \times F}$ 
 denote such a weight tensor. $C$ is the number of number of input channels, $X$ and $Y$ are the special dimensions of the kernel, and $F$ is the target number of feature maps.
 Let $I \in \mathbb{R}^{C \times N \times M}$ denote an input signal where $C$ is the number of input maps, and $N$ and $M$ are the spatial dimensions of the maps.
-The computation performed by a generic convolutional layer is defined as
+The target value, $T = I \ast W$, of a generic convolutional layer for a particular output feature, $f$, and spatial location, $(x, y)$, is defined as
 \begin{align*}
 \label{convlayereq}
-&I \ast W (f,x,y) = \\
+&T(f,x,y) = \\
 &\sum_{c=1}^C \sum_{x'=1}^{X} \sum_{y'=1}^{Y} I(c,x+x',y+y') W(c,x',y',f)
 \end{align*}
 
-We would like to approximate $W$ with a low rank tensor that has a particular structure that allows for a more efficient computation of the convolution. The approximations will be more efficient in two senses: both the number of floating point operations required to compute the convolution output and the number of parameters that need to be stored will be dramatically reduced. 
+We show how to approximate $W$ with a low rank tensor that has a particular structure that allows for a more efficient computation of the convolution. The approximations will be more efficient in two senses: both the number of floating point operations required to compute the convolution output and the number of parameters that need to be stored will be dramatically reduced. 
 
-A standard first convolutional layer will receives three color channels, typically in RGB or YUV space, as input whereas later hidden layers typically receive a much larger number of feature maps that have resulted from computations performed in previous layers. As a result, the first layer weights often have a markedly different structure than the weights in later convolutional layers. We have found that different approximation techniques are well suited to the different layers which we now describe. The first approach, which we call the monochromatic filter approximation can be applied to the weights in the first convolutional layer. The second approach, which we call the bi-clustering approximation,  can be applied to later convolutional layers where the number of input and output maps is large. 
+A standard first convolutional layer receives three color channels, typically in RGB or YUV space, as input whereas later hidden layers typically receive a much larger number of feature maps that have resulted from computations performed in previous layers. As a result, the first layer weights often have a markedly different structure than the weights in later convolutional layers. We have found that different approximation techniques are well suited to the different layers which we now describe. The first approach, which we call the monochromatic filter approximation can be applied to the weights in the first convolutional layer. The second approach, which we call the bi-clustering approximation,  can be applied to later convolutional layers where the number of input and output maps is large. 
 
 \subsection{Monochromatic filters}
 Let $W \in \mathbb{R}^{C \times X \times Y \times F}$ denote the first convolutional layer weights of a trained network. The number of input channels, $C$, is 3 and each channel corresponds to a different color component (either RGB or YUV). We have found that the color components of weights from a trained convolutional neural network have low dimensional structure. In particular, the weights can be well approximated by projecting the color dimension down into a 1D subspace. Figure ?? shows the original first layer convolutional weights of a trained network and the weights after the color dimension has been projected into 1D lines. 
@@ -51,7 +51,7 @@ where $U_f \in \mathbb{R}^{C \times C}, S_f \in \mathbb{R}^{C \times XY}, V_f \i
 \end{equation*}
 where $\tilde{U}_f \in \mathbb{R}^{C \times 1}, \tilde{S}_f \in \mathbb{R}, \tilde{V}_f \in \mathbb{R}^{1 \times XY}$.
 
-This approximation corresponds to shifting from $C$ color channels to 1 color channel for each output feature. We can further exploit the regularity in the weights by sharing the color component basis between different output features. We do this by clustering the $F$ left singular vectors,  $\tilde{U}_f$, of each output feature $f$ into $C'$ different equal sized clusters, where $C'$ is much smaller than $F$. Then, for each of the $\frac{F}{C'}$ output feature, $f$, that is assigned to cluster $c$, we can approximate $W_f$ with
+This approximation corresponds to shifting from $C$ color channels to 1 color channel for each output feature. We can further exploit the regularity in the weights by sharing the color component basis between different output features. We do this by clustering the $F$ left singular vectors,  $\tilde{U}_f$, of each output feature $f$ into $C'$ equal sized clusters, where $C'$ is much smaller than $F$. Then, for each of the $\frac{F}{C'}$ output feature, $f$, that is assigned to cluster $c$, we can approximate $W_f$ with
 \begin{equation*}
 	\tilde{W}_f = U_c \tilde{S}_f \tilde{V}_f^{\top}
 \end{equation*}
@@ -59,22 +59,32 @@ where $U_c \in \mathbb{R}^{C \times 1}$ is the cluster center for cluster $c$ an
 
 This low-rank approximation allows for a more efficient computation of the convolutional layer output. By decomposing the approximated weights into two tensors. Let $W_C \in \mathbb{R}^{C' \times C}$ denote the color transform matrix where the rows of $W_c$ are the cluster centers $U_c^{\top}$. Let $W_{mono} \in \mathbb{R}^{X \times Y \times F}$ denote the monochromatic weight tensor containing $ \tilde{S}_f \tilde{V}_f^{\top}$ for each of the $F$ output features. Given this decomposition, we can compute the output of the convolutional layer by first transforming the input signal, $I \in \mathbb{R}^{C \times N \times M}$ into a different basis using the color transform matrix: $\tilde{I} = W_c $
 
-This low-rank approximation allows for a more efficient computation of the convolutional layer output. By decomposing the approximated weights into two tensors. Let $W_C \in \mathbb{R}^{C' \times C}$ denote the color transform matrix where the rows of $W_c$ are the cluster centers $U_c^{\top}$. Let $W_{mono} \in \mathbb{R}^{X \times Y \times F}$ denote the monochromatic weight tensor containing $ \tilde{S}_f \tilde{V}_f^{\top}$ for each of the $F$ output features. Given this decomposition, we can compute the output of the convolutional layer by first transforming the input signal, $I \in \mathbb{R}^{C \times N \times M}$ into a different basis using the color transform matrix: 
+By decomposing the approximated weights into two tensors, this low-rank approximation allows for a more efficient computation of the convolutional layer output. Let $W_C \in \mathbb{R}^{C' \times C}$ denote the color transform matrix where the rows of $W_c$ are the cluster centers $U_c^{\top}$. Let $W_{mono} \in \mathbb{R}^{X \times Y \times F}$ denote the monochromatic weight tensor containing $ \tilde{S}_f \tilde{V}_f^{\top}$ for each of the $F$ output features. Given this decomposition, we can compute the output of the convolutional layer by first transforming the input signal, $I \in \mathbb{R}^{C \times N \times M}$ into a different basis using the color transform matrix: 
 \begin{equation*}
 	\tilde{I} = W_c \otimes I
 \end{equation*}
-where $\tilde{I} \in \mathbb{R}^{C' \times N \times M}$. After the color transformation, each of the $f$ filters in $W_{mono}$ is monochromatic in the sense that it only acts upon one of the $C'$ color channels. Concretely, target value of output feature $f$ is
+where $\tilde{I} \in \mathbb{R}^{C' \times N \times M}$. After the color transformation, each of the $f$ filters in $W_{mono}$ is monochromatic in the sense that it only acts upon one of the $C'$ color channels. Concretely, target value, $\tilde{T}$, of the approximated convolutional layer for a particular output feature $f$, and spatial location $(x, y)$ is
 \begin{align*}
-	T(f, x, y) &= \sum_{x' = 1}^{X} \sum_{y' = 1}^{Y} \Big(\sum_{c = 1}^{C} I(c, x + x', y + y') W_c(c', c) \Big) \\
+	\tilde{T}(f, x, y) &= \sum_{x' = 1}^{X} \sum_{y' = 1}^{Y} \Big(\sum_{c = 1}^{C} I(c, x + x', y + y') W_c(c', c) \Big) \\
 			&\hspace{3mm} \times (c, x + x', y + y') W(x', y', f) \\
 			&= \sum_{x' = 1}^{X} \sum_{y' = 1}^{Y} \tilde{I}(c', x + x', y + y') W(x', y', f)
 \end{align*} 
-where $c' \in [1, ..., C']$ is the cluster feature $f$ is assigned to. 
+where $c' \in [1, ..., C']$ is the cluster feature $f$ is assigned to. If the color transformation is computed once at the outset, then the number of operations performed is significantly reduced.  
+
+\subsubsection{Complexity analysis}
+
+\subsubsection{Empirical performance}
 
 \subsection{Bi-clustering of hidden layer weights}
+Let $W \in \mathbb{R}^{C \times X \times Y \times F}$ denote the weights of a second or later convolutional layer. Similar to the first convolutional layer approximation, we rely on the low dimensional linear structure of learned weights in a trained convolutional network to find an efficient approximation. We decompose $W$ by considering a partition of the input features into $G$ equal sized clusters and a partition of the output features into $H$ equal sized clusters. For a given input cluster, $g$, and output cluster, $h$, we approximate the weights corresponding to the input and output features in those clusters, $W_{g,h} \in \mathbb{R}^{\frac{C}{G} \times X \times Y \times \frac{F}{H}}$, with a rank K tensor, $\tilde{W}_{g,h}$.  
+
+We cluster the input features by concatenating the spatial and output feature dimensions of $W$ and clustering the resulting $C$ vectors $\mathbb{R}^{XYF}$. This clustering can be done using k-means or a more sophisticated subspace clustering algorthm. In our experiments we found that often k-means was sufficient. We clustered the output features in an analogous manner and completely independently of the input clustering. 
+
+ 
 
 
+\subsubsection{Complexity analysis}
 
-
+\subsubsection{Empirical performance}
 
 
