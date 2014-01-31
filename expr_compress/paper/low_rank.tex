@@ -1,59 +1,3 @@
-\documentclass{article}
-
-\usepackage{graphicx} % more modern
-\usepackage{subfigure} 
-\usepackage{amssymb}
-\usepackage{amsmath}
-\usepackage{amsthm}
-
-
-% For citations
-\usepackage{natbib}
-
-% For algorithms
-\usepackage{comment}
-\usepackage{framed}
-\usepackage{algorithm}
-\usepackage{algorithmic}
-\usepackage{amsmath}
-%\usepackage{algorithmicx}
-%\usepackage{algpseudocode}
-
-\usepackage{hyperref}
-
-\allowdisplaybreaks
-
-\newcommand{\theHalgorithm}{\arabic{algorithm}}
-
-\newtheorem{theorem}{Theorem}[section]
-\newtheorem{lemma}[theorem]{Lemma}
-\newtheorem{conjecture}[theorem]{Conjecture}
-\newtheorem{proposition}[theorem]{Proposition}
-\newtheorem{definition}[theorem]{Definition}
-\newtheorem{corollary}[theorem]{Corollary}
-
-%\usepackage[accepted]{icml2014}  % XXX : just set temporarly to print out authors corretly.
-\usepackage{icml2014}  
-
-\renewcommand{\algorithmicrequire}{\textbf{Input:}}
-\renewcommand{\algorithmicensure}{\textbf{Output:}}
-
-\begin{document} 
-
-\icmltitle{Exploiting Linear Structure Within Convolutional Networks
-  for Efficient Evaluation}
-
-\icmlauthor{Emily Denton}{denton@cs.nyu.edu}
-\icmlauthor{Wojciech Zaremba}{zaremba@cs.nyu.edu}
-\icmlauthor{Joan Bruna}{bruna@cs.nyu.edu}
-\icmlauthor{Rob Fergus}{fergus@cs.nyu.edu}
-
-\icmlkeywords{machine learning, deep learning, speeding up forward pass, redundancies in neural networks}
-
-\begin{abstract}
-
-\end{abstract}
-
 \section{Low Rank Approximations}
 In this section, we give theoretical background on low rank approximations. First, we discuss simplest setting, which is
 for matrices (two dimensional tensors). We then consider the approximation of 4-dimensional tensors of convolution weights.
@@ -99,19 +43,24 @@ Let $W \in \mathbb{R}^{C \times X \times Y \times F}$ denote the first convoluti
 
 The approximation is computed as follows. First, for every output feature, $f$, we consider consider the matrix $W_f \in \mathbb{R}^{C \times XY }$, where the spatial dimensions have been combined, and find the singular value decomposition, 
 \begin{equation*}
-	W_f = U_f S_f T_f^{\top}
+	W_f = U_f S_f V_f^{\top}
 \end{equation*}
-where $U_f \in \mathbb{R}^{C \times C}, S_f \in \mathbb{R}^{C \times XY}, V_f \in \mathbb{R}^{XY \times XY}$
+where $U_f \in \mathbb{R}^{C \times C}, S_f \in \mathbb{R}^{C \times XY}, V_f \in \mathbb{R}^{XY \times XY}$. We then take the rank-1 approximation to $W_f$ 
+\begin{equation*}
+	\tilde{W}_f = \tilde{U}_f \tilde{S}_f \tilde{V}_f^{\top}
+\end{equation*}
+where $\tilde{U}_f \in \mathbb{R}^{C \times 1}, \tilde{S}_f \in \mathbb{R}, \tilde{V}_f \in \mathbb{R}^{1 \times XY}$.
 
+This approximation corresponds to shifting from $C$ color channels to 1 color channel for each output feature. We can further exploit the regularity in the weights by sharing the color component basis between different output features. We do this by clustering the $F$ left singular vectors,  $\tilde{U}_f$, of each output feature $f$ into $C'$ different equal sized clusters, where $C'$ is much smaller than $F$. Then, for each of the $\frac{F}{C'}$ output feature, $f$, that is assigned to cluster $c$, we can approximate $W_f$ with
+\begin{equation*}
+	\tilde{W}_f = U_c \tilde{S}_f \tilde{V}_f^{\top}
+\end{equation*}
+where $U_c \in \mathbb{R}^{C \times 1}$ is the cluster center for cluster $c$ and $\tilde{S}_f$ and $\tilde{V}_f$ as as before. 
+
+This low-rank approximation allows for a more efficient computation of the convolutional layer output. By decomposing the approximated weights into two tensors. Let $W_C \in \mathbb{R}^{C' \times C}$ denote the color transform matrix where the rows of $W_c$ are the cluster centers $U_c^{\top}$. Let $W_{mono} \in \mathbb{R}^{X \times Y \times F}$ denote the monochromatic weight tensor containing $ \tilde{S}_f \tilde{V}_f^{\top}$ for each of the $F$ output features. Given this decomposition, we can compute the output of the convolutional layer by first transforming the input signal, $I \in \mathbb{R}^{C \times N \times M}$ into a different basis using the color transform matrix: $\tilde{I} = W_c 
 
 
 \subsection{Bi-clustering of hidden layer weights}
-\nocite{*}
-\bibliography{bibliography}
-\bibliographystyle{icml2014}
-
-
-\end{document}
 
 
 
