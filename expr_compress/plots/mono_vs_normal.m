@@ -9,7 +9,7 @@ json = {};
 json{1} = json_old{1};
 json{2} = json_old{2};
         
-json{1}.batch_size = 128;
+json{1}.batch_size = 1;
 % Plan(json, '~/imagenet_data/imagenet_matthew', 0, 'single');
 Plan(json, [], 0, 'single');
 plan.training = 0;

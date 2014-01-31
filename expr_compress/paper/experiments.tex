@@ -1,49 +1,30 @@
-
 \section{Numerical Experiments}
 
-\begin{figure}[ht]
-  \includegraphics[width=0.48\textwidth]{img/eval_per_batch.png}
-  \caption{CPU computational time per image for various batch sizes.}
-\end{figure}
-\begin{figure}[ht]
-  \includegraphics[width=0.48\textwidth]{img/eval_per_layer_per_batch_128_batch_size.png}
-  \caption{Per layer breakdown of execution time for mini batch of size 128. Such size of mini batch gives optimal per image CPU time.}
-\end{figure}
-\begin{figure}[ht]
-  \includegraphics[width=0.48\textwidth]{img/eval_per_layer_per_batch_1_batch_size.png}
-  \caption{Per layer breakdown of execution for mini batch of size 1. Use for real time applications.}
-\end{figure}
-
-
-\begin{figure}[ht]
-  \includegraphics[width=0.48\textwidth]{img/eval_per_batch_GPU.png}
-  \caption{GPU computational time per image for various batch sizes.}
-\end{figure}
-\begin{figure}[ht]
-  \includegraphics[width=0.48\textwidth]{img/eval_per_layer_per_batch_GPU_128_batch_size.png}
-  \caption{Per layer breakdown of execution time for mini batch of size 128. Such size of mini batch gives optimal per image GPU time.}
-\end{figure}
-
 \subsection{Testing time}
+    
+\subsubsection{Monochromatic Filters}
+Monochromatic approximation can work well only if color components span few one dimensional subspaces. 
+Figures \ref{AlexNetComponents}, \ref{MattNetComponents} show that it is indeed case for both AlexNet, as
+well as MattNet. In case of AlexNet, we colored with a different colors every feature map, so one dimensional structure
+is clearly depicted. For MattNet, we found further low-dimensional structure. All the colors seems to lay close
+to two planes. Visualization gives different color to color components laying on every plane. Moreover,
+colors span one dimensional subspaces within planes.
 
-on GPU: Michael can help.
-
-on CPU
-
-\subsubsection{Monochromatic}
-
-\subsubsection{Linear combination of filters}
-
-\subsubsection{Separable filters}
-
-
-\subsection{ Denoising}
-\begin{figure}[ht]
-  \begin{minipage}[b]{0.48\linewidth}
-  	\includegraphics[width=\textwidth]{img/first.png}
-  \end{minipage}
-  \begin{minipage}[b]{0.48\linewidth}
-  	\includegraphics[width=\textwidth]{img/first_appr.png}
-  \end{minipage}
-  \caption{(Left) Original filters, (Right) approximated filters. (this pictures are too big, and should contain white separation).}
+\begin{figure}[t]
+\mbox{
+  \subfigure[AlexNet]{
+      \includegraphics[width=0.48\linewidth]{img/color_components_alex_3d.eps}
+      \label{AlexNetComponents}
+  }\quad
+\subfigure[MattNet]{
+  \includegraphics[width=0.48\linewidth]{img/color_components_matthew_3d.eps} 
+  \label{MattNetComponents}
+  }
+}
+\caption{Visualization of color components for AlexNet and MattNet.}
 \end{figure}
+
+
+
+\subsubsection{Biclustering}
+

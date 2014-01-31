@@ -1,46 +1,46 @@
-This is BibTeX, Version 0.99d (TeX Live 2013)
+This is BibTeX, Version 0.99d (TeX Live 2013/MacPorts 2013_5)
 Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: compress.aux
 The style file: icml2014.bst
 Database file #1: bibliography.bib
-You've used 8 entries,
+You've used 10 entries,
             2773 wiz_defined-function locations,
-            635 strings with 6463 characters,
-and the built_in function-call counts, 4415 in all, are:
-= -- 369
-> -- 328
-< -- 4
-+ -- 110
-- -- 102
-* -- 362
-:= -- 681
-add.period$ -- 26
-call.type$ -- 8
-change.case$ -- 58
-chr.to.int$ -- 8
-cite$ -- 16
-duplicate$ -- 197
-empty$ -- 320
-format.name$ -- 110
-if$ -- 925
+            644 strings with 6807 characters,
+and the built_in function-call counts, 5438 in all, are:
+= -- 464
+> -- 379
+< -- 6
++ -- 127
+- -- 117
+* -- 434
+:= -- 825
+add.period$ -- 32
+call.type$ -- 10
+change.case$ -- 69
+chr.to.int$ -- 10
+cite$ -- 20
+duplicate$ -- 251
+empty$ -- 407
+format.name$ -- 129
+if$ -- 1152
 int.to.chr$ -- 1
 int.to.str$ -- 1
-missing$ -- 8
-newline$ -- 48
-num.names$ -- 32
-pop$ -- 130
+missing$ -- 10
+newline$ -- 58
+num.names$ -- 40
+pop$ -- 154
 preamble$ -- 1
-purify$ -- 50
+purify$ -- 59
 quote$ -- 0
-skip$ -- 160
+skip$ -- 207
 stack$ -- 0
-substring$ -- 96
-swap$ -- 35
-text.length$ -- 3
+substring$ -- 140
+swap$ -- 49
+text.length$ -- 4
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 88
+type$ -- 110
 warning$ -- 0
-while$ -- 30
+while$ -- 39
 width$ -- 0
-write$ -- 108
+write$ -- 133
