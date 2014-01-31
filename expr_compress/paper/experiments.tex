@@ -43,28 +43,28 @@ Total & & & & \\
 Layer & Time & Fraction & Time per img. & Fraction \\
 & (bs = 1) & (bs = 1) & (bs = 128) & (bs = 128) \\
 \hline
-Conv1 & & & & \\
-MaxPool & & & & \\
-LRNormal & & & & \\
-Conv2 & & & & \\
-MaxPool & & & & \\
-LRNormal & & & & \\
-Conv3 & & & & \\
-MaxPool & & & & \\
-Conv4 & & & & \\
-Conv5 & & & & \\
-MaxPool & & & & \\
-FC & & & & \\
-FC & & & & \\
-FC & & & & \\
-Softmax & & & & \\
+Conv1 & & & 31.67 & 12.40\% \\
+MaxPool & & & 17.83 & 6.98\% \\
+LRNormal & & & 13.80 & 5.40\% \\
+Conv2 & & & 105.28 & 41.22\% \\
+MaxPool & & & 9.99 & 3.91\% \\
+LRNormal & & & 7.36 & 2.88\% \\
+Conv3 & & & 22.12 & 8.66\% \\
+MaxPool & & & 4.16 & 1.62\% \\
+Conv4 & & & 15.40 & 6.02\% \\
+Conv5 & & & 20.36 & 7.97\% \\
+MaxPool & & & 1.12 & 0.43\% \\
+FC & & & 4.76 & 1.86\% \\
+FC & & & 1.10 & 0.43\% \\
+FC & & & 0.30 & 0.11\% \\
+Softmax & & & 0.09 & 0.03\%\\
 \hline 
-Total & & & & \\
+Total & & & 255.39 & \\
 \hline
 \end{tabular}
 }
 \caption{Evaluation time (in ms) per layer on CPU for (top) AlexNet, (bottom) MattNet. We consider real time application setting (batch size aka bs of 1), and
-mass scale annotation (batch size of 128). Results averaged over 8 trials.}
+mass scale annotation (batch size of 128).} 
 \label{evaluation_time}
 \end{table}
 

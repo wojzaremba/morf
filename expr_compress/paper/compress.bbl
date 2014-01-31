@@ -1,4 +1,4 @@
-\begin{thebibliography}{11}
+\begin{thebibliography}{12}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -55,6 +55,14 @@ Lowe, David~G.
 Mathieu, Michael, Henaff, Mikael, and LeCun, Yann.
 \newblock Fast training of convolutional networks through ffts.
 \newblock \emph{arXiv preprint arXiv:1312.5851}, 2013.
+
+\bibitem[Sermanet et~al.(2013)Sermanet, Eigen, Zhang, Mathieu, Fergus, and
+  LeCun]{sermanet2013overfeat}
+Sermanet, Pierre, Eigen, David, Zhang, Xiang, Mathieu, Michael, Fergus, Rob,
+  and LeCun, Yann.
+\newblock Overfeat: Integrated recognition, localization and detection using
+  convolutional networks.
+\newblock \emph{arXiv preprint arXiv:1312.6229}, 2013.
 
 \bibitem[Vanhoucke et~al.(2011)Vanhoucke, Senior, and
   Mao]{vanhoucke2011improving}
