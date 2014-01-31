@@ -7,9 +7,9 @@ load_imagenet_model();
 W = plan.layer{5}.cpu.vars.W;
 
 args.cluster_type = 'kmeans';
-args.iclust = 32;
-args.oclust = 16;
-ranks = [1, 2, 4, 6, 8, 12, 16, 20, 24, 28, 32, 64]; %[1, 2, 3, 4, 5, 6, 7, 8];
+args.iclust = 48;
+args.oclust = 4;
+ranks = [1, 2, 4, 6, 8, 12, 16, 20, 24, 28, 32, 64, 128]; %[1, 2, 3, 4, 5, 6, 7, 8];
 
 num_weights = [];
 recon_error = [];
@@ -34,7 +34,7 @@ for i = 1:length(ranks);
     test_error(i) = error;
     plan.layer{5}.cpu.vars.W = W;
 
-	save('layer2reconerror_vs_numweights_matthew_iclust=32_oclust=16_kmeans.mat', 'test_error', 'recon_error', 'num_weights', 'ranks');	
+	save('layer2reconerror_vs_numweights_matthew_iclust=48=4_kmeans.mat', 'test_error', 'recon_error', 'num_weights', 'ranks');	
 end
 
 

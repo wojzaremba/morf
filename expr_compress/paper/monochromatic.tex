@@ -49,7 +49,15 @@ $C X Y F N M \Delta^{-2}$  & $	 C' C^2 N M + X Y F N M \Delta^{-2}$\\
 }
 \end{table}
 
-Figure ?? shows the relative reduction in operations for varying values of $C'$.
+Figure \ref{monochromatic_ops_pic} shows the relative reduction in operations for varying values of $C'$.
+
+\begin{figure}[t]
+\mbox{
+  \includegraphics[width=\linewidth]{img/monochromatic_numcolors_vs_numops.eps} 
+}
+\label{monochromatic_ops_pic}
+\caption{Relative decrease in number of operations required to compute output of first convolutional layer for various monochromatic operations applied to MattNet (blue) and AlexNet (red).}
+\end{figure}
 
 \subsubsection{Empirical performance}
 There is an obvious tradeoff between increased efficiency and decreased accuracy of the network as we approximate the filters with varying values of $C'$. In our experiments we only used approximations that did not increase the error of the network. However, it is insightful to see how test error varies with the number of color components used. Figure ?? illustrates the tradeoff.
