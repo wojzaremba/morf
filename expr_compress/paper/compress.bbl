@@ -1,4 +1,4 @@
-\begin{thebibliography}{10}
+\begin{thebibliography}{11}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -11,6 +11,11 @@ Denil, Misha, Shakibi, Babak, Dinh, Laurent, Ranzato, Marc'Aurelio, and
   de~Freitas, Nando.
 \newblock Predicting parameters in deep learning.
 \newblock \emph{arXiv preprint arXiv:1306.0543}, 2013.
+
+\bibitem[Guennebaud et~al.(2010)Guennebaud, Jacob, et~al.]{eigenweb}
+Guennebaud, Ga\"{e}l, Jacob, Beno\^{i}t, et~al.
+\newblock Eigen v3.
+\newblock http://eigen.tuxfamily.org, 2010.
 
 \bibitem[Hinton et~al.(2012)Hinton, Srivastava, Krizhevsky, Sutskever, and
   Salakhutdinov]{hinton2012improving}
