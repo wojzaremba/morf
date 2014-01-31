@@ -11,7 +11,7 @@ Table \ref{evaluation_time} gives us reference on prediction time for network wi
 \begin{tabular}{rrrrr}
 \hline
 & Evaluation & & Evaluation &  \\
-Layer & Time & Fraction & Time & Fraction \\
+Layer & Time & Fraction & Time per img. & Fraction \\
 & (bs = 1) & (bs = 1) & (bs = 128) & (bs = 128) \\
 \hline
 Conv1 & & & & \\
@@ -34,6 +34,34 @@ Total & & & & \\
 \hline
 \end{tabular}
 \vspace{5mm}
+}
+\parbox{.99\linewidth}{
+\centering
+\begin{tabular}{rrrrr}
+\hline
+& Evaluation & & Evaluation &  \\
+Layer & Time & Fraction & Time per img. & Fraction \\
+& (bs = 1) & (bs = 1) & (bs = 128) & (bs = 128) \\
+\hline
+Conv1 & & & & \\
+MaxPool & & & & \\
+LRNormal & & & & \\
+Conv2 & & & & \\
+MaxPool & & & & \\
+LRNormal & & & & \\
+Conv3 & & & & \\
+MaxPool & & & & \\
+Conv4 & & & & \\
+Conv5 & & & & \\
+MaxPool & & & & \\
+FC & & & & \\
+FC & & & & \\
+FC & & & & \\
+Softmax & & & & \\
+\hline 
+Total & & & & \\
+\hline
+\end{tabular}
 }
 \caption{Evaluation time (in ms) per layer on CPU for (top) AlexNet, (bottom) MattNet. We consider real time application setting (batch size aka bs of 1), and
 mass scale annotation (batch size of 128). Results averaged over 8 trials.}

@@ -1,5 +1,5 @@
 UNAME := $(shell uname)
-OPT := -v CC=gcc LD=gcc COPTIMFLAGS='-O3 -DNDEBUG' -largeArrayDims
+OPT := -v CC=g++-mp-4.8 LD=g++-mp-4.8 COPTIMFLAGS='-O3 -DNDEBUG -fopenmp' CXXOPTIMFLAGS='-O3 -DNDEBUG -fopenmp' -largeArrayDims  
 ifeq ($(UNAME), Linux)
 	MATLAB_LIB  := -I/opt/matlab/extern/include
 	MEX 	    := mex -DUNIX $(MATLAB_LIB) $(OPT)

@@ -10,7 +10,7 @@
 
 using namespace Eigen;
 
-template<int BS>
+template<int BS, int IN_D>
 void conv(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	lookups = 0;
 	float *i = (float*) mxGetData(prhs[0]);
@@ -23,39 +23,36 @@ void conv(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	const mwSize* w_size = mxGetDimensions(prhs[1]);
 	const mwSize* bias_size = mxGetDimensions(prhs[2]);
 	const mwSize* out_size = mxGetDimensions(prhs[3]);
-	//int BS = i_size[0];
 	assert(i_size[0] == BS);
-	int in_rows = i_size[1];
-	int in_cols = i_size[2];
-	int in_depth = i_size[3];
+	int in_s = i_size[1];
+	assert(i_size[1] == i_size[2]);
+	assert(i_size[3] == IN_D);
 	int out_depth = w_size[0];
 	int patch = w_size[1];
 	assert_(patch == w_size[2]);
-	assert_(in_depth == w_size[3]);
+	assert_(IN_D == w_size[3]);
 	assert_(out_depth == bias_size[0]);
 	assert_(out_size[0] == BS);
 	assert_(out_size[3] == out_depth);
-	int out_rows = ceil((float)(in_rows - patch + 2 * padding) / stride) + 1;
-	int out_cols = ceil((float)(in_cols - patch + 2 * padding) / stride) + 1;
-	assert_(out_size[1] == out_rows);
-	assert_(out_size[2] == out_cols);
+	int out_s = ceil((float)(in_s - patch + 2 * padding) / stride) + 1;
+	assert_(out_size[1] == out_s);
+	assert_(out_size[2] == out_s);
 		
-	Map<MatrixXf>out_mat(out, BS * out_rows * out_cols, out_depth);
+	Map<MatrixXf>out_mat(out, BS * out_s * out_s, out_depth);
 	out_mat.setZero();
-	for (int y = 0; y < out_cols; ++y) {
-	  for (int x = 0; x < out_rows; ++x) {
-	    Map<MatrixXf, 1, Stride<Dynamic, 1> > out_stride_mat(out + BS * (x + out_rows * y), BS, out_depth, Stride<Dynamic, 1>(BS * out_rows * out_cols, 1)); 
-	    for (int py = 0; py < patch; ++py) {
-              int y_idx = y * stride + py - padding;
-	      if ((y_idx >= in_cols) || (y_idx < 0)) {
-	        continue;
-	      }
+	for (int y = 0; y < out_s; ++y) {
+	  for (int x = 0; x < out_s; ++x) {
+	    Map<MatrixXf, 1, Stride<Dynamic, 1> > out_stride_mat(out + BS * (x + out_s * y), BS, out_depth, Stride<Dynamic, 1>(BS * out_s * out_s, 1)); 
+	    int y_offset = y * stride - padding;
+	    for (int py = fmax(0, -y_offset); py < fmin(patch, in_s - y_offset); ++py) {
+              int y_idx = y_offset + py;
 	      int x_offset = x * stride - padding;
-              for (int px = fmax(0, -x_offset); px < fmin(patch, in_rows - x_offset); ++px) {
-	        int x_idx = x_offset + px;
-	    	Map<MatrixXf, 1, Stride<Dynamic, 1> > i_stride_mat(i + BS * (x_idx + in_rows * y_idx), BS, in_depth, Stride<Dynamic, 1>(BS * in_rows * in_cols, 1)); 
-	    	Map<MatrixXf, 1, Stride<Dynamic, 1> > w_stride_mat(w + out_depth * (px + patch * py), out_depth, in_depth, Stride<Dynamic, 1>(out_depth * patch * patch, 1)); 
+	      int x_idx = x_offset + fmax(0, -x_offset);
+              for (int px = fmax(0, -x_offset); px < fmin(patch, in_s - x_offset); ++px) {
+	    	Map<MatrixXf, 1, Stride<Dynamic, 1> > i_stride_mat(i + BS * (x_idx + in_s * y_idx), BS, IN_D, Stride<Dynamic, 1>(BS * in_s * in_s, 1)); 
+	    	Map<MatrixXf, 1, Stride<Dynamic, 1> > w_stride_mat(w + out_depth * (px + patch * py), out_depth, IN_D, Stride<Dynamic, 1>(out_depth * patch * patch, 1)); 
 		out_stride_mat += i_stride_mat * w_stride_mat.transpose();
+		++x_idx;
 	      }
 	    }
 	  }
@@ -72,10 +69,37 @@ void conv(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	const mwSize* i_size = mxGetDimensions(prhs[0]);
 	int BS = i_size[0];
+	int IN_D = i_size[3];
 	if (BS == 1) { 
-		conv<1>(nlhs, plhs, nrhs, prhs);
+		if (IN_D == 3) {
+			conv<1, 3>(nlhs, plhs, nrhs, prhs);
+		} else if (IN_D == 96) {
+			conv<1, 96>(nlhs, plhs, nrhs, prhs);
+		} else if (IN_D == 256) {
+			conv<1, 256>(nlhs, plhs, nrhs, prhs);
+		} else if (IN_D == 512) {
+			conv<1, 512>(nlhs, plhs, nrhs, prhs);
+		} else if (IN_D == 1024) {
+			conv<1, 1024>(nlhs, plhs, nrhs, prhs);
+		} else {
+			mexPrintf("IN_D = %d\n", IN_D);
+			assert_(0);
+		}
 	} else if (BS == 128) { 
-		conv<128>(nlhs, plhs, nrhs, prhs);
+		if (IN_D == 3) {
+			conv<128, 3>(nlhs, plhs, nrhs, prhs);
+		} else if (IN_D == 96) {
+			conv<128, 96>(nlhs, plhs, nrhs, prhs);
+		} else if (IN_D == 256) {
+			conv<128, 256>(nlhs, plhs, nrhs, prhs);
+		} else if (IN_D == 512) {
+			conv<128, 512>(nlhs, plhs, nrhs, prhs);
+		} else if (IN_D == 1024) {
+			conv<128, 1024>(nlhs, plhs, nrhs, prhs);
+		} else {
+			mexPrintf("IN_D = %d\n", IN_D);
+			assert_(0);
+		}
 	} else {
 		assert_(0);
 	}

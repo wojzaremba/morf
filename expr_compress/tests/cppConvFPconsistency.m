@@ -2,7 +2,7 @@ clc;
 clear all;
 global plan
 json = {};
-json{1} = struct('batch_size', 128, 'rows', 5, 'cols', 5, 'depth', 4, 'type', 'TestInput');
+json{1} = struct('batch_size', 128, 'rows', 15, 'cols', 15, 'depth', 96, 'type', 'TestInput');
 json{2} = struct('local_2d_patch', struct('patch_rows', 4, 'patch_cols', 4, 'stride_rows', 2, 'stride_cols', 2, 'padding_rows', 1, 'padding_cols', 1), 'function', 'RELU', 'depth', 5, 'type', 'Conv');
 Plan(json, [], 0, 'single');
 
