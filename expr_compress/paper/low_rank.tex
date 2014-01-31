@@ -78,9 +78,12 @@ where $c' \in [1, ..., C']$ is the cluster feature $f$ is assigned to. If the co
 \subsection{Bi-clustering of hidden layer weights}
 Let $W \in \mathbb{R}^{C \times X \times Y \times F}$ denote the weights of a second or later convolutional layer. Similar to the first convolutional layer approximation, we rely on the low dimensional linear structure of learned weights in a trained convolutional network to find an efficient approximation. We decompose $W$ by considering a partition of the input features into $G$ equal sized clusters and a partition of the output features into $H$ equal sized clusters. For a given input cluster, $g$, and output cluster, $h$, we approximate the weights corresponding to the input and output features in those clusters, $W_{g,h} \in \mathbb{R}^{\frac{C}{G} \times X \times Y \times \frac{F}{H}}$, with a rank K tensor, $\tilde{W}_{g,h}$.  
 
-We cluster the input features by concatenating the spatial and output feature dimensions of $W$ and clustering the resulting $C$ vectors $\mathbb{R}^{XYF}$. This clustering can be done using k-means or a more sophisticated subspace clustering algorthm. In our experiments we found that often k-means was sufficient. We clustered the output features in an analogous manner and completely independently of the input clustering. 
+We cluster the input features by concatenating the spatial and output feature dimensions of $W$ and clustering the resulting $C$ vectors in $\mathbb{R}^{XYF}$. This clustering can be done using k-means or a more sophisticated subspace clustering algorthm. In our experiments we found that often k-means was sufficient. We clustered the output features in an analogous manner and completely independently of the input clustering. 
 
- 
+Any 3D tensor, $M \in \mathbb{R}^{n \times m \times k}$, can be approximated by a decomposition that minimizes 
+\begin{equation*}
+	\|  \|
+\end{equation*} 
 
 
 \subsubsection{Complexity analysis}

@@ -6,7 +6,6 @@ load_imagenet_model();
 
 W = plan.layer{2}.cpu.vars.W;
 
-args.num_colors = 8;
 args.even = 1;
 args.start = 'sample';
 num_colors = [1, 2, 3, 4, 6, 8, 12, 24, 48, 69]; 
@@ -33,6 +32,7 @@ for i = 1:length(num_colors);
     end
     test_error(i) = error;
     plan.layer{2}.cpu.vars.W = W;
+    save('layer1reconerror_vs_numweights_matthew.mat', 'test_error', 'recon_error', 'num_weights', 'num_colors');
 end
 
 
