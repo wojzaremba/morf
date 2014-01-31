@@ -6,16 +6,17 @@ load_imagenet_model();
 
 W = plan.layer{5}.cpu.vars.W;
 
+args.cluster_type = 'kmeans';
 args.iclust = 32;
-args.oclust = 8;
-ranks = [4, 8, 12, 16, 20, 24, 28, 32, 64]; %[1, 2, 3, 4, 5, 6, 7, 8];
+args.oclust = 16;
+ranks = [1, 2, 4, 6, 8, 12, 16, 20, 24, 28, 32, 64]; %[1, 2, 3, 4, 5, 6, 7, 8];
 
 num_weights = [];
 recon_error = [];
 test_error = [];
 for i = 1:length(ranks);
     args.k = ranks(i);
-    [Wapprox, F, C, X, Y, assignment, nw] = bisubspace_lowrank_approx(double(W), args);
+    [Wapprox, F, C, X, Y, assignment, nw] = bisubspace_lowrank_approx_nosep(double(W), args);
     recon_error(i) = norm(W(:) - Wapprox(:));
     num_weights(i) = nw;
     plan.layer{5}.cpu.vars.W = Wapprox;
@@ -32,7 +33,9 @@ for i = 1:length(ranks);
     end
     test_error(i) = error;
     plan.layer{5}.cpu.vars.W = W;
+
+	save('layer2reconerror_vs_numweights_matthew_iclust=32_oclust=16_kmeans.mat', 'test_error', 'recon_error', 'num_weights', 'ranks');	
 end
 
 
-orig_num_weights = 96 * 256 * 5 * 5;
+orig_num_weights = prod(size(plan.layer{5}.cpu.vars.W));

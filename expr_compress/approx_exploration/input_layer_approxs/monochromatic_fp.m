@@ -5,7 +5,7 @@ init();
 load_imagenet_model();
 
 % Replace first convolutional layer weights with approximated weights
-num_colors = 8;
+num_colors = 12;
 W = plan.layer{2}.cpu.vars.W;
 [Wapprox, Wmono, colors, perm, ~] = monochromatic_approx(double(W), struct('num_colors', num_colors, 'even', 1, 'start', 'sample'));
 plan.layer{2}.cpu.vars.W = Wapprox;
