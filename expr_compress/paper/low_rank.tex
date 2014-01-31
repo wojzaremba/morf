@@ -57,8 +57,19 @@ This approximation corresponds to shifting from $C$ color channels to 1 color ch
 \end{equation*}
 where $U_c \in \mathbb{R}^{C \times 1}$ is the cluster center for cluster $c$ and $\tilde{S}_f$ and $\tilde{V}_f$ as as before. 
 
-This low-rank approximation allows for a more efficient computation of the convolutional layer output. By decomposing the approximated weights into two tensors. Let $W_C \in \mathbb{R}^{C' \times C}$ denote the color transform matrix where the rows of $W_c$ are the cluster centers $U_c^{\top}$. Let $W_{mono} \in \mathbb{R}^{X \times Y \times F}$ denote the monochromatic weight tensor containing $ \tilde{S}_f \tilde{V}_f^{\top}$ for each of the $F$ output features. Given this decomposition, we can compute the output of the convolutional layer by first transforming the input signal, $I \in \mathbb{R}^{C \times N \times M}$ into a different basis using the color transform matrix: $\tilde{I} = W_c$. 
+This low-rank approximation allows for a more efficient computation of the convolutional layer output. By decomposing the approximated weights into two tensors. Let $W_C \in \mathbb{R}^{C' \times C}$ denote the color transform matrix where the rows of $W_c$ are the cluster centers $U_c^{\top}$. Let $W_{mono} \in \mathbb{R}^{X \times Y \times F}$ denote the monochromatic weight tensor containing $ \tilde{S}_f \tilde{V}_f^{\top}$ for each of the $F$ output features. Given this decomposition, we can compute the output of the convolutional layer by first transforming the input signal, $I \in \mathbb{R}^{C \times N \times M}$ into a different basis using the color transform matrix: $\tilde{I} = W_c $
 
+This low-rank approximation allows for a more efficient computation of the convolutional layer output. By decomposing the approximated weights into two tensors. Let $W_C \in \mathbb{R}^{C' \times C}$ denote the color transform matrix where the rows of $W_c$ are the cluster centers $U_c^{\top}$. Let $W_{mono} \in \mathbb{R}^{X \times Y \times F}$ denote the monochromatic weight tensor containing $ \tilde{S}_f \tilde{V}_f^{\top}$ for each of the $F$ output features. Given this decomposition, we can compute the output of the convolutional layer by first transforming the input signal, $I \in \mathbb{R}^{C \times N \times M}$ into a different basis using the color transform matrix: 
+\begin{equation*}
+	\tilde{I} = W_c \otimes I
+\end{equation*}
+where $\tilde{I} \in \mathbb{R}^{C' \times N \times M}$. After the color transformation, each of the $f$ filters in $W_{mono}$ is monochromatic in the sense that it only acts upon one of the $C'$ color channels. Concretely, target value of output feature $f$ is
+\begin{align*}
+	T(f, x, y) &= \sum_{x' = 1}^{X} \sum_{y' = 1}^{Y} \Big(\sum_{c = 1}^{C} I(c, x + x', y + y') W_c(c', c) \Big) \\
+			&\hspace{3mm} \times (c, x + x', y + y') W(x', y', f) \\
+			&= \sum_{x' = 1}^{X} \sum_{y' = 1}^{Y} \tilde{I}(c', x + x', y + y') W(x', y', f)
+\end{align*} 
+where $c' \in [1, ..., C']$ is the cluster feature $f$ is assigned to. 
 
 \subsection{Bi-clustering of hidden layer weights}
 

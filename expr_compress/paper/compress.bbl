@@ -1,4 +1,4 @@
-\begin{thebibliography}{8}
+\begin{thebibliography}{10}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -19,6 +19,13 @@ Hinton, Geoffrey~E, Srivastava, Nitish, Krizhevsky, Alex, Sutskever, Ilya, and
 \newblock Improving neural networks by preventing co-adaptation of feature
   detectors.
 \newblock \emph{arXiv preprint arXiv:1207.0580}, 2012.
+
+\bibitem[Krizhevsky et~al.(2012)Krizhevsky, Sutskever, and
+  Hinton]{krizhevsky2012imagenet}
+Krizhevsky, Alex, Sutskever, Ilya, and Hinton, Geoff.
+\newblock Imagenet classification with deep convolutional neural networks.
+\newblock In \emph{Advances in Neural Information Processing Systems 25}, pp.\
+  1106--1114, 2012.
 
 \bibitem[Le et~al.(2010)Le, Ngiam, Chen, Chia, Koh, and
   Ng]{LeNgiChenChiaKohNg10}
@@ -50,6 +57,11 @@ Vanhoucke, Vincent, Senior, Andrew, and Mao, Mark~Z.
 \newblock Improving the speed of neural networks on cpus.
 \newblock In \emph{Proc. Deep Learning and Unsupervised Feature Learning NIPS
   Workshop}, 2011.
+
+\bibitem[Zeiler \& Fergus(2013)Zeiler and Fergus]{zeiler2013visualizing}
+Zeiler, Matthew~D and Fergus, Rob.
+\newblock Visualizing and understanding convolutional neural networks.
+\newblock \emph{arXiv preprint arXiv:1311.2901}, 2013.
 
 \bibitem[Zeiler et~al.(2011)Zeiler, Taylor, and Fergus]{zeiler2011adaptive}
 Zeiler, Matthew~D, Taylor, Graham~W, and Fergus, Rob.
