@@ -21,7 +21,21 @@ Now the computation $X\tilde{W}$ can be done in $O(nmt + nt^2 + ntk)$, which, fo
 
 \subsection{Tensor Low Rank Approximations}
 
-In typical object recognition architectures, the convolutional layer weights at the end of training exhibit strong redundancy and regularity across all dimensions. A particularly simple way to exploit such regularity is to 
+For a 3-tensor, $M \in \mathbb{R}^{n \times m \times k}$, we can construct a rank 1 approximation by finding a decomposition that minimizes 
+\begin{equation*}
+	\| M - \alpha \otimes \beta \otimes \gamma \|_F
+\end{equation*} 
+where $\alpha \in \mathbb{R}^n$, $\beta \in \mathbb{R}^m$, $\gamma \in \mathbb{R}^m$ and $\|X\|_F$ denotes the Frobenius norm.
+
+This easily extends to a rank K approximation using a greedy algorithm: First find the best rank 1 approximation and then iteratively find the best rank 1 approximation to the remaining tensor after subtracting the rank 1 approximation found in the previous step. %Ugliest sentence ever, fix! %
+ The rank K approximation is given as a sum of the rank 1 tensors  
+\begin{equation*}
+	\tilde{M} = \sum_{k = 1}^{K} \alpha_k \otimes \beta_k \otimes \gamma_k 
+\end{equation*} 
+
+\subsection{Low Rank Approximations of Convolutional Filters}
+
+In typical object recognition architectures, the weights of convolutional layers at the end of training exhibit strong redundancy and regularity across all dimensions. A particularly simple way to exploit such regularity is to 
 linearly compress the tensors, which amounts to finding low-rank approximations.
 
 Convolution weights can be described as a $4$-dimensional tensor. Let $W \in \mathbb{R}^{C \times X \times Y \times F}$ 
@@ -34,6 +48,6 @@ The target value, $T = I \ast W$, of a generic convolutional layer for a particu
 &\sum_{c=1}^C \sum_{x'=1}^{X} \sum_{y'=1}^{Y} I(c,x+x',y+y') W(c,x',y',f)
 \end{align*}
 
-We show how to approximate $W$ with a low rank tensor that has a particular structure that allows for a more efficient computation of the convolution. The approximations will be more efficient in two senses: both the number of floating point operations required to compute the convolution output and the number of parameters that need to be stored will be dramatically reduced. 
+We show how to approximate $W$ with a low rank tensor that allows for a more efficient computation of the convolution. The approximations will be more efficient in two senses: both the number of floating point operations required to compute the convolution output and the number of parameters that need to be stored will be dramatically reduced. 
 
-A standard first convolutional layer receives three color channels, typically in RGB or YUV space, as input whereas later hidden layers typically receive a much larger number of feature maps that have resulted from computations performed in previous layers. As a result, the first layer weights often have a markedly different structure than the weights in later convolutional layers. We have found that different approximation techniques are well suited to the different layers which we now describe. The first approach, which we call the monochromatic filter approximation can be applied to the weights in the first convolutional layer. The second approach, which we call the bi-clustering approximation,  can be applied to later convolutional layers where the number of input and output maps is large. 
+The first convolutional layer in the standard architecture receives three color channels, typically in RGB or YUV space, as input whereas later hidden layers typically receive a much larger number of feature maps that have resulted from computations performed in previous layers. As a result, the first layer weights often have a markedly different structure than the weights in later convolutional layers. We have found that different approximation techniques are well suited to the different layers. The first approach, which we call the monochromatic filter approximation, can be applied to the weights in the first convolutional layer. The second approach, which we call the bi-clustering approximation, can be applied to later convolutional layers where the number of input and output maps is large. 

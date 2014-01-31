@@ -8,7 +8,7 @@ W = plan.layer{2}.cpu.vars.W;
 
 args.even = 1;
 args.start = 'sample';
-num_colors = [1, 2, 3, 4, 6, 8, 12, 24, 48, 69]; 
+num_colors = [1, 2, 3, 4, 6, 8, 12, 24, 48, 64]; 
 
 num_weights = [];
 recon_error = [];
