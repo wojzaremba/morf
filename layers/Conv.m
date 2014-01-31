@@ -20,7 +20,7 @@ classdef Conv < Layer
             C_(obj.Fun_, v.out, v.out);            
         end
         
-        function FP(obj)
+        function FP_old(obj)
             global plan
             prev_dim = obj.prev_dim();
             v = obj.cpu.vars;
@@ -51,7 +51,7 @@ classdef Conv < Layer
             obj.cpu.vars.out = obj.F(results);
         end         
           
-        function FPcpp(obj)
+        function FP(obj)
             v = obj.cpu.vars; 
             ConvCpp(v.X, v.W, v.B, v.out, obj.stride(1), obj.padding(1));
         end

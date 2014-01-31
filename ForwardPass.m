@@ -22,9 +22,16 @@ else
     end   
     fptic = tic;
     obj.FP();
+    % XXXXXXX
+%     if (strcmp(obj.type, 'Conv'))
+%         tmp = obj.cpu.vars.out;
+%         obj.cpu.vars.out(:) = 0;
+%         obj.FPcpp();
+%         norm(obj.cpu.vars.out(:) - tmp(:)) / norm(obj.cpu.vars.out(:))
+%     end
     lapse = toc(fptic);
 end
-plan.time.fp(obj.layer_nr) = lapse;
+plan.time.fp(plan.input.step - 1, obj.layer_nr) = lapse;
 for k = 1:length(obj.next)
     ForwardPass(obj.next{k});   
 end

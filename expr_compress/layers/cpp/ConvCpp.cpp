@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <iostream>
 #include <algorithm>
 #include <vector>
 #include "mex.h"
@@ -7,6 +8,9 @@
 #include "../../../external/eigen/Eigen/Dense"
 #include "templates.h"
 
+using namespace Eigen;
+
+template<int BS>
 void conv(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	lookups = 0;
 	float *i = (float*) mxGetData(prhs[0]);
@@ -19,7 +23,8 @@ void conv(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	const mwSize* w_size = mxGetDimensions(prhs[1]);
 	const mwSize* bias_size = mxGetDimensions(prhs[2]);
 	const mwSize* out_size = mxGetDimensions(prhs[3]);
-	int bs = i_size[0];
+	//int BS = i_size[0];
+	assert(i_size[0] == BS);
 	int in_rows = i_size[1];
 	int in_cols = i_size[2];
 	int in_depth = i_size[3];
@@ -28,63 +33,51 @@ void conv(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	assert_(patch == w_size[2]);
 	assert_(in_depth == w_size[3]);
 	assert_(out_depth == bias_size[0]);
-	assert_(out_size[0] == bs);
+	assert_(out_size[0] == BS);
 	assert_(out_size[3] == out_depth);
 	int out_rows = ceil((float)(in_rows - patch + 2 * padding) / stride) + 1;
 	int out_cols = ceil((float)(in_cols - patch + 2 * padding) / stride) + 1;
 	assert_(out_size[1] == out_rows);
 	assert_(out_size[2] == out_cols);
 		
-	memset(out, 0, sizeof(float) * bs * out_rows * out_cols * out_depth);
+	Map<MatrixXf>out_mat(out, BS * out_rows * out_cols, out_depth);
+	out_mat.setZero();
 	for (int y = 0; y < out_cols; ++y) {
 	  for (int x = 0; x < out_rows; ++x) {
+	    Map<MatrixXf, 1, Stride<Dynamic, 1> > out_stride_mat(out + BS * (x + out_rows * y), BS, out_depth, Stride<Dynamic, 1>(BS * out_rows * out_cols, 1)); 
 	    for (int py = 0; py < patch; ++py) {
-              int y_idx = y * stride + py;
-	      if (y_idx >= in_cols) {
-	        break;
+              int y_idx = y * stride + py - padding;
+	      if ((y_idx >= in_cols) || (y_idx < 0)) {
+	        continue;
 	      }
-              for (int px = 0; px < patch; ++px) {
-		int x_idx = x * stride + px;
-		if (x_idx >= in_rows) {
-	          break;
-		}
-	        for (int in_d = 0; in_d < in_depth; ++in_d) {
-		  int w_offset = out_depth * (px + patch * (py + in_d * patch));
-		  int i_offset = bs * (x_idx + in_rows * (y_idx + in_d * in_cols));
-		  Eigen::Map<Eigen::VectorXf>i_vec(i + i_offset, bs); 
-		  int out_offset = bs * (x + out_rows * y);
-		  Eigen::Map<Eigen::VectorXf>w_vec(w + w_offset, out_depth);
-	          for (int d = 0; d < out_depth; ++d) {
-		    Eigen::Map<Eigen::VectorXf>out_vec(out + out_offset, bs); 
-		    out_vec += w_vec(d) * i_vec;
-		    out_offset += bs * out_rows * out_cols;
-		  }
-		}
+	      int x_offset = x * stride - padding;
+              for (int px = fmax(0, -x_offset); px < fmin(patch, in_rows - x_offset); ++px) {
+	        int x_idx = x_offset + px;
+	    	Map<MatrixXf, 1, Stride<Dynamic, 1> > i_stride_mat(i + BS * (x_idx + in_rows * y_idx), BS, in_depth, Stride<Dynamic, 1>(BS * in_rows * in_cols, 1)); 
+	    	Map<MatrixXf, 1, Stride<Dynamic, 1> > w_stride_mat(w + out_depth * (px + patch * py), out_depth, in_depth, Stride<Dynamic, 1>(out_depth * patch * patch, 1)); 
+		out_stride_mat += i_stride_mat * w_stride_mat.transpose();
 	      }
 	    }
 	  }
 	}
 
-	Eigen::Map<Eigen::VectorXf>bias_vec(bias, out_depth);
-	Eigen::Map<Eigen::MatrixXf>out_mat(out, bs * out_rows * out_cols, out_depth);
+	Map<VectorXf>bias_vec(bias, out_depth);
 	out_mat.rowwise() += bias_vec.transpose();
-	out_mat.array() = (out_mat.array() + out_mat.array().abs()) / 2.f; // ReLU.
+	out_mat.array() /= 2.f; 
+	out_mat.array() = (out_mat.array() + out_mat.array().abs()); // ReLU.
 	print("lookups = %d\n", lookups);
 }
-
-void conv_bs1(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-	conv(nlhs, plhs, nrhs, prhs);
-}
-
 
 // ConvCpp(X, W, B, out, stride, pading);
 void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	const mwSize* i_size = mxGetDimensions(prhs[0]);
-	int bs = i_size[0];
-	if (bs == 1) { 
-		conv_bs1(nlhs, plhs, nrhs, prhs);
+	int BS = i_size[0];
+	if (BS == 1) { 
+		conv<1>(nlhs, plhs, nrhs, prhs);
+	} else if (BS == 128) { 
+		conv<128>(nlhs, plhs, nrhs, prhs);
 	} else {
-		conv(nlhs, plhs, nrhs, prhs);
+		assert_(0);
 	}
 }
 

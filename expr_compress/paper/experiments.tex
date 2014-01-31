@@ -6,31 +6,37 @@ Table \ref{evaluation_time} gives us reference on prediction time for network wi
 
 \begin{table}[t]
 \tiny
-\parbox{.45\linewidth}{
+\parbox{.99\linewidth}{
 \centering
-\begin{tabular}{rrr}
+\begin{tabular}{rrrrr}
 \hline
-Layer & \multicolumn{2}{c}{Evaluation Time} \\
-      & bs=1 & bs=128 \\
+& Evaluation & & Evaluation &  \\
+Layer & Time & Fraction & Time & Fraction \\
+& (bs = 1) & (bs = 1) & (bs = 128) & (bs = 128) \\
 \hline
-2 & 5 & 5 \\
+Conv1 & & & & \\
+MaxPool & & & & \\
+LRNormal & & & & \\
+Conv2 & & & & \\
+MaxPool & & & & \\
+LRNormal & & & & \\
+Conv3 & & & & \\
+MaxPool & & & & \\
+Conv4 & & & & \\
+Conv5 & & & & \\
+MaxPool & & & & \\
+FC & & & & \\
+FC & & & & \\
+FC & & & & \\
+Softmax & & & & \\
+\hline 
+Total & & & & \\
 \hline
 \end{tabular}
-\label{evaluation_time_alex}
+\vspace{5mm}
 }
-\parbox{.45\linewidth}{
-\centering
-\begin{tabular}{rrr}
-\hline
-Layer & \multicolumn{2}{c}{Evaluation Time} \\
-      & bs=1 & bs=128 \\
-\hline
-2 & 5 & 5 \\
-\hline
-\end{tabular}
-}
-\caption{Evaluation time per layer on CPU for (left) AlexNet, (right) MattNet. We consider real time application setting (batch size aka bs of 1), and
-mass scale annotation (batch size of 128).}
+\caption{Evaluation time (in ms) per layer on CPU for (top) AlexNet, (bottom) MattNet. We consider real time application setting (batch size aka bs of 1), and
+mass scale annotation (batch size of 128). Results averaged over 8 trials.}
 \label{evaluation_time}
 \end{table}
 
@@ -48,7 +54,6 @@ are faithful.
 Figures \ref{denoising} and \ref{denoising} shows first layer filters after approximating them 
 with monochromatic filters. This corresponds to the projection on one out of ''number of clusters`` 1-dim plane (line).
 One can notice that often approximated filters look cleaner than original one.
-
 
 
 \begin{figure}[t]
