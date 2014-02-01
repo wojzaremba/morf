@@ -39,7 +39,7 @@ plot(num_colors, orig_ops ./ approx_ops, 'r--', 'linewidth', 2);
 
 
 xlabel('Number of colors used in monochromatic approximation', 'FontSize', 15, 'FontName', 'TimesNewRoman', 'FontWeight', 'bold');
-ylabel('Relative decrease in number of operations', 'FontSize', 15, 'FontName', 'TimesNewRoman', 'FontWeight', 'bold');
+ylabel('Relatic savings in number of operations', 'FontSize', 15, 'FontName', 'TimesNewRoman', 'FontWeight', 'bold');
 %title('Relative decrease in number of operations for various monochromatic operations applied to MattNet');
 legend1 = legend('MattNet', 'AlexNet');
 

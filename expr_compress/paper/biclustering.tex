@@ -39,7 +39,30 @@ $C X Y F N M \Delta^{-2}$  & $G H N M \Delta^{-2} K (X Y \frac{C}{G} + X Y + \fr
 }
 \end{table}
 
-Figure ?? shows the relative reduction in operations for varying values of $G$, $H$ and $K$.
+Figure \ref{biclustering_ops_pic} shows the relative reduction in operations for varying values of $G$, $H$ and $K$.
+
+\begin{figure}[t]
+\centering
+\mbox{
+	\includegraphics[width=0.75\linewidth]{img/bicluster_ranks_vs_numops_mattnet.eps} 
+}
+\label{biclustering_ops_pic}
+\caption{Relative savings in number of operations required to compute target output of second convolutional layer of MattNet with the bi-clustered approximation and varying rank. Different input/output cluster sizes are plotted.}
+\end{figure}
+
+
 \subsubsection{Empirical performance}
 
-
+\begin{figure}[t]
+\centering
+\mbox{
+	\subfigure{
+  		\includegraphics[width=0.48\linewidth]{img/layer2reconerror_vs_ranks.eps} 
+	}
+	\subfigure{
+  		\includegraphics[width=0.48\linewidth]{img/layer2testerror_vs_ranks.eps} 
+	}
+}
+\label{layer2recon_error_vs_rank}
+\caption{Reconstruction error (left) and test error (right) for MattNet plotted against varying ranks used in the bi-clustering approximation for the second convolutional layer weights. Different input/output cluster sizes are plotted.}
+\end{figure}

@@ -114,14 +114,22 @@ One can notice that often approximated filters look cleaner than original one.
 
 \subsubsection{Reduction in memory overhead}
 \begin{figure}[t]
+\centering
 \mbox{
-\subfigure{
-  \includegraphics[width=\linewidth]{img/monochromatic_numcolors_vs_numweights.eps} 
-  }
+  \includegraphics[width=0.75\linewidth]{img/monochromatic_numcolors_vs_numweights.eps} 
 }
 \label{monochromatic_numweights}
-\caption{Relative decrease in number of weights required for first convolutional layer for various monochromatic operations applied to MattNet (red) and AlexNet (blue).}
+\caption{Relative savings in number of weights required for first convolutional layer for various monochromatic approximations applied to MattNet (red) and AlexNet (blue).}
 \end{figure}
 
 \subsection{Bi-clustering}
 
+\subsubsection{Reduction in memory overhead}
+\begin{figure}[t]
+\centering
+\mbox{
+  \includegraphics[width=0.75\linewidth]{img/biclustering_rank_vs_numweights_matt.eps} 
+}
+\label{biclustering_numweights}
+\caption{Relative decrease in number of weights required for second convolutional layer for various bi-clustering approximations applied to MattNet.}
+\end{figure}

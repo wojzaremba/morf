@@ -41,8 +41,7 @@ plot(num_colors, orig_weights ./ approx_weights, 'r--', 'linewidth', 2);
 
 
 xlabel('Number of colors used in monochromatic approximation', 'FontSize', 15, 'FontName', 'TimesNewRoman', 'FontWeight', 'bold');
-ylabel('Relative decrease in number of weights', 'FontSize', 15, 'FontName', 'TimesNewRoman', 'FontWeight', 'bold');
-%title('Relative decrease in number of operations for various monochromatic operations applied to MattNet');
+ylabel('Relative savings in number of weights', 'FontSize', 15, 'FontName', 'TimesNewRoman', 'FontWeight', 'bold');
 legend1 = legend('MattNet', 'AlexNet');
 
 set(legend1,'Position',[0.695714285714286 0.746 0.175714285714286 0.126]);
