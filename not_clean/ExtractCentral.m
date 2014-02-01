@@ -9,7 +9,6 @@ function img = ExtractCentral(img, f_size)
         img = img(r1, r2, :);
     end   
     img = imresize(img, [f_size, f_size]);    
-    img = single(img);
     if (size(img, 3) == 1)
         img = repmat(img, [1, 1, 3]);
     end

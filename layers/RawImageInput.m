@@ -1,20 +1,16 @@
 classdef RawImageInput < Input
     properties
         file_pattern
-        train
-        test
-        val
-        training
-        full_size
-        raw_images
-        output_size
+        meanX
+        Y
     end
     methods
         function obj = RawImageInput(json)
             obj@Input(FillDefault(json));
             obj.file_pattern = json.file_pattern;
-            obj.raw_images = json.raw_images;
-            obj.training = 1;
+            tmp = load(sprintf('%s/meta.mat', obj.file_pattern));
+            obj.meanX = tmp.meanX;
+            obj.Y = tmp.Y;
             obj.Finalize();
         end       
         
@@ -24,30 +20,24 @@ classdef RawImageInput < Input
             batches = -1;
         end
         
-        function [X, Y, step] = GetImage_(obj, step, train)         
-            if (train == 2)
-                if (isempty(obj.val))
-                    obj.val = struct();
-                    obj.val.path = [obj.raw_images];
-                    tmp = load([obj.file_pattern]);
-                    obj.val.mean = repmat(reshape(single(tmp.mean_img), [1, obj.dims]), [obj.batch_size, 1, 1, 1]);
-                    obj.val.Y = single(tmp.Y);
-                end
-                source = obj.val;            
-            else
-                assert(0);
-            end
+        function [X, Y, step] = GetImage_(obj, step, train)                         
             X = zeros(obj.batch_size, obj.dims(1), obj.dims(2), 3);
             Y = zeros(obj.batch_size, 1000);
             for i = step : (step + obj.batch_size - 1)
-                name = sprintf('%s/ILSVRC2012_val_%s.JPEG', source.path, toString(i, 8));
-                X(i - step + 1, :, :, :) = single(imread(name));
-                Y(i - step + 1, :) = obj.val.Y(i, :);
+                name = sprintf('%s/ILSVRC2012_val_%s.JPEG', obj.file_pattern, sprintf('%08d', i));
+                idx = i - step + 1;
+                X(idx, :, :, :) = single(imread(name));
+                Y(idx, obj.Y(i)) = 1;
             end    
-            X = X - source.mean;
+            X = X - repmat(reshape(obj.meanX, [1, obj.dims(1), obj.dims(2), obj.dims(3)]), [obj.batch_size, 1, 1, 1]);
             step = i + 1;
         end               
     end
+end
+
+function toString(i, nr)
+    zeros(nr, 1)
+   num2str(i) 
 end
 
 function json = FillDefault(json)

@@ -1,7 +1,7 @@
 [    
     {
-        "type" : "ImageInput",
-        "file_pattern": "~/imagenet_data/",
+        "type" : "RawImageInput",
+        "file_pattern": "~/val_cropped/",
         "batch_size": 128,
         "rows": 224,
         "cols": 224,

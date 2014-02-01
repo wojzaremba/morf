@@ -1,28 +1,17 @@
 clear all
-f = dir('~/val/');
-X = zeros(1024, 224, 224, 3);
-Y = zeros(size(X, 1), 1);
-idx = 1;
-offset = 0;
-for i = 1 : length(f)
+meanX = zeros(224, 224, 3);
+Y = zeros(50000, 1);
+for i = 1 : 50000
     fprintf('%d\n', i);
-    if (f(i).name(end) ~= 'G')
-        continue
-    end
-    if (idx <= (offset + size(X, 1))) && (idx > offset)            
-        name = ['~/val/', f(i).name];
-        assert(str2num(name(end - 12 : end - 5)) == idx)
-        A = double(imread(name));
-        A = ExtractCentral(A, 255);
-        A = A(16:(end - 16), 16:(end - 16), :);
-        X(idx - offset, :, :, :) = A;
-    end
-    idx = idx + 1;
-    if (idx > (offset + size(X, 1)))
-        break;
-    end    
+    name = sprintf('~/val/ILSVRC2012_val_%08d.JPEG', i);    
+    img = imread(name);
+    img = ExtractCentral(img, 255);
+    img = img(16:(end - 16), 16:(end - 16), :);
+    imwrite(img, sprintf('~/val_cropped/ILSVRC2012_val_%08d.JPEG', i));
+    meanX = meanX + double(img);
 end
-X = X - repmat(mean(X, 1), [size(X, 1), 1, 1, 1]);
+meanX = single(meanX / 50000);
+
 
 meta = load('~/morf/data/imagenet/meta.mat');
 fid1 = fopen('~/morf/data/imagenet/labels.txt');
@@ -41,23 +30,12 @@ fclose(fid1);
 fid1 = fopen('~/morf/data/imagenet/ILSVRC2012_validation_ground_truth.txt');
 tline = fgetl(fid1);
 
-for i = 1 : (size(Y, 1) + offset)
-    if (i <= (offset + size(Y, 1))) && (i > offset)
-        key = meta.synsets(str2num(tline)).WNID(2:end);
-        fprintf('old Y = %d, synset = %s\n', i, key);         
-        Y(i - offset) = map(key);
-    end
+for i = 1 : 50000
+    key = meta.synsets(str2num(tline)).WNID(2:end);
+    fprintf('old Y = %d, synset = %s\n', i, key);         
+    Y(i) = map(key);
     tline = fgetl(fid1);    
 end
 fclose(fid1);
 
-
-data = {};
-for i = 1:size(X, 1);
-    data{i}.X = single(squeeze(X(i, :, :, :)));
-    tmp = zeros(1000, 1);
-    tmp(Y(i)) = 1;
-    data{i}.Y = single(tmp);
-end
-assert(sum(Y == 0) == 0);
-save('~/morf/data/imagenet/test', 'data')
+save('~/val_cropped/meta', 'meanX', 'Y');
