@@ -5,10 +5,15 @@
 #include "mex.h"
 #include <assert.h>
 #include <math.h>
-#include "../../../external/eigen/Eigen/Dense"
 #include "templates.h"
+#define EIGEN_USE_MKL_ALL
+#include <Eigen/Dense>
 
-using namespace Eigen;
+
+using Eigen::MatrixXf;
+using Eigen::Stride;
+using Eigen::Dynamic;
+using Eigen::VectorXf;
 
 template<int BS, int IN_D>
 void conv(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
@@ -38,19 +43,22 @@ void conv(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	assert_(out_size[1] == out_s);
 	assert_(out_size[2] == out_s);
 		
-	Map<MatrixXf>out_mat(out, BS * out_s * out_s, out_depth);
+	Eigen::Map<MatrixXf>out_mat(out, BS * out_s * out_s, out_depth);
 	out_mat.setZero();
+	
+	#pragma omp parallel for
 	for (int y = 0; y < out_s; ++y) {
+	  #pragma omp parallel for
 	  for (int x = 0; x < out_s; ++x) {
-	    Map<MatrixXf, 1, Stride<Dynamic, 1> > out_stride_mat(out + BS * (x + out_s * y), BS, out_depth, Stride<Dynamic, 1>(BS * out_s * out_s, 1)); 
+	    Eigen::Map<MatrixXf, 1, Stride<Dynamic, 1> > out_stride_mat(out + BS * (x + out_s * y), BS, out_depth, Stride<Dynamic, 1>(BS * out_s * out_s, 1)); 
 	    int y_offset = y * stride - padding;
 	    for (int py = fmax(0, -y_offset); py < fmin(patch, in_s - y_offset); ++py) {
               int y_idx = y_offset + py;
 	      int x_offset = x * stride - padding;
 	      int x_idx = x_offset + fmax(0, -x_offset);
               for (int px = fmax(0, -x_offset); px < fmin(patch, in_s - x_offset); ++px) {
-	    	Map<MatrixXf, 1, Stride<Dynamic, 1> > i_stride_mat(i + BS * (x_idx + in_s * y_idx), BS, IN_D, Stride<Dynamic, 1>(BS * in_s * in_s, 1)); 
-	    	Map<MatrixXf, 1, Stride<Dynamic, 1> > w_stride_mat(w + out_depth * (px + patch * py), out_depth, IN_D, Stride<Dynamic, 1>(out_depth * patch * patch, 1)); 
+	    	Eigen::Map<MatrixXf, 1, Stride<Dynamic, 1> > i_stride_mat(i + BS * (x_idx + in_s * y_idx), BS, IN_D, Stride<Dynamic, 1>(BS * in_s * in_s, 1)); 
+	    	Eigen::Map<MatrixXf, 1, Stride<Dynamic, 1> > w_stride_mat(w + out_depth * (px + patch * py), out_depth, IN_D, Stride<Dynamic, 1>(out_depth * patch * patch, 1)); 
 		out_stride_mat += i_stride_mat * w_stride_mat.transpose();
 		++x_idx;
 	      }
@@ -58,7 +66,7 @@ void conv(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	  }
 	}
 
-	Map<VectorXf>bias_vec(bias, out_depth);
+	Eigen::Map<VectorXf>bias_vec(bias, out_depth);
 	out_mat.rowwise() += bias_vec.transpose();
 	out_mat.array() /= 2.f; 
 	out_mat.array() = (out_mat.array() + out_mat.array().abs()); // ReLU.
@@ -104,4 +112,3 @@ void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		assert_(0);
 	}
 }
-

@@ -10,15 +10,21 @@ plan.only_fp = 1;
 plan.training = 0;
 plan.input.step = 1;
 error = 0;
-for i = 1:8
+for i = 1:1
     plan.input.GetImage(0);
     ForwardPass(plan.input); 
     error = error + plan.classifier.GetScore(5);
     fprintf('%d / %d\n', error, i * plan.input.batch_size);
 end
 
+plan.time.fp
 
+% matlab
+%       0.0011    3.9622    2.2095    1.7071   13.3983    1.1448    0.9304    2.8241    0.5330    1.9286    2.5859    0.1397    0.5469    0.1231    0.0398    0.0126
 
-% error should be 20 / 128.
-% 1. More data to compute mean.
-% 2. Regenerate stuff with crop from the central (maybe it is resized).
+% cpp, MKL
+%       0.0011    3.0658    2.3650    1.7210    3.4963    1.1215    0.7761    1.5675    0.5207    1.2880    1.2266    0.1154    0.3881    0.0702    0.0171    0.0094
+
+% 0. Compile with MKL.
+% 1. Przepisz to tak, zeby bylo 1-1 z kodem w matlab i zacznij modyfikacje
+% od tego momentu
