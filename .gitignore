@@ -6,6 +6,7 @@
 
 # Compiled MEX binaries (all platforms)
 *.mex*
+!expr_compress/layers/cpp/ConvCpp.mexmaci64
 
 *.swp
 

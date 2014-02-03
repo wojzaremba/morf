@@ -23,9 +23,11 @@ classdef RawImageInput < Input
         function [X, Y, step] = GetImage_(obj, step, train)                         
             X = zeros(obj.batch_size, obj.dims(1), obj.dims(2), 3);
             Y = zeros(obj.batch_size, 1000);
-            for i = ((step - 1) * obj.batch_size + 1) : (step * obj.batch_size)
+            from = ((step - 1) * obj.batch_size + 1);
+            to = from + obj.batch_size - 1;
+            for i = from : to
                 name = sprintf('%s/ILSVRC2012_val_%s.JPEG', obj.file_pattern, sprintf('%08d', i));
-                idx = i - step + 1;
+                idx = i - from + 1;
                 X(idx, :, :, :) = single(imread(name));
                 Y(idx, obj.Y(i)) = 1;
             end    

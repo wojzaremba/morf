@@ -10,7 +10,7 @@ plan.only_fp = 1;
 plan.training = 0;
 plan.input.step = 1;
 error = 0;
-for i = 1:1
+for i = 1:8
     plan.input.GetImage(0);
     ForwardPass(plan.input); 
     error = error + plan.classifier.GetScore(5);
@@ -24,7 +24,3 @@ plan.time.fp
 
 % cpp, MKL
 %       0.0011    3.0658    2.3650    1.7210    3.4963    1.1215    0.7761    1.5675    0.5207    1.2880    1.2266    0.1154    0.3881    0.0702    0.0171    0.0094
-
-% 0. Compile with MKL.
-% 1. Przepisz to tak, zeby bylo 1-1 z kodem w matlab i zacznij modyfikacje
-% od tego momentu
