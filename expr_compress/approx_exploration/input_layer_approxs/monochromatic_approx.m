@@ -1,4 +1,4 @@
-function [Wapprox, Wmono, colors, perm, num_weights] = monochromatic_approx(W, args)
+function [Wapprox, Wmono, colors, perm] = monochromatic_approx(Worig, args)
 % This approximation clusters the first left singular vectors of each of
 % the convolution kernels associated with each output feature. Filters in 
 % the same cluster share the same inner color component. The reconstructed 
@@ -11,8 +11,7 @@ function [Wapprox, Wmono, colors, perm, num_weights] = monochromatic_approx(W, a
 %             otherwise
 % args.num_colors : number of clusters (or "colors") to use
 
-
-    W = permute(W, [1, 4, 2, 3]);
+    W = permute(Worig, [1, 4, 2, 3]);
     % Simple re-parametrization of first layer with monochromatic filters
     for f = 1 : size(W,1)
         [u,s,v]=svd(squeeze(W(f,:,:)),0);
@@ -23,14 +22,13 @@ function [Wapprox, Wmono, colors, perm, num_weights] = monochromatic_approx(W, a
         approx0(f, :, :, :) = reshape(chunk, 1, size(W, 2), size(W, 3), size(W, 4));
     end
     
-    [assignment, colors] = mykmeans(C, args.num_colors, W, S);
-    
+%     [assignment, colors] = mykmeans(C, args.num_colors, W, S);
 %     if args.even
-%         [assignment,colors] = litekmeans(C', args.num_colors);
-%         colors = colors';
+        [assignment,colors] = litekmeans(C', args.num_colors);
+        colors = colors';
 %     else
 %         MAXiter = 1000; % Maximum iteration for KMeans Algorithm
-%         REPlic = Val(args, 'rep', 100); % Replication for KMeans Algorithm
+%         REPlic = Val(args, 'rep', 1000); % Replication for KMeans Algorithm
 %         [assignment,colors] = kmeans(C, args.num_colors, 'start', 'sample', 'maxiter', MAXiter, 'replicates', REPlic, 'EmptyAction', 'singleton');
 %     end
     
@@ -52,6 +50,7 @@ function [Wapprox, Wmono, colors, perm, num_weights] = monochromatic_approx(W, a
     [~, perm] = sort(assignment);
     colors = colors';
     
-    num_weights = prod(size(colors)) + prod(size(Wmono));
+%     [assignment, colors] = mykmeans(C, args.num_colors, W, S);    
+    fprintf('L2 relative error : %f\n', norm(Wapprox(:) - Worig(:)) / norm(Worig(:)));
 end
 

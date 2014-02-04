@@ -6,6 +6,7 @@ classdef Conv < Layer
         function obj = Conv(json)
             obj@Layer(FillDefault(json));
             obj.Finalize();
+            ConvCpp();            
         end                      
        
         function FP_(obj)
@@ -20,7 +21,7 @@ classdef Conv < Layer
             C_(obj.Fun_, v.out, v.out);            
         end
         
-        function FP_old(obj)
+        function FPmatlab(obj)
             global plan
             prev_dim = obj.prev_dim();
             v = obj.cpu.vars;

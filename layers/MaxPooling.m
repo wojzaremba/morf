@@ -5,7 +5,8 @@ classdef MaxPooling < Layer
     methods
         function obj = MaxPooling(json)
             obj@Layer(FillDefault(json));
-            obj.Finalize();
+            obj.Finalize();            
+            MaxPoolCpp();
         end
         
         function FP_(obj)
@@ -13,7 +14,7 @@ classdef MaxPooling < Layer
             C_(MaxPool, v.X, v.out, obj.depth(), obj.patch(1), obj.stride(1), obj.dims(1));            
         end
         
-        function FP(obj)
+        function FPmatlab(obj)
             X = obj.cpu.vars.X;
             dims = obj.dims;
             dims_prev = obj.prev_dim();
@@ -34,6 +35,11 @@ classdef MaxPooling < Layer
             obj.cpu.vars.idx = idx;
             obj.cpu.vars.out = out;
         end
+        
+        function FP(obj)
+            v = obj.cpu.vars; 
+            MaxPoolCpp(v.X, v.out, obj.patch(1), obj.stride(1));
+        end        
         
         function BP(obj)
             global plan;

@@ -75,7 +75,7 @@ classdef Plan < handle
             end
             fprintf('Total number of\n\ttotal learnable vars = %d\n\ttotal vars = %d\n\ttotal vars on the gpu = %d\n', obj.stats.total_learnable_vars, obj.stats.total_vars, obj.stats.total_vars_gpu);            
             obj.all_uploaded_weights = [];
-        end        
+        end     
         
         function gid = GetGID(obj)
             gid = obj.gid; 

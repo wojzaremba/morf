@@ -8,7 +8,7 @@ Plan(json, [], 0, 'single');
 
 plan.input.GetImage(1);
 plan.layer{2}.cpu.vars.X = single(plan.layer{1}.cpu.vars.out);
-plan.layer{2}.FP_old();
+plan.layer{2}.FPmatlab();
 outFP = plan.layer{2}.cpu.vars.out;
 plan.layer{2}.cpu.vars.out(:) = 0;
 

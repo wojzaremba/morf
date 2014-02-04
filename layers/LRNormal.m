@@ -9,11 +9,12 @@ classdef LRNormal < Layer
     methods
         function obj = LRNormal(json)
             obj@Layer(FillDefault(json));
-            obj.k = json.k;
-            obj.n = json.n;
-            obj.alpha = json.alpha;
-            obj.beta = json.beta;
+            obj.k = single(json.k);
+            obj.n = single(json.n);
+            obj.alpha = single(json.alpha);
+            obj.beta = single(json.beta);
             obj.Finalize();
+            LRNormalCpp();
         end
         
         function FP_(obj)
@@ -21,16 +22,20 @@ classdef LRNormal < Layer
             C_(ConvResponseNormCrossMap, v.X, v.denoms, v.out, obj.depth(), obj.n, obj.k, obj.alpha, obj.beta);
         end
         
-        function FP(obj)
+        function FPmatlab(obj)
             X = obj.cpu.vars.X;
             normal = zeros(size(X), class(X));
             for i = 1:obj.depth
                 normal(:, :, :, i) = obj.k + obj.alpha * sum(X(:, :, :, max(i - (obj.n - 1) / 2, 1):min(i + (obj.n - 1) / 2, obj.depth)) .^ 2, 4);
-            end
-            
+            end            
             obj.cpu.vars.normal = normal;
             obj.cpu.vars.out = X ./ (normal .^ obj.beta);
         end
+        
+        function FP(obj)
+            v = obj.cpu.vars; 
+            LRNormalCpp(v.X, v.out, obj.k, obj.n, obj.alpha, obj.beta);
+        end        
         
         function BP(obj)
             v = obj.cpu.vars;

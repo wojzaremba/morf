@@ -14,7 +14,6 @@ using Eigen::VectorXf;
 
 template<int BS>
 void monoconv(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-	lookups = 0;
 	float *i = (float*) mxGetData(prhs[0]);
 	float *i_mono = (float*) mxGetData(prhs[1]);
 	float *c = (float*) mxGetData(prhs[2]);
@@ -92,11 +91,13 @@ void monoconv(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	Eigen::Map<MatrixXf>out_mat(out, bs * out_s * out_s, out_depth);
 	out_mat.rowwise() += bias_vec.transpose();
 	out_mat.array() = (out_mat.array() + out_mat.array().abs()) / 2.f; // ReLU.
-	print("lookups = %d\n", lookups);
 }
 
 // MonoConvCpp(X, Xmono, Cmono, Wmono, B, perm, out, stride, obj.padding);
 void mexFunction (int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
+	if (nrhs == 0) {
+		return;
+	}
 	const mwSize* i_size = mxGetDimensions(prhs[0]);
 	int BS = i_size[0];
 	if (BS == 1) { 

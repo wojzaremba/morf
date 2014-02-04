@@ -9,11 +9,11 @@ n = size(X,2);
 last = 0;
 
 minener = 1e+20;
-outiters=16;
+outiters=100;
 maxiters=1000;
-
+rand('seed', 1);
 for j=1:outiters
-
+fprintf('litekmeans j = %d\n', j);
 aux=randperm(n);
 m = X(:,aux(1:k));
 %[~,label] = max(bsxfun(@minus,m'*X,dot(m,m,1)'/2),[],1); % assign samples to the nearest centers

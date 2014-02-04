@@ -7,7 +7,7 @@ MKLROOT := /opt/intel/composer_xe_2013_sp1.1.103/
 %.mexmaci64: %.o
 	icpc -O -arch x86_64 -Wl,-syslibroot,/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk -mmacosx-version-min=10.8 -bundle -Wl,-exported_symbols_list,/Applications/MATLAB_R2013a_Student.app/extern/lib/maci64/mexFunction.map -o "$@" $<  -L/Applications/MATLAB_R2013a_Student.app/bin/maci64 -lmx -lmex -lmat -lstdc++ -L$(MKLROOT)/mkl/lib $(MKLROOT)/mkl/lib/libmkl_intel_lp64.a $(MKLROOT)/mkl/lib/libmkl_core.a $(MKLROOT)/mkl/lib/libmkl_intel_thread.a -lpthread -lm -L$(MKLROOT)/compiler/lib/intel64 -parallel 
 
-all: clean ConvCpp.mexmaci64 MonoConvCpp.mexmaci64
+all: clean LRNormalCpp.mexmaci64 MaxPoolCpp.mexmaci64 ConvCpp.mexmaci64 MonoConvCpp.mexmaci64
 	/opt/intel/mkl/bin/mklvars.sh intel64 lp64
 
 clean:

@@ -13,11 +13,11 @@ for bs = [1, 128]
     plan.layer{2}.cpu.vars.Wmono = single(randn(size(plan.layer{2}.cpu.vars.Wmono)));
     plan.layer{2}.cpu.vars.perm = single(randperm(seed, json{2}.depth)' - 1);
     plan.layer{2}.cpu.vars.B = single(randn(size(plan.layer{2}.cpu.vars.B)));
-    plan.layer{2}.FP();
+    plan.layer{2}.FPmatlab();
     outFP = plan.layer{2}.cpu.vars.out;
     plan.layer{2}.cpu.vars.out(:) = 0;
 
-    plan.layer{2}.FPcpp();
+    plan.layer{2}.FP();
     outFPcpp = plan.layer{2}.cpu.vars.out;
 
     prev_dim = plan.layer{2}.prev_dim();

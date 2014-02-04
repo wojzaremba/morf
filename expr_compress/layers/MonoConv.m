@@ -8,6 +8,7 @@ classdef MonoConv < LayerApprox
             obj@LayerApprox(FillDefault(json));
             obj.num_image_colors = json.num_image_colors;
             obj.Finalize();
+            MonoConvCpp();                        
         end                      
        
         function FP_(obj)
@@ -23,7 +24,7 @@ classdef MonoConv < LayerApprox
             Capprox_gen(obj.Fun_, v.out, v.out);  
         end
         
-        function FP_old(obj)
+        function FPmatlab(obj)
             prev_dim = obj.prev_dim();
             v = obj.cpu.vars;
             X = v.X;  
@@ -75,6 +76,7 @@ classdef MonoConv < LayerApprox
             prev_dim = obj.prev_dim();
             obj.AddParam('Xmono', [plan.input.batch_size, prev_dim(1), prev_dim(2), obj.num_image_colors], false);             
             obj.AddParam('Cmono', [prev_dim(3), obj.num_image_colors], false);            
+            obj.AddParam('W', [obj.depth, obj.patch(1), obj.patch(2), prev_dim(3)], true); % XXX hack.
             obj.AddParam('Wmono', [obj.patch(1), obj.patch(2), obj.depth], false);     
             obj.AddParam('B', [obj.depth, 1], false);              
             obj.AddParam('perm', [obj.depth, 1], false); 

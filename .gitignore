@@ -8,6 +8,8 @@
 *.mex*
 !expr_compress/layers/cpp/ConvCpp.mexmaci64
 !expr_compress/layers/cpp/MonoConvCpp.mexmaci64
+!expr_compress/layers/cpp/LRNormalCpp.mexmaci64
+!expr_compress/layers/cpp/MaxPoolCpp.mexmaci64
 
 *.swp
 

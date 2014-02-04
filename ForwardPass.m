@@ -31,7 +31,7 @@ else
 %     end
     lapse = toc(fptic);
 end
-plan.time.fp(plan.input.step - 1, obj.layer_nr) = lapse;
+plan.time.fp(max(plan.input.step - 1, 1), obj.layer_nr) = lapse;
 for k = 1:length(obj.next)
     ForwardPass(obj.next{k});   
 end
