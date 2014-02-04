@@ -1,7 +1,3 @@
-% 1. Double check if it works.
-% 2. Generate plots / tables.
-% 3. Do some initial good writing.
-
 clc;
 global plan;
 json_old = ParseJSON('plans/imagenet_matthew.txt');
@@ -9,7 +5,7 @@ json = {};
 json{1} = json_old{1};
 json{2} = json_old{2};
         
-json{1}.batch_size = 1;
+json{1}.batch_size = 128;
 % Plan(json, '~/imagenet_data/imagenet_matthew', 0, 'single');
 Plan(json, [], 0, 'single');
 plan.training = 0;
@@ -19,12 +15,8 @@ plan.input.GetImage(0);
 plan.layer{2}.cpu.vars.X = plan.layer{1}.cpu.vars.out;
 
 tic;
-plan.layer{2}.FPcpp();
-fprintf('common conv cpp takes = %f\n', toc);
-
-tic;
 plan.layer{2}.FP();
-fprintf('common conv matlab takes = %f\n', toc);
+fprintf('common conv cpp takes = %f\n', toc);
 
 outFPcommon = plan.layer{2}.cpu.vars.out;
 

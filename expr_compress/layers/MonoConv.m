@@ -23,7 +23,7 @@ classdef MonoConv < LayerApprox
             Capprox_gen(obj.Fun_, v.out, v.out);  
         end
         
-        function FP(obj)
+        function FP_old(obj)
             prev_dim = obj.prev_dim();
             v = obj.cpu.vars;
             X = v.X;  
@@ -61,7 +61,7 @@ classdef MonoConv < LayerApprox
             obj.cpu.vars.out = obj.F(v.out);
         end     
         
-        function FPcpp(obj)
+        function FP(obj)
             v = obj.cpu.vars; 
             MonoConvCpp(v.X, v.Xmono, v.Cmono, v.Wmono, v.B, v.perm, v.out, obj.stride(1), obj.padding(1));
         end        

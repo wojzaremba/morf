@@ -1,7 +1,7 @@
 global plan
 json = {};
-for bs = [1, 12]
-    json{1} = struct('batch_size', bs, 'rows', 8, 'cols', 10, 'depth', 2, 'type', 'TestInput');
+for bs = [1, 128]
+    json{1} = struct('batch_size', bs, 'rows', 8, 'cols', 8, 'depth', 96, 'type', 'TestInput');
     json{2} = struct('local_2d_patch', struct('patch_rows', 4, 'patch_cols', 4), 'function', 'RELU', 'depth', 8, 'num_image_colors', 4, 'type', 'MonoConv');
 
     Plan(json, [], 0, 'single');
@@ -29,5 +29,5 @@ for bs = [1, 12]
 
     assert(norm(X(:) - v.Xmono(:)) < 1e-4);
 
-    assert(norm(outFP(:) - outFPcpp(:)) < 1e-4);
+    assert(norm(outFP(:) - outFPcpp(:)) / norm(outFP(:)) < 1e-4);
 end
