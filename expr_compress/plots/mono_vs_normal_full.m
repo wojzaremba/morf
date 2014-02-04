@@ -32,7 +32,7 @@ fprintf('Computing approximation\n');
 fprintf('Approximated\n');
 
 perm = perm' - 1;
-Wmono = permute(Wmono_, [3, 2, 1]);
+Wmono = permute(Wmono_, [2, 3, 1]);
 
 plan.layer{2}.cpu.vars.X = single(plan.layer{1}.cpu.vars.out);
 plan.layer{2}.cpu.vars.Cmono = single(Cmono);
