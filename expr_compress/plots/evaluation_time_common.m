@@ -4,7 +4,7 @@ global plan debug
 debug = 2;
 json = ParseJSON('plans/imagenet_matthew.txt');
         
-json{1}.batch_size = 128;
+json{1}.batch_size = 1;
 Plan(json, '~/imagenet_data/imagenet_matthew', 0, 'single');
 plan.only_fp = 1;
 plan.training = 0;

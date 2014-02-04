@@ -35,7 +35,7 @@ void lrnormal(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	Eigen::Map<MatrixXf>out_mat(out, BS * in_s * in_s, IN_D);
 	out_mat.setConstant(0);
 	Eigen::Map<MatrixXf>i_mat(i, BS * in_s * in_s, IN_D);
-	//#pragma omp parallel for
+	#pragma omp parallel for
 	for (int idx = 0; idx < IN_D; ++idx) {
 		for (int idx_i = fmax(idx - ((n - 1) / 2), 0); idx_i <= fmin(idx + (n - 1) / 2, IN_D - 1); ++idx_i) {
 			out_mat.col(idx) += i_mat.array().square().matrix().col(idx_i);

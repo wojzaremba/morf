@@ -43,28 +43,28 @@ Total & & & & \\
 Layer & Time & Fraction & Time per img. & Fraction \\
 & (bs = 1) & (bs = 1) & (bs = 128) & (bs = 128) \\
 \hline
-Conv1 & & & 31.67 & 12.40\% \\
-MaxPool & & & 17.83 & 6.98\% \\
-LRNormal & & & 13.80 & 5.40\% \\
-Conv2 & & & 105.28 & 41.22\% \\
-MaxPool & & & 9.99 & 3.91\% \\
-LRNormal & & & 7.36 & 2.88\% \\
-Conv3 & & & 22.12 & 8.66\% \\
-MaxPool & & & 4.16 & 1.62\% \\
-Conv4 & & & 15.40 & 6.02\% \\
-Conv5 & & & 20.36 & 7.97\% \\
-MaxPool & & & 1.12 & 0.43\% \\
-FC & & & 4.76 & 1.86\% \\
-FC & & & 1.10 & 0.43\% \\
-FC & & & 0.30 & 0.11\% \\
-Softmax & & & 0.09 & 0.03\%\\
+Conv1 & $277.52 \pm 22.51$ & 6.46\% & $21.57 \pm 2.33$ & 21.11\% \\
+MaxPool & $12.96 \pm 3.15$ & 0.30\% & $1.01 \pm 0.13$ & 0.99\% \\
+LRNormal & $1.49 \pm 1.03$ & 0.03\% & $1.80 \pm 0.11$ & 1.76\% \\
+Conv2 & $978.16 \pm 108.69$ & 22.80\% & $33.61 \pm 2.87$ & 32.88\% \\
+MaxPool & $9.07 \pm 0.09$ & 0.21\% & $0.74 \pm 0.10$ & 0.72\% \\
+LRNormal & $1.48 \pm 2.34$ & 0.03\% & $0.79 \pm 0.09$ & 0.78\% \\
+Conv3 & $589.82 \pm 51.11$ & 13.74\% & $14.32 \pm 0.75$ & 14.01\% \\
+MaxPool & $3.61 \pm 0.30$ & 0.08\% & $0.58 \pm 0.05$ & 0.57\% \\
+Conv4 & $930.85 \pm 93.65$ & 21.69\% & $12.15 \pm 0.67$ & 11.89\% \\
+Conv5 & $1211.67 \pm 60.15$ & 28.24\% & $11.40 \pm 0.61$ & 11.15\% \\
+MaxPool & $0.81 \pm 0.07$ & 0.01\% & $0.11 \pm 0.01$ & 0.10\% \\
+FC & $224 \pm 8.72$ & 5.22\% & $3.19 \pm 0.34$ & 3.12\% \\
+FC & $37.01 \pm 8.31$ & 0.86\% & $0.65 \pm 0.04$ & 0.63\% \\
+FC & $9.24 \pm 2.15$ & 0.21\% & $0.17 \pm 0.02$ & 0.17\% \\
+Softmax & $1.78 \pm 4.16$ & 0.04\% & $0.04 \pm 0.05$ & 0.04\%\\
 \hline 
-Total & & & 255.39 & \\
+Total & 4289.73 & & 102.20 & \\
 \hline
 \end{tabular}
 }
 \caption{Evaluation time (in ms) per layer on CPU for (top) AlexNet, (bottom) MattNet. We consider real time application setting (batch size aka bs of 1), and
-mass scale annotation (batch size of 128).} 
+mass scale annotation (batch size of 128). Results are averaged over 8 trails.} 
 \label{evaluation_time}
 \end{table}
 
